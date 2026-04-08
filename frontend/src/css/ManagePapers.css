@@ -1,0 +1,114 @@
+.manage-container {
+  min-height: 100vh;
+  background-color: #f0f4f8;
+}
+
+.manage-header {
+  background-color: #1a56db;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manage-title {
+  color: white;
+  font-size: 20px;
+}
+
+.manage-back {
+  padding: 8px 16px;
+  background-color: white;
+  color: #1a56db;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.manage-content {
+  padding: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.manage-card {
+  background-color: white;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.manage-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.manage-heading {
+  font-size: 20px;
+  color: #333;
+}
+
+.manage-search {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  width: 250px;
+  outline: none;
+}
+
+.manage-empty {
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.manage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.manage-table th {
+  background-color: #f0f4f8;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #444;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.manage-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.manage-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.manage-delete {
+  padding: 6px 14px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.manage-delete:hover {
+  background-color: #fca5a5;
+}
+
+.manage-delete:disabled {
+  background-color: #aaa;
+  color: white;
+  cursor: not-allowed;
+}

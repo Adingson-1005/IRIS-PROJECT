@@ -1,0 +1,21 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Node
+node_modules/
+dist/
+build/
+
+# Database
+*.sql.bak
+
+# Uploads folder (PDF files)
+backend/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
