@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
 import AdminDashboard from './pages/AdminDashboard'
 import InstructorDashboard from './pages/InstructorDashboard'
-import StudentDashboard from './pages/StudentDashboard'
+
 import UploadPaper from './pages/UploadPaper'
 import ProtectedRoute from './components/ProtectedRoute'
 import MyUploads from './pages/MyUploads'
@@ -26,12 +26,6 @@ function App() {
         <Route path="/instructor" element={
           <ProtectedRoute allowedRole="instructor">
             <InstructorDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/student" element={
-          <ProtectedRoute allowedRole="student">
-            <StudentDashboard />
           </ProtectedRoute>
         } />
 
@@ -60,9 +54,9 @@ function App() {
         } />
 
         <Route path="/search-papers" element={
-          <ProtectedRoute allowedRole="student">
-            <SearchPapers />
-          </ProtectedRoute>
+        <ProtectedRoute allowedRole="student">
+          <SearchPapers />
+        </ProtectedRoute>
         } />
 
 

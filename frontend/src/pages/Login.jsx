@@ -25,7 +25,7 @@ function Login() {
 
       if (role === 'admin') navigate('/admin')
       else if (role === 'instructor') navigate('/instructor')
-      else navigate('/student')
+      else navigate('/search-papers')
 
     } catch {
       setError('Invalid email or password')

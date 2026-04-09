@@ -85,8 +85,11 @@ function SearchPapers() {
     <div className="sp-container">
       <div className="sp-header">
         <h1 className="sp-header-title">IRIS — Research Repository</h1>
-        <button className="sp-back-btn" onClick={() => navigate('/student')}>
-          Back to Dashboard
+        <button className="sp-back-btn" onClick={() => {
+          localStorage.clear()
+          navigate('/')
+        }}>
+          Logout
         </button>
       </div>
 

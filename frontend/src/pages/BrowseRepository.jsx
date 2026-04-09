@@ -8,6 +8,8 @@ function BrowseRepository() {
   const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [selectedPaper, setSelectedPaper] = useState(null)
   const role = localStorage.getItem('role')
 
   useEffect(() => {
@@ -25,6 +27,16 @@ function BrowseRepository() {
       console.error('Failed to fetch papers')
     }
     setLoading(false)
+  }
+
+  const openModal = (paper) => {
+    setSelectedPaper(paper)
+    setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setSelectedPaper(null)
   }
 
   const handleReindex = async () => {
@@ -101,7 +113,7 @@ function BrowseRepository() {
               <tbody>
                 {filtered.map((paper) => (
                   <tr key={paper.id}>
-                    <td>{paper.title}</td>
+                    <td style={{cursor: 'pointer', color: '#0e9f6e'}} onClick={() => openModal(paper)}>{paper.title}</td>
                     <td>{paper.authors}</td>
                     <td>{paper.category}</td>
                     <td>{paper.methodology}</td>
