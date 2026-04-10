@@ -1,55 +1,64 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import UploadPaper from './UploadPaper'
+import MyUploads from './MyUploads'
+import BrowseRepository from './BrowseRepository'
 import '../css/InstructorDashboard.css'
 
 function InstructorDashboard() {
   const navigate = useNavigate()
   const full_name = localStorage.getItem('full_name')
+  const [activePage, setActivePage] = useState('upload')
 
   const handleLogout = () => {
     localStorage.clear()
     navigate('/')
   }
 
-  return (
-    <div className="instructor-container">
+  const navItems = [
+    { key: 'upload',  label: 'Upload Research Paper' },
+    { key: 'uploads', label: 'My Uploads' },
+    { key: 'browse',  label: 'Main Repository' },
+  ]
 
-      <div className="instructor-header">
-        <h1 className="instructor-title">IRIS — Instructor Panel</h1>
-        <div className="instructor-header-right">
+  const renderContent = () => {
+    switch (activePage) {
+      case 'upload':  return <UploadPaper />
+      case 'uploads': return <MyUploads />
+      case 'browse':  return <BrowseRepository />
+      default:        return null
+    }
+  }
+
+  return (
+    <div className="instructor-shell">
+      <aside className="instructor-sidebar">
+        <div className="sidebar-brand">
+          <h1>IRIS</h1>
+          <p>Instructor Panel</p>
+        </div>
+
+        <nav className="sidebar-nav">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              className={`nav-item ${activePage === item.key ? 'active' : ''}`}
+              onClick={() => setActivePage(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
           <span className="instructor-name">Welcome, {full_name}</span>
           <button className="instructor-logout" onClick={handleLogout}>Logout</button>
         </div>
-      </div>
+      </aside>
 
-      <div className="instructor-content">
-
-        <div
-          className="instructor-card"
-          onClick={() => navigate('/upload')}
-          style={{ cursor: 'pointer' }}
-        >
-          <h2>Upload Research Paper</h2>
-          <p>Submit approved research papers to the repository</p>
-        </div>
-
-        <div className="instructor-card"
-            onClick={() => navigate('/my-uploads')}
-            style={{ cursor: 'pointer' }}
-          >
-            <h2>My Uploads</h2>
-            <p>View and manage papers you have uploaded</p>
-        </div>
-
-        <div
-  className="instructor-card"
-  onClick={() => navigate('/browse')}
-  style={{ cursor: 'pointer' }}
->
-  <h2>Main Repository</h2>
-  <p>Search and view all available research papers</p>
-</div>
-
-      </div>
+      <main className="instructor-main">
+        {renderContent()}
+      </main>
     </div>
   )
 }

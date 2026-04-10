@@ -1,18 +1,14 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
 import '../css/ManagePapers.css'
 
 function ManagePapers() {
-  const navigate = useNavigate()
   const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    fetchPapers()
-  }, [])
+  useEffect(() => { fetchPapers() }, [])
 
   const fetchPapers = async () => {
     try {
@@ -28,18 +24,14 @@ function ManagePapers() {
   }
 
   const handleDelete = async (paperId, title) => {
-    const confirm = window.confirm(
-      `Are you sure you want to delete "${title}"? This cannot be undone.`
-    )
+    const confirm = window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)
     if (!confirm) return
-
     setDeleting(paperId)
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(
-        `http://127.0.0.1:8000/papers/delete/${paperId}`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      )
+      await axios.delete(`http://127.0.0.1:8000/papers/delete/${paperId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
       setPapers(papers.filter(p => p.id !== paperId))
     } catch (err) {
       alert('Failed to delete paper')
@@ -53,72 +45,50 @@ function ManagePapers() {
   )
 
   return (
-    <div className="manage-container">
-      <div className="manage-header">
-        <h1 className="manage-title">IRIS — Manage Papers</h1>
-        <button
-          className="manage-back"
-          onClick={() => navigate('/admin')}
-        >
-          Back to Dashboard
-        </button>
-      </div>
-
-      <div className="manage-content">
-        <div className="manage-card">
-          <div className="manage-top">
-            <h2 className="manage-heading">
-              All Research Papers ({filtered.length})
-            </h2>
-            <input
-              className="manage-search"
-              placeholder="Filter by title or author..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          {loading && <p>Loading papers...</p>}
-
-          {!loading && filtered.length === 0 && (
-            <p className="manage-empty">No papers found.</p>
-          )}
-
-          {!loading && filtered.length > 0 && (
-            <table className="manage-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Authors</th>
-                  <th>Category</th>
-                  <th>Methodology</th>
-                  <th>Year</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((paper) => (
-                  <tr key={paper.id}>
-                    <td>{paper.title}</td>
-                    <td>{paper.authors}</td>
-                    <td>{paper.category}</td>
-                    <td>{paper.methodology}</td>
-                    <td>{paper.year}</td>
-                    <td>
-                      <button
-                        className="manage-delete"
-                        onClick={() => handleDelete(paper.id, paper.title)}
-                        disabled={deleting === paper.id}
-                      >
-                        {deleting === paper.id ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+    <div className="manage-content">
+      <div className="manage-card">
+        <div className="manage-top">
+          <h2 className="manage-heading">All Research Papers ({filtered.length})</h2>
+          <input
+            className="manage-search"
+            placeholder="Filter by title or author..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+
+        {loading && <p>Loading papers...</p>}
+        {!loading && filtered.length === 0 && <p className="manage-empty">No papers found.</p>}
+        {!loading && filtered.length > 0 && (
+          <table className="manage-table">
+            <thead>
+              <tr>
+                <th>Title</th><th>Authors</th><th>Category</th>
+                <th>Methodology</th><th>Year</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((paper) => (
+                <tr key={paper.id}>
+                  <td>{paper.title}</td>
+                  <td>{paper.authors}</td>
+                  <td>{paper.category}</td>
+                  <td>{paper.methodology}</td>
+                  <td>{paper.year}</td>
+                  <td>
+                    <button
+                      className="manage-delete"
+                      onClick={() => handleDelete(paper.id, paper.title)}
+                      disabled={deleting === paper.id}
+                    >
+                      {deleting === paper.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

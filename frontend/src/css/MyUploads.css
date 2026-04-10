@@ -97,3 +97,18 @@
   color: white;
   cursor: not-allowed;
 }
+.myuploads-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.myuploads-search {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  width: 250px;
+  outline: none;
+}

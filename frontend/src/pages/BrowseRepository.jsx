@@ -1,20 +1,15 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
 import '../css/BrowseRepository.css'
 
 function BrowseRepository() {
-  const navigate = useNavigate()
   const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [showModal, setShowModal] = useState(false)
   const [selectedPaper, setSelectedPaper] = useState(null)
   const role = localStorage.getItem('role')
 
-  useEffect(() => {
-    fetchPapers()
-  }, [])
+  useEffect(() => { fetchPapers() }, [])
 
   const fetchPapers = async () => {
     try {
@@ -23,32 +18,20 @@ function BrowseRepository() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       setPapers(response.data.papers)
-    } catch (err) {
+    } catch {
       console.error('Failed to fetch papers')
     }
     setLoading(false)
   }
 
-  const openModal = (paper) => {
-    setSelectedPaper(paper)
-    setShowModal(true)
-  }
-
-  const closeModal = () => {
-    setShowModal(false)
-    setSelectedPaper(null)
-  }
-
   const handleReindex = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.post(
-        'http://127.0.0.1:8000/papers/reindex-all',
-        {},
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      )
+      const response = await axios.post('http://127.0.0.1:8000/papers/reindex-all', {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
       alert(response.data.message)
-    } catch (err) {
+    } catch {
       alert('Reindex failed')
     }
   }
@@ -58,33 +41,15 @@ function BrowseRepository() {
     p.authors.toLowerCase().includes(search.toLowerCase())
   )
 
-  const backRoute = role === 'instructor' ? '/instructor' : '/admin'
-
   return (
-    <div className="browse-container">
-      <div className="browse-header">
-        <h1 className="browse-title">IRIS — Browse Repository</h1>
-        <div className="browse-header-right">
-          {role === 'instructor' && (
-            <button className="browse-reindex" onClick={handleReindex}>
-              Re-index All Papers
-            </button>
-          )}
-          <button
-            className="browse-back"
-            onClick={() => navigate(backRoute)}
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-
-      <div className="browse-content">
-        <div className="browse-card">
-          <div className="browse-top">
-            <h2 className="browse-heading">
-              All Research Papers ({filtered.length})
-            </h2>
+    <div className="browse-content">
+      <div className="browse-card">
+        <div className="browse-top">
+          <h2 className="browse-heading">All Research Papers ({filtered.length})</h2>
+          <div className="browse-top-right">
+            {role === 'instructor' && (
+              <button className="browse-reindex" onClick={handleReindex}>Re-index All</button>
+            )}
             <input
               className="browse-search"
               placeholder="Filter by title or author..."
@@ -92,39 +57,56 @@ function BrowseRepository() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-
-          {loading && <p>Loading papers...</p>}
-
-          {!loading && filtered.length === 0 && (
-            <p className="browse-empty">No papers found.</p>
-          )}
-
-          {!loading && filtered.length > 0 && (
-            <table className="browse-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Authors</th>
-                  <th>Category</th>
-                  <th>Methodology</th>
-                  <th>Year</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((paper) => (
-                  <tr key={paper.id}>
-                    <td style={{cursor: 'pointer', color: '#0e9f6e'}} onClick={() => openModal(paper)}>{paper.title}</td>
-                    <td>{paper.authors}</td>
-                    <td>{paper.category}</td>
-                    <td>{paper.methodology}</td>
-                    <td>{paper.year}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
+
+        {loading && <p>Loading papers...</p>}
+        {!loading && filtered.length === 0 && (
+          <p className="browse-empty">
+            {search ? 'No papers match your search.' : 'No papers in the repository yet.'}
+          </p>
+        )}
+        {!loading && filtered.length > 0 && (
+          <table className="browse-table">
+            <thead>
+              <tr>
+                <th>Title</th><th>Authors</th><th>Category</th><th>Methodology</th><th>Year</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((paper) => (
+                <tr key={paper.id}>
+                  <td
+                    className="browse-title-cell"
+                    onClick={() => setSelectedPaper(paper)}
+                  >
+                    {paper.title}
+                  </td>
+                  <td>{paper.authors}</td>
+                  <td>{paper.category}</td>
+                  <td>{paper.methodology}</td>
+                  <td>{paper.year}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
+
+      {selectedPaper && (
+        <div className="browse-modal-overlay" onClick={() => setSelectedPaper(null)}>
+          <div className="browse-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="browse-modal-title">{selectedPaper.title}</h3>
+            <p><strong>Authors:</strong> {selectedPaper.authors}</p>
+            <p><strong>Category:</strong> {selectedPaper.category}</p>
+            <p><strong>Methodology:</strong> {selectedPaper.methodology}</p>
+            <p><strong>Year:</strong> {selectedPaper.year}</p>
+            {selectedPaper.abstract && (
+              <p><strong>Abstract:</strong> {selectedPaper.abstract}</p>
+            )}
+            <button className="browse-modal-close" onClick={() => setSelectedPaper(null)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

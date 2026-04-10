@@ -1,52 +1,100 @@
-.instructor-container {
+.instructor-shell {
+  display: flex;
   min-height: 100vh;
   background-color: #f0f4f8;
 }
 
-.instructor-header {
+.instructor-sidebar {
+  width: 220px;
   background-color: #0e9f6e;
-  padding: 16px 32px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
-.instructor-title {
+.sidebar-brand {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-brand h1 {
   color: white;
-  font-size: 22px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-.instructor-header-right {
+.sidebar-brand p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  padding: 11px 20px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-left-color: white;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .instructor-name {
-  color: white;
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
 }
 
 .instructor-logout {
-  padding: 8px 16px;
-  background-color: white;
-  color: #0e9f6e;
-  border: none;
+  padding: 7px 12px;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.15s;
 }
 
-.instructor-content {
+.instructor-logout:hover {
+  background-color: rgba(255, 255, 255, 0.22);
+}
+
+.instructor-main {
+  flex: 1;
   padding: 32px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.instructor-card {
-  background-color: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  overflow-y: auto;
 }
