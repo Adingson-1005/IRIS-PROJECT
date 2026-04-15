@@ -5,45 +5,71 @@
 
 .sp-header {
   background-color: #7e3af2;
-  padding: 16px 32px;
+  padding: 14px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .sp-header-title {
   color: white;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
 }
 
-.sp-back-btn {
-  padding: 8px 16px;
+.sp-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sp-logout-btn {
+  padding: 7px 14px;
   background-color: white;
   color: #7e3af2;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.sp-submit-btn {
+  padding: 7px 14px;
+  background-color: #f0fdf4;
+  color: #065f46;
+  border: 1.5px solid #6ee7b7;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sp-submit-btn:hover {
+  background-color: #d1fae5;
 }
 
 .sp-body {
-  padding: 28px 32px;
+  padding: 20px 16px;
   max-width: 860px;
   margin: 0 auto;
 }
 
 .sp-search-row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .sp-input {
   flex: 1;
-  padding: 11px 16px;
+  min-width: 0;
+  padding: 11px 14px;
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 14px;
@@ -56,7 +82,7 @@
 }
 
 .sp-search-btn {
-  padding: 11px 24px;
+  padding: 11px 20px;
   background-color: #7e3af2;
   color: white;
   border: none;
@@ -73,7 +99,7 @@
 }
 
 .sp-clear-btn {
-  padding: 11px 16px;
+  padding: 11px 14px;
   border-radius: 8px;
   border: 1px solid #ddd;
   background: white;
@@ -89,28 +115,31 @@
 
 .sp-filters {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
   align-items: center;
 }
 
 .sp-select {
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 13px;
   background: white;
   outline: none;
   color: #444;
+  flex: 1;
+  min-width: 120px;
 }
 
 .sp-year {
-  width: 90px;
+  max-width: 100px;
+  flex: 0 0 100px;
 }
 
 .sp-status-bar {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .sp-results-label {
@@ -145,14 +174,14 @@
 .sp-results {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .sp-card {
   background: white;
   border-radius: 12px;
   border: 1px solid #eee;
-  padding: 20px 22px;
+  padding: 18px 16px;
 }
 
 .sp-card-title {
@@ -160,6 +189,7 @@
   font-weight: 600;
   color: #1a1a2e;
   margin-bottom: 4px;
+  line-height: 1.4;
 }
 
 .sp-card-authors {
@@ -170,7 +200,7 @@
 
 .sp-tags {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   margin-bottom: 10px;
 }
@@ -178,8 +208,8 @@
 .sp-tag {
   background-color: #ede9fe;
   color: #5b21b6;
-  font-size: 12px;
-  padding: 3px 10px;
+  font-size: 11px;
+  padding: 3px 8px;
   border-radius: 20px;
   font-weight: 500;
 }
@@ -193,5 +223,160 @@
 .sp-score {
   font-size: 11px;
   color: #aaa;
-  margin-top: 10px;
+  margin-top: 8px;
+}
+
+/* Submit modal overlay */
+.sp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.sp-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.sp-modal h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #1a1a2e;
+}
+
+.sp-modal-field {
+  margin-bottom: 16px;
+}
+
+.sp-modal-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.sp-modal-field input,
+.sp-modal-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+.sp-modal-field textarea {
+  resize: vertical;
+}
+
+.sp-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.sp-modal-submit {
+  flex: 1;
+  padding: 11px;
+  background-color: #7e3af2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sp-modal-submit:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.sp-modal-cancel {
+  flex: 1;
+  padding: 11px;
+  background-color: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sp-modal-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.sp-modal-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/*--------- Responsive breakpoints ------------ */
+@media (max-width: 600px) {
+  .sp-header-title {
+    font-size: 15px;
+  }
+
+  .sp-body {
+    padding: 16px 12px;
+  }
+
+  .sp-search-row {
+    flex-wrap: nowrap;
+  }
+
+  .sp-input {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .sp-search-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .sp-filters {
+    gap: 6px;
+  }
+
+  .sp-select {
+    font-size: 12px;
+    padding: 7px 8px;
+    min-width: 100px;
+  }
+
+  .sp-card {
+    padding: 14px 12px;
+  }
+
+  .sp-card-title {
+    font-size: 14px;
+  }
+
+  .sp-modal {
+    padding: 20px 16px;
+  }
 }

@@ -13,10 +13,14 @@ function SearchPapers() {
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [submitFile, setSubmitFile] = useState(null)
+  const [submitTitle, setSubmitTitle] = useState('')
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
-  useEffect(() => {
-    fetchAllPapers()
-  }, [])
+  useEffect(() => { fetchAllPapers() }, [])
 
   const fetchAllPapers = async () => {
     try {
@@ -25,17 +29,14 @@ function SearchPapers() {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAllPapers(response.data.papers)
-    } catch (err) {
+    } catch {
       setError('Failed to load papers.')
     }
     setLoading(false)
   }
 
   const handleSearch = async () => {
-    if (!keyword.trim()) {
-      setMode('browse')
-      return
-    }
+    if (!keyword.trim()) { setMode('browse'); return }
     setSearching(true)
     setError('')
     try {
@@ -50,7 +51,7 @@ function SearchPapers() {
       })
       setSearchResults(response.data.results)
       setMode('search')
-    } catch (err) {
+    } catch {
       setError('Search failed. Please try again.')
     }
     setSearching(false)
@@ -68,13 +69,37 @@ function SearchPapers() {
     if (e.key === 'Enter') handleSearch()
   }
 
-  const applyFilters = (papers) => {
-    return papers.filter(p => {
-      if (filters.category && p.category !== filters.category) return false
-      if (filters.methodology && p.methodology !== filters.methodology) return false
-      if (filters.year && String(p.year) !== String(filters.year)) return false
-      return true
-    })
+  const applyFilters = (papers) => papers.filter(p => {
+    if (filters.category && p.category !== filters.category) return false
+    if (filters.methodology && p.methodology !== filters.methodology) return false
+    if (filters.year && String(p.year) !== String(filters.year)) return false
+    return true
+  })
+
+  const handleSubmitPaper = async () => {
+    if (!submitFile) { setSubmitError('Please select a PDF file'); return }
+    if (!submitTitle.trim()) { setSubmitError('Please enter a title'); return }
+    setSubmitLoading(true)
+    setSubmitError('')
+    setSubmitMessage('')
+    try {
+      const data = new FormData()
+      data.append('title', submitTitle)
+      data.append('file', submitFile)
+      const token = localStorage.getItem('token')
+      await axios.post('http://127.0.0.1:8000/ai/submit-draft', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      setSubmitMessage('Draft submitted! AI feedback will appear here once built.')
+      setSubmitFile(null)
+      setSubmitTitle('')
+    } catch {
+      setSubmitError('Submission failed. Please try again.')
+    }
+    setSubmitLoading(false)
   }
 
   const displayPapers = mode === 'search'
@@ -85,21 +110,29 @@ function SearchPapers() {
     <div className="sp-container">
       <div className="sp-header">
         <h1 className="sp-header-title">IRIS — Research Repository</h1>
-        <button className="sp-back-btn" onClick={() => {
-          localStorage.clear()
-          navigate('/')
-        }}>
-          Logout
-        </button>
+        <div className="sp-header-right">
+          <button
+            className="sp-submit-btn"
+            onClick={() => setShowModal(true)}
+            title="Submit your research draft"
+          >
+            +
+          </button>
+          <button
+            className="sp-logout-btn"
+            onClick={() => { localStorage.clear(); navigate('/') }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="sp-body">
-
         <div className="sp-search-row">
           <input
             className="sp-input"
             type="text"
-            placeholder="Search by keyword using inverted index..."
+            placeholder="Search by keyword..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -109,12 +142,10 @@ function SearchPapers() {
             onClick={handleSearch}
             disabled={searching}
           >
-            {searching ? 'Searching...' : 'Search'}
+            {searching ? '...' : 'Search'}
           </button>
           {mode === 'search' && (
-            <button className="sp-clear-btn" onClick={handleClear}>
-              Clear
-            </button>
+            <button className="sp-clear-btn" onClick={handleClear}>Clear</button>
           )}
         </div>
 
@@ -183,7 +214,7 @@ function SearchPapers() {
 
         {!loading && displayPapers.length === 0 && mode === 'search' && (
           <div className="sp-empty-state">
-            <p>No papers found for "{keyword}". Try a different keyword or clear your filters.</p>
+            <p>No papers found for "{keyword}". Try a different keyword.</p>
           </div>
         )}
 
@@ -211,8 +242,64 @@ function SearchPapers() {
             )
           })}
         </div>
-
       </div>
+
+      {showModal && (
+        <div className="sp-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="sp-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Submit Research Draft</h2>
+
+            {submitMessage && <p className="sp-modal-success">{submitMessage}</p>}
+            {submitError && <p className="sp-modal-error">{submitError}</p>}
+
+            <div className="sp-modal-field">
+              <label>Title of your paper</label>
+              <input
+                type="text"
+                placeholder="Enter your paper title"
+                value={submitTitle}
+                onChange={(e) => setSubmitTitle(e.target.value)}
+              />
+            </div>
+
+            <div className="sp-modal-field">
+              <label>Upload your draft (PDF)</label>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setSubmitFile(e.target.files[0])}
+              />
+              {submitFile && (
+                <p style={{ fontSize: '12px', color: '#0e9f6e', marginTop: '4px' }}>
+                  Selected: {submitFile.name}
+                </p>
+              )}
+            </div>
+
+            <div className="sp-modal-actions">
+              <button
+                className="sp-modal-cancel"
+                onClick={() => {
+                  setShowModal(false)
+                  setSubmitMessage('')
+                  setSubmitError('')
+                  setSubmitFile(null)
+                  setSubmitTitle('')
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="sp-modal-submit"
+                onClick={handleSubmitPaper}
+                disabled={submitLoading}
+              >
+                {submitLoading ? 'Submitting...' : 'Submit Draft'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
