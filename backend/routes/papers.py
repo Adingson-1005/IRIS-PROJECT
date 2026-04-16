@@ -6,6 +6,7 @@ from services.inverted_index import build_index
 import os
 import shutil
 import uuid
+from fastapi.responses import FileResponse
 
 router = APIRouter()
 
@@ -62,7 +63,9 @@ def upload_paper(
 def list_papers(db: Session = Depends(get_db)):
     try:
         papers = db.execute(text("""
-            SELECT id, title, authors, category, methodology, year, created_at
+            SELECT id, title, authors, abstract, category, methodology,
+                   year, file_url, created_at,
+                   COALESCE(downloads, 0) as downloads
             FROM papers
             ORDER BY created_at DESC
         """)).fetchall()
@@ -102,5 +105,46 @@ def delete_paper(paper_id: str, db: Session = Depends(get_db)):
         db.commit()
         return {"message": "Paper deleted successfully"}
 
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@router.get("/download/{paper_id}")
+def download_paper(paper_id: str, db: Session = Depends(get_db)):
+    try:
+        paper = db.execute(
+            text("SELECT * FROM papers WHERE id = :id"),
+            {"id": paper_id}
+        ).fetchone()
+
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
+
+        file_path = paper.file_url
+
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on server")
+
+        db.execute(
+            text("UPDATE papers SET downloads = COALESCE(downloads, 0) + 1 WHERE id = :id"),
+            {"id": paper_id}
+        )
+        db.execute(text("""
+            INSERT INTO search_logs (keyword, results_count)
+            VALUES (:keyword, :count)
+        """), {
+            "keyword": f"DOWNLOAD: {paper.title}",
+            "count": 1
+        })
+        db.commit()
+
+        return FileResponse(
+            path=file_path,
+            filename=f"{paper.title}.pdf",
+            media_type="application/pdf"
+        )
+
+    except HTTPException:
+        raise
     except Exception as e:
         return {"error": str(e)}

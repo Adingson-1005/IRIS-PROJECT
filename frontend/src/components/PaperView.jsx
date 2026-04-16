@@ -10,6 +10,31 @@ function PaperView({ paper, onClose }) {
     ? paper.authors.split(',').map(a => a.trim()).filter(Boolean)
     : []
 
+  const handleDownload = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const paperId = paper.paper_id || paper.id
+      const response = await fetch(
+        `http://127.0.0.1:8000/papers/download/${paperId}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      )
+      if (!response.ok) throw new Error('Download failed')
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${paper.title}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (err) {
+      alert('Download failed. The file may not be available.')
+    }
+  }
+
   return (
     <div className="pv-overlay" onClick={onClose}>
       <div className="pv-modal" onClick={(e) => e.stopPropagation()}>
@@ -23,14 +48,12 @@ function PaperView({ paper, onClose }) {
             <span>View Paper</span>
           </div>
           <div className="pv-topbar-actions">
-            <a
-              className="pv-btn-outline"
-              href={`http://127.0.0.1:8000/${paper.file_url}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Download PDF
-            </a>
+                      <button
+            className="pv-btn-outline"
+            onClick={() => handleDownload()}
+          >
+            Download PDF
+          </button>
             <button className="pv-close-x" onClick={onClose}>✕</button>
           </div>
         </div>
@@ -81,16 +104,20 @@ function PaperView({ paper, onClose }) {
           </div>
 
           <div className="pv-right">
-            <div className="pv-stats-card">
-              <div className="pv-stat">
-                <span className="pv-stat-number">—</span>
-                <span className="pv-stat-label">VIEWS</span>
-              </div>
-              <div className="pv-stat">
-                <span className="pv-stat-number">—</span>
-                <span className="pv-stat-label">LIKES</span>
-              </div>
+                      <div className="pv-stats-card">
+            <div className="pv-stat">
+              <span className="pv-stat-number">
+                {paper.downloads || 0}
+              </span>
+              <span className="pv-stat-label">DOWNLOADS</span>
             </div>
+            <div className="pv-stat">
+              <span className="pv-stat-number">
+                {paper.year || '—'}
+              </span>
+              <span className="pv-stat-label">YEAR</span>
+            </div>
+          </div>
 
             <div className="pv-details-card">
               <h4 className="pv-details-title">Document Details</h4>
