@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import UploadPaper from './UploadPaper'
 import MyUploads from './MyUploads'
 import BrowseRepository from './BrowseRepository'
 import '../css/InstructorDashboard.css'
@@ -8,7 +7,7 @@ import '../css/InstructorDashboard.css'
 function InstructorDashboard() {
   const navigate = useNavigate()
   const full_name = localStorage.getItem('full_name')
-  const [activePage, setActivePage] = useState('upload')
+  const [activePage, setActivePage] = useState('uploads')
 
   const handleLogout = () => {
     localStorage.clear()
@@ -16,14 +15,12 @@ function InstructorDashboard() {
   }
 
   const navItems = [
-    { key: 'upload',  label: 'Upload Research Paper' },
     { key: 'uploads', label: 'My Uploads' },
     { key: 'browse',  label: 'Main Repository' },
   ]
 
   const renderContent = () => {
     switch (activePage) {
-      case 'upload':  return <UploadPaper />
       case 'uploads': return <MyUploads />
       case 'browse':  return <BrowseRepository />
       default:        return null

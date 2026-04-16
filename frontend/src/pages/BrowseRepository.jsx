@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import '../css/BrowseRepository.css'
+import PaperView from '../components/PaperView'
 
 function BrowseRepository() {
   const [papers, setPapers] = useState([])
@@ -93,19 +94,10 @@ function BrowseRepository() {
       </div>
 
       {selectedPaper && (
-        <div className="browse-modal-overlay" onClick={() => setSelectedPaper(null)}>
-          <div className="browse-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="browse-modal-title">{selectedPaper.title}</h3>
-            <p><strong>Authors:</strong> {selectedPaper.authors}</p>
-            <p><strong>Category:</strong> {selectedPaper.category}</p>
-            <p><strong>Methodology:</strong> {selectedPaper.methodology}</p>
-            <p><strong>Year:</strong> {selectedPaper.year}</p>
-            {selectedPaper.abstract && (
-              <p><strong>Abstract:</strong> {selectedPaper.abstract}</p>
-            )}
-            <button className="browse-modal-close" onClick={() => setSelectedPaper(null)}>Close</button>
-          </div>
-        </div>
+        <PaperView
+          paper={selectedPaper}
+          onClose={() => setSelectedPaper(null)}
+        />
       )}
     </div>
   )

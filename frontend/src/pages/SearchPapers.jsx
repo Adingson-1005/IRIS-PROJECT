@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import '../css/SearchPapers.css'
+import PaperView from '../components/PaperView'
 
 function SearchPapers() {
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ function SearchPapers() {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [submitMessage, setSubmitMessage] = useState('')
   const [submitError, setSubmitError] = useState('')
+  const [selectedPaper, setSelectedPaper] = useState(null)
 
   useEffect(() => { fetchAllPapers() }, [])
 
@@ -222,7 +224,7 @@ function SearchPapers() {
           {displayPapers.map((paper) => {
             const id = paper.paper_id || paper.id
             return (
-              <div key={id} className="sp-card">
+              <div key={id} className="sp-card" onClick={() => setSelectedPaper(paper)} style={{ cursor: 'pointer' }}>
                 <h3 className="sp-card-title">{paper.title}</h3>
                 <p className="sp-card-authors">{paper.authors}</p>
                 <div className="sp-tags">
@@ -299,6 +301,13 @@ function SearchPapers() {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedPaper && (
+        <PaperView
+          paper={selectedPaper}
+          onClose={() => setSelectedPaper(null)}
+        />
       )}
     </div>
   )

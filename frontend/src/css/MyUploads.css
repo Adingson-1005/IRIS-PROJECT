@@ -112,3 +112,164 @@
   width: 250px;
   outline: none;
 }
+
+/* Modal myuploads styles */ 
+.myuploads-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.myuploads-new-btn {
+  padding: 9px 18px;
+  background-color: #0e9f6e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.myuploads-new-btn:hover {
+  background-color: #047857;
+}
+
+.myuploads-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.myuploads-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.myuploads-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.myuploads-modal-title {
+  font-size: 20px;
+  color: #1a1a2e;
+}
+
+.myuploads-modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.myuploads-modal-close-btn:hover {
+  color: #333;
+}
+
+.myuploads-modal-field {
+  margin-bottom: 14px;
+}
+
+.myuploads-modal-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.myuploads-modal-field input,
+.myuploads-modal-field textarea,
+.myuploads-modal-field select {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+.myuploads-modal-row {
+  display: flex;
+  gap: 14px;
+}
+
+.myuploads-modal-row .myuploads-modal-field {
+  flex: 1;
+}
+
+.myuploads-modal-filename {
+  font-size: 12px;
+  color: #0e9f6e;
+  margin-top: 4px;
+}
+
+.myuploads-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.myuploads-modal-cancel {
+  flex: 1;
+  padding: 11px;
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.myuploads-modal-submit {
+  flex: 1;
+  padding: 11px;
+  background-color: #0e9f6e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.myuploads-modal-submit:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.myuploads-modal-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.myuploads-modal-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}

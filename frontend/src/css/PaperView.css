@@ -1,0 +1,329 @@
+.pv-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 16px;
+}
+
+.pv-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 980px;
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.pv-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 28px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  border-radius: 16px 16px 0 0;
+}
+
+.pv-breadcrumb {
+  font-size: 13px;
+  color: #888;
+}
+
+.pv-breadcrumb-link {
+  color: #0e9f6e;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.pv-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.pv-breadcrumb-sep {
+  margin: 0 6px;
+  color: #ccc;
+}
+
+.pv-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pv-btn-outline {
+  padding: 8px 16px;
+  background-color: #0e9f6e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.pv-btn-outline:hover {
+  background-color: #047857;
+}
+
+.pv-close-x {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.pv-close-x:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.pv-body {
+  display: flex;
+  gap: 28px;
+  padding: 28px;
+  flex: 1;
+}
+
+.pv-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.pv-right {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pv-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.pv-category-tag {
+  background-color: #ede9fe;
+  color: #5b21b6;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.pv-year-tag {
+  background-color: #f0f4f8;
+  color: #555;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.pv-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.pv-authors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.pv-author-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pv-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #1a56db;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pv-author-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pv-author-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+}
+
+.pv-author-role {
+  font-size: 11px;
+  color: #888;
+}
+
+.pv-abstract-section {
+  margin-bottom: 20px;
+}
+
+.pv-abstract-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0e9f6e;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.pv-abstract-text {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.75;
+}
+
+.pv-keywords-section {
+  margin-top: 8px;
+}
+
+.pv-keywords-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.pv-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pv-keyword {
+  background-color: #f0f4f8;
+  color: #555;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.pv-stats-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+}
+
+.pv-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pv-stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.pv-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 1px;
+}
+
+.pv-details-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pv-details-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 14px;
+}
+
+.pv-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid #f5f5f5;
+  gap: 8px;
+}
+
+.pv-detail-row:last-child {
+  border-bottom: none;
+}
+
+.pv-detail-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}
+
+.pv-detail-value {
+  font-size: 13px;
+  color: #333;
+  text-align: right;
+}
+
+.pv-access-badge {
+  background-color: #d1fae5;
+  color: #065f46;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 680px) {
+  .pv-body {
+    flex-direction: column;
+    padding: 20px 16px;
+  }
+  .pv-right {
+    width: 100%;
+  }
+  .pv-title {
+    font-size: 18px;
+  }
+}
