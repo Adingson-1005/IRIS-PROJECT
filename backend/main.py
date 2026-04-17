@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from database import engine
 from sqlalchemy import text
-from routes import auth, papers, search
+from routes import auth, papers, search, analytics
 import os
 
 app = FastAPI()
@@ -21,6 +21,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(papers.router, prefix="/papers", tags=["papers"])
 app.include_router(search.router, prefix="/search", tags=["search"])
+app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 
 @app.get("/")
 def root():

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ManagePapers from './ManagePapers'
-import BrowseRepository from './BrowseRepository'
+import Analytics from './Analytics'
 import '../css/AdminDashboard.css'
 
 function AdminDashboard() {
   const navigate = useNavigate()
   const full_name = localStorage.getItem('full_name')
-  const [activePage, setActivePage] = useState('users')
+  const [activePage, setActivePage] = useState('papers')
 
   const handleLogout = () => {
     localStorage.clear()
@@ -15,15 +15,15 @@ function AdminDashboard() {
   }
 
   const navItems = [
-    { key: 'users',   label: 'Manage Users' },
-    { key: 'papers',  label: 'Manage Papers' },
+    { key: 'papers',    label: 'Manage Papers' },
     { key: 'analytics', label: 'Analytics' },
+    { key: 'users',     label: 'Manage Users' },
   ]
 
   const renderContent = () => {
     switch (activePage) {
       case 'papers':    return <ManagePapers />
-      case 'analytics': return <div className="admin-placeholder">Analytics coming soon.</div>
+      case 'analytics': return <Analytics />
       default:          return <div className="admin-placeholder">User management coming soon.</div>
     }
   }
@@ -35,7 +35,6 @@ function AdminDashboard() {
           <h1>IRIS</h1>
           <p>Admin Panel</p>
         </div>
-
         <nav className="sidebar-nav">
           {navItems.map((item) => (
             <button
@@ -47,13 +46,11 @@ function AdminDashboard() {
             </button>
           ))}
         </nav>
-
         <div className="sidebar-footer">
           <span className="admin-name">Welcome, {full_name}</span>
           <button className="admin-logout" onClick={handleLogout}>Logout</button>
         </div>
       </aside>
-
       <main className="admin-main">
         {renderContent()}
       </main>
