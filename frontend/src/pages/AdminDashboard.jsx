@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import ManagePapers from './ManagePapers'
 import Analytics from './Analytics'
 import '../css/AdminDashboard.css'
+import ManageUsers from './ManageUsers'
 
 function AdminDashboard() {
   const navigate = useNavigate()
@@ -24,7 +25,8 @@ function AdminDashboard() {
     switch (activePage) {
       case 'papers':    return <ManagePapers />
       case 'analytics': return <Analytics />
-      default:          return <div className="admin-placeholder">User management coming soon.</div>
+      case 'users':    return <ManageUsers />
+      default:          return <ManageUsers />
     }
   }
 

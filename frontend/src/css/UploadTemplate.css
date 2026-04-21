@@ -1,0 +1,197 @@
+.ut-container {
+  width: 100%;
+  max-width: 680px;
+}
+
+.ut-heading {
+  font-size: 22px;
+  color: #1a1a2e;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.ut-current-card {
+  background: white;
+  border: 2px solid #d1fae5;
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ut-current-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #0e9f6e;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ut-current-info {
+  flex: 1;
+}
+
+.ut-current-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 2px;
+}
+
+.ut-current-date {
+  font-size: 13px;
+  color: #888;
+}
+
+.ut-active-badge {
+  background-color: #d1fae5;
+  color: #065f46;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.ut-no-template {
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-size: 14px;
+  color: #92400e;
+  margin-bottom: 24px;
+}
+
+.ut-upload-card {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.ut-upload-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.ut-upload-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.ut-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.ut-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.ut-file-field {
+  margin-bottom: 20px;
+}
+
+.ut-file-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 8px;
+}
+
+.ut-file-field input {
+  width: 100%;
+  font-size: 14px;
+}
+
+.ut-filename {
+  font-size: 12px;
+  color: #0e9f6e;
+  margin-top: 6px;
+}
+
+.ut-submit {
+  width: 100%;
+  padding: 12px;
+  background-color: #0e9f6e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ut-submit:hover {
+  background-color: #047857;
+}
+
+.ut-submit:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.ut-loading {
+  padding: 40px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+.ut-owner-note {
+  font-size: 12px;
+  color: #0e9f6e;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.ut-locked-card {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 32px 28px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.ut-locked-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.ut-locked-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.ut-locked-desc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  max-width: 400px;
+  margin: 0 auto;
+}

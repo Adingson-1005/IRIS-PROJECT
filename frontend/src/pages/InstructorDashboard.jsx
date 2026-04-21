@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MyUploads from './MyUploads'
 import BrowseRepository from './BrowseRepository'
+import UploadTemplate from './UploadTemplate'
 import '../css/InstructorDashboard.css'
 
 function InstructorDashboard() {
@@ -15,15 +16,17 @@ function InstructorDashboard() {
   }
 
   const navItems = [
-    { key: 'uploads', label: 'My Uploads' },
-    { key: 'browse',  label: 'Main Repository' },
+    { key: 'uploads',  label: 'My Uploads' },
+    { key: 'browse',   label: 'Main Repository' },
+    { key: 'template', label: 'Research Template' },
   ]
 
   const renderContent = () => {
     switch (activePage) {
-      case 'uploads': return <MyUploads />
-      case 'browse':  return <BrowseRepository />
-      default:        return null
+      case 'uploads':  return <MyUploads />
+      case 'browse':   return <BrowseRepository />
+      case 'template': return <UploadTemplate />
+      default:         return <MyUploads />
     }
   }
 
@@ -34,7 +37,6 @@ function InstructorDashboard() {
           <h1>IRIS</h1>
           <p>Instructor Panel</p>
         </div>
-
         <nav className="sidebar-nav">
           {navItems.map((item) => (
             <button
@@ -46,13 +48,11 @@ function InstructorDashboard() {
             </button>
           ))}
         </nav>
-
         <div className="sidebar-footer">
           <span className="instructor-name">Welcome, {full_name}</span>
           <button className="instructor-logout" onClick={handleLogout}>Logout</button>
         </div>
       </aside>
-
       <main className="instructor-main">
         {renderContent()}
       </main>

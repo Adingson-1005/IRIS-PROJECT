@@ -1,0 +1,345 @@
+.mu-container {
+  width: 100%;
+}
+
+.mu-heading {
+  font-size: 22px;
+  color: #1a1a2e;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.mu-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.mu-summary-card {
+  border-radius: 12px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.mu-summary-num {
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+}
+
+.mu-summary-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+
+.mu-total       { background-color: #1a56db; }
+.mu-students    { background-color: #7e3af2; }
+.mu-instructors { background-color: #0e9f6e; }
+.mu-admins      { background-color: #d97706; }
+
+.mu-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.mu-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mu-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.mu-filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mu-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  outline: none;
+  background: white;
+  color: #444;
+}
+
+.mu-search {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  outline: none;
+  width: 220px;
+}
+
+.mu-loading {
+  text-align: center;
+  color: #888;
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+.mu-empty {
+  text-align: center;
+  color: #aaa;
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+.mu-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.mu-table th {
+  background-color: #f0f4f8;
+  padding: 11px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: #444;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.mu-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.mu-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.mu-name {
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.mu-email {
+  color: #666;
+  font-size: 13px;
+}
+
+.mu-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+
+.mu-badge-admin {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.mu-badge-instructor {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.mu-badge-student {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
+.mu-protected {
+  font-size: 12px;
+  color: #aaa;
+  font-style: italic;
+}
+
+.mu-delete {
+  padding: 6px 14px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mu-delete:hover {
+  background-color: #fca5a5;
+}
+
+.mu-delete:disabled {
+  background-color: #aaa;
+  color: white;
+  cursor: not-allowed;
+}
+
+.mu-add-btn {
+  padding: 9px 18px;
+  background-color: #1a56db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mu-add-btn:hover {
+  background-color: #1447c0;
+}
+
+.mu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.mu-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.mu-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mu-modal-title {
+  font-size: 20px;
+  color: #1a1a2e;
+  font-weight: 600;
+}
+
+.mu-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.mu-modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.mu-modal-field {
+  margin-bottom: 16px;
+}
+
+.mu-modal-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.mu-modal-field input,
+.mu-modal-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.mu-modal-field input:focus,
+.mu-modal-field select:focus {
+  border-color: #1a56db;
+}
+
+.mu-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.mu-modal-cancel {
+  flex: 1;
+  padding: 11px;
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.mu-modal-cancel:hover {
+  background: #f5f5f5;
+}
+
+.mu-modal-submit {
+  flex: 1;
+  padding: 11px;
+  background-color: #1a56db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.mu-modal-submit:hover {
+  background-color: #1447c0;
+}
+
+.mu-modal-submit:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.mu-modal-success {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.mu-modal-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
