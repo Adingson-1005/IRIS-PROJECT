@@ -7,6 +7,7 @@ import os
 import shutil
 import uuid
 from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Header
 
 router = APIRouter()
 
@@ -22,9 +23,16 @@ def upload_paper(
     methodology: str = Form(...),
     year: int = Form(...),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    authorization: str = Header(...)
 ):
     try:
+        from jose import jwt
+        SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("sub")
+
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
@@ -35,8 +43,8 @@ def upload_paper(
             shutil.copyfileobj(file.file, buffer)
 
         result = db.execute(text("""
-            INSERT INTO papers (title, authors, abstract, category, methodology, year, file_url)
-            VALUES (:title, :authors, :abstract, :category, :methodology, :year, :file_url)
+            INSERT INTO papers (title, authors, abstract, category, methodology, year, file_url, uploaded_by)
+            VALUES (:title, :authors, :abstract, :category, :methodology, :year, :file_url, :uploaded_by)
             RETURNING id
         """), {
             "title": title,
@@ -45,7 +53,8 @@ def upload_paper(
             "category": category,
             "methodology": methodology,
             "year": year,
-            "file_url": file_path
+            "file_url": file_path,
+            "uploaded_by": user_id
         })
         db.commit()
 
@@ -69,6 +78,31 @@ def list_papers(db: Session = Depends(get_db)):
             FROM papers
             ORDER BY created_at DESC
         """)).fetchall()
+        return {"papers": [dict(row._mapping) for row in papers]}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/my-papers")
+def my_papers(
+    db: Session = Depends(get_db),
+    authorization: str = Header(...)
+):
+    try:
+        from jose import jwt
+        SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        user_id = payload.get("sub")
+
+        papers = db.execute(text("""
+            SELECT id, title, authors, abstract, category, methodology,
+                   year, file_url, created_at,
+                   COALESCE(downloads, 0) as downloads
+            FROM papers
+            WHERE uploaded_by = :user_id
+            ORDER BY created_at DESC
+        """), {"user_id": user_id}).fetchall()
+
         return {"papers": [dict(row._mapping) for row in papers]}
     except Exception as e:
         return {"error": str(e)}

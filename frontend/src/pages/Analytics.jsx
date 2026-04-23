@@ -102,7 +102,7 @@ function Analytics() {
 
         {/* Category Breakdown */}
         <div className="an-card">
-          <h3 className="an-card-title">Papers by Category</h3>
+          <h3 className="an-card-title">Papers by Strand</h3>
           {categories.length === 0 ? (
             <p className="an-empty">No papers yet.</p>
           ) : (

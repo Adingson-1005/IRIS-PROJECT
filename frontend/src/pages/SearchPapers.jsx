@@ -158,12 +158,10 @@ function SearchPapers() {
             onChange={(e) => setFilters({ ...filters, category: e.target.value })}
           >
             <option value="">All Categories</option>
-            <option value="Science">Science</option>
-            <option value="Technology">Technology</option>
-            <option value="Engineering">Engineering</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Humanities">Humanities</option>
-            <option value="Social Science">Social Science</option>
+            <option value="STEM">STEM</option>
+            <option value="HUMSS">HUMSS</option>
+            <option value="ABM">ABM</option>
+            <option value="GAS">GAS</option>
           </select>
 
           <select

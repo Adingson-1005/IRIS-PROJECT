@@ -23,7 +23,7 @@ function MyUploads() {
   const fetchPapers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://127.0.0.1:8000/papers/list', {
+      const response = await axios.get('http://127.0.0.1:8000/papers/my-papers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       setPapers(response.data.papers)
@@ -202,15 +202,13 @@ function MyUploads() {
 
             <div className="myuploads-modal-row">
               <div className="myuploads-modal-field">
-                <label>Category</label>
+                <label>Strand</label>
                 <select name="category" value={formData.category} onChange={handleChange}>
-                  <option value="">Select category</option>
-                  <option>Science</option>
-                  <option>Technology</option>
-                  <option>Engineering</option>
-                  <option>Mathematics</option>
-                  <option>Humanities</option>
-                  <option>Social Science</option>
+                  <option value="">Select strand</option>
+                  <option>STEM</option> 
+                  <option>HUMSS</option>
+                  <option>ABM</option>
+                  <option>GAS</option>
                 </select>
               </div>
               <div className="myuploads-modal-field">
