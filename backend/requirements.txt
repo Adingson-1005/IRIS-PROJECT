@@ -4,4 +4,6 @@ sqlalchemy
 PyMuPDF
 python-jose[cryptography]
 bcrypt
-python-dotenv 
+python-dotenv
+google-generativeai
+timeout 

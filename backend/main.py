@@ -5,7 +5,7 @@ from database import engine
 from sqlalchemy import text
 from routes import auth, papers, search, analytics, users
 import os
-from routes import auth, papers, search, analytics, users, templates
+from routes import auth, papers, search, analytics, users, templates, ai
 
 app = FastAPI()
 
@@ -25,6 +25,7 @@ app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(templates.router, prefix="/templates", tags=["templates"])
+app.include_router(ai.router, prefix="/ai", tags=["ai"])
 
 @app.get("/")
 def root():

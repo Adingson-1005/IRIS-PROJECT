@@ -3,6 +3,42 @@
   background-color: #f0f4f8;
 }
 
+/* Loading spinner for AI analysis */
+.sp-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.sp-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #7e3af2;
+  border-radius: 50%;
+  animation: sp-spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes sp-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.sp-loading-text {
+  font-size: 16px;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.sp-loading-subtext {
+  font-size: 13px;
+  color: #6b7280;
+}
+
 .sp-header {
   background-color: #7e3af2;
   padding: 14px 20px;
@@ -332,6 +368,97 @@
   border-radius: 8px;
   font-size: 14px;
   margin-bottom: 16px;
+} 
+
+.sp-modal-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.sp-modal-filename {
+  font-size: 12px;
+  color: #0e9f6e;
+  margin-top: 4px;
+}
+
+.sp-result-header {
+  margin-bottom: 20px;
+}
+
+.sp-result-header h2 {
+  font-size: 18px;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.sp-result-title {
+  font-size: 13px;
+  color: #888;
+}
+
+.sp-score-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  gap: 2px;
+}
+
+.sp-score-high { background-color: #d1fae5; border: 4px solid #0e9f6e; }
+.sp-score-mid  { background-color: #fef3c7; border: 4px solid #d97706; }
+.sp-score-low  { background-color: #fee2e2; border: 4px solid #e02424; }
+
+.sp-score-num {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.sp-score-label {
+  font-size: 10px;
+  color: #666;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.sp-feedback-box {
+  background-color: #f9fafb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.sp-feedback-section {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a56db;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.sp-feedback-item {
+  font-size: 13px;
+  color: #444;
+  margin-left: 8px;
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+
+.sp-feedback-text {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 4px;
 }
 
 /*--------- Responsive breakpoints ------------ */

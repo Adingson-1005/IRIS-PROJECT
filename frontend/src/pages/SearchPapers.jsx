@@ -78,31 +78,36 @@ function SearchPapers() {
     return true
   })
 
-  const handleSubmitPaper = async () => {
-    if (!submitFile) { setSubmitError('Please select a PDF file'); return }
-    if (!submitTitle.trim()) { setSubmitError('Please enter a title'); return }
-    setSubmitLoading(true)
-    setSubmitError('')
-    setSubmitMessage('')
-    try {
-      const data = new FormData()
-      data.append('title', submitTitle)
-      data.append('file', submitFile)
-      const token = localStorage.getItem('token')
-      await axios.post('http://127.0.0.1:8000/ai/submit-draft', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      setSubmitMessage('Draft submitted! AI feedback will appear here once built.')
-      setSubmitFile(null)
-      setSubmitTitle('')
-    } catch {
-      setSubmitError('Submission failed. Please try again.')
-    }
-    setSubmitLoading(false)
+  const [aiResult, setAiResult] = useState(null)
+
+const handleSubmitPaper = async () => {
+  if (!submitFile) { setSubmitError('Please select a PDF file'); return }
+  if (!submitTitle.trim()) { setSubmitError('Please enter a title'); return }
+  setSubmitLoading(true)
+  setSubmitError('')
+  setSubmitMessage('')
+  setAiResult(null)
+  try {
+    const data = new FormData()
+    data.append('title', submitTitle)
+    data.append('file', submitFile)
+    const token = localStorage.getItem('token')
+    const response = await axios.post('http://127.0.0.1:8000/ai/submit-draft', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    setAiResult(response.data)
+    setSubmitFile(null)
+    setSubmitTitle('')
+  } catch (err) {
+    setSubmitError(
+      err.response?.data?.detail || 'Submission failed. Please try again.'
+    )
   }
+  setSubmitLoading(false)
+}
 
   const displayPapers = mode === 'search'
     ? searchResults
@@ -245,61 +250,119 @@ function SearchPapers() {
       </div>
 
       {showModal && (
-        <div className="sp-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="sp-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Submit Research Draft</h2>
+  <div className="sp-modal-overlay" onClick={() => {
+    setShowModal(false)
+    setSubmitMessage('')
+    setSubmitError('')
+    setSubmitFile(null)
+    setSubmitTitle('')
+    setAiResult(null)
+  }}>
+    <div className="sp-modal" onClick={(e) => e.stopPropagation()}>
 
-            {submitMessage && <p className="sp-modal-success">{submitMessage}</p>}
-            {submitError && <p className="sp-modal-error">{submitError}</p>}
+      {!aiResult ? (
+        <>
+          <h2>Submit Research Draft</h2>
+          <p className="sp-modal-desc">
+            Upload your draft PDF and the AI will compare it against
+            the instructor's template and give you a score with suggestions.
+          </p>
 
-            <div className="sp-modal-field">
-              <label>Title of your paper</label>
-              <input
-                type="text"
-                placeholder="Enter your paper title"
-                value={submitTitle}
-                onChange={(e) => setSubmitTitle(e.target.value)}
-              />
-            </div>
+          {submitError && <p className="sp-modal-error">{submitError}</p>}
 
-            <div className="sp-modal-field">
-              <label>Upload your draft (PDF)</label>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setSubmitFile(e.target.files[0])}
-              />
-              {submitFile && (
-                <p style={{ fontSize: '12px', color: '#0e9f6e', marginTop: '4px' }}>
-                  Selected: {submitFile.name}
-                </p>
-              )}
-            </div>
-
-            <div className="sp-modal-actions">
-              <button
-                className="sp-modal-cancel"
-                onClick={() => {
-                  setShowModal(false)
-                  setSubmitMessage('')
-                  setSubmitError('')
-                  setSubmitFile(null)
-                  setSubmitTitle('')
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="sp-modal-submit"
-                onClick={handleSubmitPaper}
-                disabled={submitLoading}
-              >
-                {submitLoading ? 'Submitting...' : 'Submit Draft'}
-              </button>
-            </div>
+          <div className="sp-modal-field">
+            <label>Title of your paper</label>
+            <input
+              type="text"
+              placeholder="Enter your paper title"
+              value={submitTitle}
+              onChange={(e) => setSubmitTitle(e.target.value)}
+            />
           </div>
-        </div>
+
+          <div className="sp-modal-field">
+            <label>Upload your draft (PDF)</label>
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => setSubmitFile(e.target.files[0])}
+            />
+            {submitFile && (
+              <p className="sp-modal-filename">Selected: {submitFile.name}</p>
+            )}
+          </div>
+
+          <div className="sp-modal-actions">
+            <button
+              className="sp-modal-cancel"
+              onClick={() => {
+                setShowModal(false)
+                setSubmitError('')
+                setSubmitFile(null)
+                setSubmitTitle('')
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="sp-modal-submit"
+              onClick={handleSubmitPaper}
+              disabled={submitLoading}
+            >
+              {submitLoading ? 'Analyzing...' : 'Submit for AI Review'}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="sp-result-header">
+            <h2>AI Feedback Results</h2>
+            <p className="sp-result-title">{aiResult.title}</p>
+          </div>
+
+          <div className={`sp-score-circle ${
+            aiResult.score >= 75 ? 'sp-score-high' :
+            aiResult.score >= 50 ? 'sp-score-mid' : 'sp-score-low'
+          }`}>
+            <span className="sp-score-num">{aiResult.score}%</span>
+            <span className="sp-score-label">Accuracy Score</span>
+          </div>
+
+          <div className="sp-feedback-box">
+            {aiResult.feedback.split('\n').map((line, i) => {
+              if (line.startsWith('SCORE:')) return null
+              if (line.startsWith('STRENGTHS:') ||
+                  line.startsWith('MISSING OR INCOMPLETE:') ||
+                  line.startsWith('SUGGESTIONS:') ||
+                  line.startsWith('OVERALL FEEDBACK:')) {
+                return <p key={i} className="sp-feedback-section">{line}</p>
+              }
+              if (line.startsWith('- ')) {
+                return <p key={i} className="sp-feedback-item">{line}</p>
+              }
+              if (line.trim()) {
+                return <p key={i} className="sp-feedback-text">{line}</p>
+              }
+              return null
+            })}
+          </div>
+
+          <button
+            className="sp-modal-submit"
+            onClick={() => {
+              setAiResult(null)
+              setShowModal(false)
+              setSubmitTitle('')
+              setSubmitFile(null)
+            }}
+          >
+            Done
+          </button>
+        </>
       )}
+    </div>
+  </div>
+)}
 
       {selectedPaper && (
         <PaperView
