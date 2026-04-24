@@ -293,25 +293,33 @@ const handleSubmitPaper = async () => {
           </div>
 
           <div className="sp-modal-actions">
-            <button
-              className="sp-modal-cancel"
-              onClick={() => {
-                setShowModal(false)
-                setSubmitError('')
-                setSubmitFile(null)
-                setSubmitTitle('')
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              className="sp-modal-submit"
-              onClick={handleSubmitPaper}
-              disabled={submitLoading}
-            >
-              {submitLoading ? 'Analyzing...' : 'Submit for AI Review'}
-            </button>
-          </div>
+  <button
+    className="sp-modal-cancel"
+    onClick={() => {
+      setShowModal(false)
+      setSubmitError('')
+      setSubmitFile(null)
+      setSubmitTitle('')
+    }}
+    disabled={submitLoading}
+  >
+    Cancel
+  </button>
+  <button
+    className="sp-modal-submit"
+    onClick={handleSubmitPaper}
+    disabled={submitLoading}
+  >
+    {submitLoading ? 'Analyzing...' : 'Submit for AI Review'}
+  </button>
+</div>
+
+{submitLoading && (
+  <div className="sp-analyzing">
+    <div className="sp-spinner"></div>
+    <p>AI is analyzing your paper. This may take 15–30 seconds...</p>
+  </div>
+)}
         </>
       ) : (
         <>

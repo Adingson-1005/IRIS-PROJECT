@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from database import engine
 from sqlalchemy import text
-from routes import auth, papers, search, analytics, users
 import os
 from routes import auth, papers, search, analytics, users, templates, ai
 

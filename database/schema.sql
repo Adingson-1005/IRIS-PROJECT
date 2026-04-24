@@ -35,4 +35,17 @@ CREATE TABLE search_logs (
     keyword VARCHAR(255) NOT NULL,
     results_count INTEGER NOT NULL,
     searched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Student submissions table (AI checker results)
+CREATE TABLE student_submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    template_id VARCHAR(100) NOT NULL,
+    file_url VARCHAR(500) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    score INTEGER,
+    feedback TEXT,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ); 
