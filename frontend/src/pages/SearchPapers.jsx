@@ -340,9 +340,10 @@ const handleSubmitPaper = async () => {
             {aiResult.feedback.split('\n').map((line, i) => {
               if (line.startsWith('SCORE:')) return null
               if (line.startsWith('STRENGTHS:') ||
-                  line.startsWith('MISSING OR INCOMPLETE:') ||
-                  line.startsWith('SUGGESTIONS:') ||
-                  line.startsWith('OVERALL FEEDBACK:')) {
+              line.startsWith('MISSING OR INCOMPLETE:') ||
+              line.startsWith('SUGGESTIONS:') ||
+              line.startsWith('OVERALL FEEDBACK:') ||
+              line.startsWith('DOCUMENT TYPE:')) {
                 return <p key={i} className="sp-feedback-section">{line}</p>
               }
               if (line.startsWith('- ')) {
