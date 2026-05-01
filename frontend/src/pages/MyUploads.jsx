@@ -23,7 +23,7 @@ function MyUploads() {
   const fetchPapers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://127.0.0.1:8000/papers/my-papers', {
+      const response = await axios.get('https://iris-backend-7717.onrender.com/papers/my-papers', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       setPapers(response.data.papers)
@@ -39,7 +39,7 @@ function MyUploads() {
     setDeleting(paperId)
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(`http://127.0.0.1:8000/papers/delete/${paperId}`, {
+      await axios.delete(`https://iris-backend-7717.onrender.com/papers/delete/${paperId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       setPapers(papers.filter(p => p.id !== paperId))
@@ -64,7 +64,7 @@ function MyUploads() {
       Object.entries(formData).forEach(([k, v]) => data.append(k, v))
       data.append('file', file)
       const token = localStorage.getItem('token')
-      await axios.post('http://127.0.0.1:8000/papers/upload', data, {
+      await axios.post('https://iris-backend-7717.onrender.com/papers/upload', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

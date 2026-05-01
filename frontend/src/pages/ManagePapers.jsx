@@ -18,7 +18,7 @@ function ManagePapers() {
   const fetchPapers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://127.0.0.1:8000/papers/list', {
+      const response = await axios.get('https://iris-backend-7717.onrender.com/papers/list', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setPapers(response.data.papers)
@@ -37,7 +37,7 @@ function ManagePapers() {
     setDeleting(paperId)
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(`http://127.0.0.1:8000/papers/delete/${paperId}`, {
+      await axios.delete(`https://iris-backend-7717.onrender.com/papers/delete/${paperId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setPapers(papers.filter(p => p.id !== paperId))

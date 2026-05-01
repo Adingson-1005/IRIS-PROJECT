@@ -15,7 +15,7 @@ function PaperView({ paper, onClose }) {
       const token = localStorage.getItem('token')
       const paperId = paper.paper_id || paper.id
       const response = await fetch(
-        `http://127.0.0.1:8000/papers/download/${paperId}`,
+        `https://iris-backend-7717.onrender.com/papers/download/${paperId}`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }

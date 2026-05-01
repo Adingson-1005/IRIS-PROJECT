@@ -17,10 +17,10 @@ function Analytics() {
       const headers = { Authorization: `Bearer ${token}` }
 
       const [s, ts, td, cat] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/analytics/summary', { headers }),
-        axios.get('http://127.0.0.1:8000/analytics/top-searches', { headers }),
-        axios.get('http://127.0.0.1:8000/analytics/top-downloads', { headers }),
-        axios.get('http://127.0.0.1:8000/analytics/category-breakdown', { headers }),
+        axios.get('https://iris-backend-7717.onrender.com/analytics/summary', { headers }),
+        axios.get('https://iris-backend-7717.onrender.com/analytics/top-searches', { headers }),
+        axios.get('https://iris-backend-7717.onrender.com/analytics/top-downloads', { headers }),
+        axios.get('https://iris-backend-7717.onrender.com/analytics/category-breakdown', { headers }),
       ])
 
       setSummary(s.data)

@@ -21,7 +21,7 @@ function ManageUsers() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://127.0.0.1:8000/users/list', {
+      const response = await axios.get('https://iris-backend-7717.onrender.com/users/list', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setUsers(response.data.users)
@@ -43,7 +43,7 @@ function ManageUsers() {
     setDeleting(userId)
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(`http://127.0.0.1:8000/users/delete/${userId}`, {
+      await axios.delete(`https://iris-backend-7717.onrender.com/users/delete/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setUsers(users.filter(u => u.id !== userId))
@@ -63,7 +63,7 @@ function ManageUsers() {
     setAddError('')
     setAddMessage('')
     try {
-      await axios.post('http://127.0.0.1:8000/auth/register', {
+      await axios.post('https://iris-backend-7717.onrender.com/auth/register', {
         full_name: formData.full_name,
         email: formData.email,
         password: formData.password,

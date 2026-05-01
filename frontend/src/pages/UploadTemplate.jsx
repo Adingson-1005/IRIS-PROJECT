@@ -16,7 +16,7 @@ function UploadTemplate() {
   const fetchCurrentTemplate = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://127.0.0.1:8000/templates/current', {
+      const response = await axios.get('https://iris-backend-7717.onrender.com/templates/current', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setCurrentTemplate(response.data.template)
@@ -36,7 +36,7 @@ function UploadTemplate() {
       const data = new FormData()
       data.append('file', file)
       const token = localStorage.getItem('token')
-      await axios.post('http://127.0.0.1:8000/templates/upload', data, {
+      await axios.post('https://iris-backend-7717.onrender.com/templates/upload', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`

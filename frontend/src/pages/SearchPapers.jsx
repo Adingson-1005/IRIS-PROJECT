@@ -27,7 +27,7 @@ function SearchPapers() {
   const fetchAllPapers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://127.0.0.1:8000/papers/list', {
+      const response = await axios.get('https://iris-backend-7717.onrender.com/papers/list', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAllPapers(response.data.papers)
@@ -47,7 +47,7 @@ function SearchPapers() {
       if (filters.category) params.category = filters.category
       if (filters.methodology) params.methodology = filters.methodology
       if (filters.year) params.year = filters.year
-      const response = await axios.get('http://127.0.0.1:8000/search/', {
+      const response = await axios.get('https://iris-backend-7717.onrender.com/search/', {
         params,
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -92,7 +92,7 @@ const handleSubmitPaper = async () => {
     data.append('title', submitTitle)
     data.append('file', submitFile)
     const token = localStorage.getItem('token')
-    const response = await axios.post('http://127.0.0.1:8000/ai/submit-draft', data, {
+    const response = await axios.post('https://iris-backend-7717.onrender.com/ai/submit-draft', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
