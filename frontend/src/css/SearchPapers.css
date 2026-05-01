@@ -1,44 +1,10 @@
+/* ── Container ── */
 .sp-container {
   min-height: 100vh;
   background-color: #f0f4f8;
 }
 
-/* Loading spinner for AI analysis */
-.sp-loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-}
-
-.sp-loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #7e3af2;
-  border-radius: 50%;
-  animation: sp-spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes sp-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.sp-loading-text {
-  font-size: 16px;
-  color: #374151;
-  margin-bottom: 8px;
-}
-
-.sp-loading-subtext {
-  font-size: 13px;
-  color: #6b7280;
-}
-
+/* ── Header ── */
 .sp-header {
   background-color: #7e3af2;
   padding: 14px 20px;
@@ -88,18 +54,19 @@
   background-color: #d1fae5;
 }
 
+/* ── Body ── */
 .sp-body {
   padding: 20px 16px;
-  max-width: 860px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
+/* ── Search row ── */
 .sp-search-row {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
   align-items: center;
-  flex-wrap: wrap;
 }
 
 .sp-input {
@@ -149,6 +116,7 @@
   background: #f5f5f5;
 }
 
+/* ── Filters ── */
 .sp-filters {
   display: flex;
   gap: 8px;
@@ -174,6 +142,7 @@
   flex: 0 0 100px;
 }
 
+/* ── Status bar ── */
 .sp-status-bar {
   margin-bottom: 14px;
 }
@@ -188,6 +157,7 @@
   font-style: italic;
 }
 
+/* ── Error & empty ── */
 .sp-error {
   background-color: #fee2e2;
   color: #991b1b;
@@ -207,62 +177,128 @@
   font-size: 14px;
 }
 
-.sp-results {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ── Card grid ── */
+.sp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
 }
 
 .sp-card {
   background: white;
   border-radius: 12px;
-  border: 1px solid #eee;
   padding: 18px 16px;
-}
-
-.sp-card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 4px;
-  line-height: 1.4;
-}
-
-.sp-card-authors {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 10px;
-}
-
-.sp-tags {
+  border: 1px solid #eee;
+  cursor: pointer;
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 10px;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 
-.sp-tag {
+.sp-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+.sp-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sp-strand-badge {
   background-color: #ede9fe;
   color: #5b21b6;
-  font-size: 11px;
-  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
   border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.sp-card-year {
+  font-size: 12px;
+  color: #aaa;
   font-weight: 500;
 }
 
-.sp-card-abstract {
-  font-size: 13px;
-  color: #555;
-  line-height: 1.65;
+.sp-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.sp-score {
+.sp-card-authors-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sp-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #7e3af2;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sp-author-name {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-card-abstract {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.sp-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #f5f5f5;
+}
+
+.sp-method-badge {
+  background-color: #d1fae5;
+  color: #065f46;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
+.sp-relevance-score {
   font-size: 11px;
   color: #aaa;
-  margin-top: 8px;
 }
 
-/* Submit modal overlay */
+/* ── Submit modal ── */
 .sp-modal-overlay {
   position: fixed;
   inset: 0;
@@ -286,8 +322,15 @@
 
 .sp-modal h2 {
   font-size: 18px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   color: #1a1a2e;
+}
+
+.sp-modal-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+  line-height: 1.6;
 }
 
 .sp-modal-field {
@@ -302,20 +345,20 @@
   margin-bottom: 6px;
 }
 
-.sp-modal-field input,
-.sp-modal-field textarea {
+.sp-modal-field input {
   width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 14px;
   outline: none;
-  font-family: 'Segoe UI', sans-serif;
   box-sizing: border-box;
 }
 
-.sp-modal-field textarea {
-  resize: vertical;
+.sp-modal-filename {
+  font-size: 12px;
+  color: #0e9f6e;
+  margin-top: 4px;
 }
 
 .sp-modal-actions {
@@ -352,15 +395,6 @@
   cursor: pointer;
 }
 
-.sp-modal-success {
-  background-color: #d1fae5;
-  color: #065f46;
-  padding: 12px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  margin-bottom: 16px;
-}
-
 .sp-modal-error {
   background-color: #fee2e2;
   color: #991b1b;
@@ -368,21 +402,34 @@
   border-radius: 8px;
   font-size: 14px;
   margin-bottom: 16px;
-} 
+}
 
-.sp-modal-desc {
-  font-size: 13px;
+/* ── AI analyzing spinner ── */
+.sp-analyzing {
+  text-align: center;
+  padding: 20px 0 8px;
   color: #666;
-  margin-bottom: 16px;
-  line-height: 1.6;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
-.sp-modal-filename {
-  font-size: 12px;
-  color: #0e9f6e;
-  margin-top: 4px;
+.sp-spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #ede9fe;
+  border-top-color: #7e3af2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── AI results ── */
 .sp-result-header {
   margin-bottom: 20px;
 }
@@ -461,73 +508,16 @@
   margin-bottom: 4px;
 }
 
-.sp-analyzing {
-  text-align: center;
-  padding: 20px 0 8px;
-  color: #666;
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.sp-spinner {
-  width: 36px;
-  height: 36px;
-  border: 4px solid #ede9fe;
-  border-top-color: #7e3af2;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/*--------- Responsive breakpoints ------------ */
+/* ── Responsive ── */
 @media (max-width: 600px) {
-  .sp-header-title {
-    font-size: 15px;
-  }
-
-  .sp-body {
-    padding: 16px 12px;
-  }
-
-  .sp-search-row {
-    flex-wrap: nowrap;
-  }
-
-  .sp-input {
-    font-size: 13px;
-    padding: 10px 12px;
-  }
-
-  .sp-search-btn {
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-
-  .sp-filters {
-    gap: 6px;
-  }
-
-  .sp-select {
-    font-size: 12px;
-    padding: 7px 8px;
-    min-width: 100px;
-  }
-
-  .sp-card {
-    padding: 14px 12px;
-  }
-
-  .sp-card-title {
-    font-size: 14px;
-  }
-
-  .sp-modal {
-    padding: 20px 16px;
+  .sp-header-title { font-size: 15px; }
+  .sp-body { padding: 16px 12px; }
+  .sp-input { font-size: 13px; padding: 10px 12px; }
+  .sp-search-btn { padding: 10px 14px; font-size: 13px; }
+  .sp-select { font-size: 12px; padding: 7px 8px; min-width: 100px; }
+  .sp-card { padding: 14px 12px; }
+  .sp-modal { padding: 20px 16px; }
+  .sp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 }

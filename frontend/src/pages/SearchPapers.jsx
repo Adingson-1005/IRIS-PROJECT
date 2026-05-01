@@ -223,30 +223,52 @@ const handleSubmitPaper = async () => {
           </div>
         )}
 
-        <div className="sp-results">
-          {displayPapers.map((paper) => {
-            const id = paper.paper_id || paper.id
-            return (
-              <div key={id} className="sp-card" onClick={() => setSelectedPaper(paper)} style={{ cursor: 'pointer' }}>
-                <h3 className="sp-card-title">{paper.title}</h3>
-                <p className="sp-card-authors">{paper.authors}</p>
-                <div className="sp-tags">
-                  {paper.category && <span className="sp-tag">{paper.category}</span>}
-                  {paper.methodology && <span className="sp-tag">{paper.methodology}</span>}
-                  {paper.year && <span className="sp-tag">{paper.year}</span>}
-                </div>
-                <p className="sp-card-abstract">
-                  {paper.abstract
-                    ? paper.abstract.substring(0, 220) + '...'
-                    : 'No abstract available.'}
-                </p>
-                {mode === 'search' && paper.score && (
-                  <p className="sp-score">Relevance score: {paper.score}</p>
-                )}
-              </div>
-            )
-          })}
+        <div className="sp-grid">
+  {displayPapers.map((paper) => {
+    const id = paper.paper_id || paper.id
+    const initials = (name) => {
+      if (!name) return '?'
+      return name.split(',')[0].trim().split(' ')
+        .map(n => n[0]).join('').substring(0, 2).toUpperCase()
+    }
+    return (
+      <div
+        key={id}
+        className="sp-card"
+        onClick={() => setSelectedPaper(paper)}
+      >
+        <div className="sp-card-top">
+          <span className="sp-strand-badge">{paper.category || 'N/A'}</span>
+          <span className="sp-card-year">{paper.year}</span>
         </div>
+
+        <h3 className="sp-card-title">{paper.title}</h3>
+
+        <div className="sp-card-authors-row">
+          <div className="sp-avatar">{initials(paper.authors)}</div>
+          <span className="sp-author-name">
+            {paper.authors?.split(',')[0]?.trim()}
+            {paper.authors?.split(',').length > 1 &&
+              ` +${paper.authors.split(',').length - 1}`}
+          </span>
+        </div>
+
+        <p className="sp-card-abstract">
+          {paper.abstract
+            ? paper.abstract.substring(0, 120) + '...'
+            : 'No abstract available.'}
+        </p>
+
+        <div className="sp-card-footer">
+          <span className="sp-method-badge">{paper.methodology}</span>
+          {mode === 'search' && paper.score && (
+            <span className="sp-relevance-score">Score: {paper.score}</span>
+          )}
+        </div>
+      </div>
+    )
+  })}
+</div>
       </div>
 
       {showModal && (
