@@ -508,6 +508,94 @@
   margin-bottom: 4px;
 }
 
+/** RAG AI STYLES **/
+
+.sp-rag-btn {
+  padding: 7px 14px;
+  background-color: #1a56db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.sp-rag-btn:hover {
+  background-color: #1447c0;
+}
+
+.sp-rag-modal {
+  max-width: 560px;
+}
+
+.sp-rag-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+  font-family: 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.sp-rag-textarea:focus {
+  border-color: #7e3af2;
+}
+
+.sp-rag-answer {
+  background-color: #f9fafb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.75;
+}
+
+.sp-rag-sources {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 14px;
+  margin-bottom: 8px;
+}
+
+.sp-rag-sources h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a56db;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.sp-rag-source-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.sp-rag-source-dot {
+  color: #1a56db;
+  font-size: 10px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.sp-rag-source-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 2px;
+}
+
+.sp-rag-source-authors {
+  font-size: 11px;
+  color: #888;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .sp-header-title { font-size: 15px; }

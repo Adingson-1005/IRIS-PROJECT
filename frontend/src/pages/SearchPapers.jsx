@@ -21,6 +21,11 @@ function SearchPapers() {
   const [submitMessage, setSubmitMessage] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [selectedPaper, setSelectedPaper] = useState(null)
+  const [showRagModal, setShowRagModal] = useState(false)
+  const [ragQuestion, setRagQuestion] = useState('')
+  const [ragLoading, setRagLoading] = useState(false)
+  const [ragAnswer, setRagAnswer] = useState(null)
+  const [ragError, setRagError] = useState('')
 
   useEffect(() => { fetchAllPapers() }, [])
 
@@ -109,6 +114,25 @@ const handleSubmitPaper = async () => {
   setSubmitLoading(false)
 }
 
+const handleAskRag = async () => {
+  if (!ragQuestion.trim()) { setRagError('Please enter a question'); return }
+  setRagLoading(true)
+  setRagError('')
+  setRagAnswer(null)
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.post(
+      'https://iris-backend-7717.onrender.com/rag/ask',
+      { question: ragQuestion },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    setRagAnswer(response.data)
+  } catch (err) {
+    setRagError(err.response?.data?.detail || 'Failed to get answer. Please try again.')
+  }
+  setRagLoading(false)
+}
+
   const displayPapers = mode === 'search'
     ? searchResults
     : applyFilters(allPapers)
@@ -118,6 +142,13 @@ const handleSubmitPaper = async () => {
       <div className="sp-header">
         <h1 className="sp-header-title">IRIS — Research Repository</h1>
         <div className="sp-header-right">
+          <button
+            className="sp-rag-btn"
+            onClick={() => setShowRagModal(true)}
+            title="Ask AI about research"
+          >
+            Ask AI
+          </button>
           <button
             className="sp-submit-btn"
             onClick={() => setShowModal(true)}
@@ -389,6 +420,116 @@ const handleSubmitPaper = async () => {
           >
             Done
           </button>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
+      {showRagModal && (
+  <div className="sp-modal-overlay" onClick={() => {
+    setShowRagModal(false)
+    setRagQuestion('')
+    setRagAnswer(null)
+    setRagError('')
+  }}>
+    <div className="sp-modal sp-rag-modal" onClick={(e) => e.stopPropagation()}>
+      {!ragAnswer ? (
+        <>
+          <h2>Ask AI about Research</h2>
+          <p className="sp-modal-desc">
+            Ask any research-related question and the AI will answer
+            based on papers in the IRIS repository.
+          </p>
+
+          {ragError && <p className="sp-modal-error">{ragError}</p>}
+
+          <div className="sp-modal-field">
+            <label>Your research question</label>
+            <textarea
+              className="sp-rag-textarea"
+              placeholder="e.g. What methodologies are used in studies about social media?"
+              value={ragQuestion}
+              onChange={(e) => setRagQuestion(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <div className="sp-modal-actions">
+            <button
+              className="sp-modal-cancel"
+              onClick={() => {
+                setShowRagModal(false)
+                setRagQuestion('')
+                setRagError('')
+              }}
+              disabled={ragLoading}
+            >
+              Cancel
+            </button>
+            <button
+              className="sp-modal-submit"
+              onClick={handleAskRag}
+              disabled={ragLoading}
+            >
+              {ragLoading ? 'Thinking...' : 'Ask AI'}
+            </button>
+          </div>
+
+          {ragLoading && (
+            <div className="sp-analyzing">
+              <div className="sp-spinner"></div>
+              <p>AI is searching the repository...</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <h2>AI Answer</h2>
+          <p className="sp-modal-desc" style={{ fontStyle: 'italic' }}>
+            "{ragQuestion}"
+          </p>
+
+          <div className="sp-rag-answer">
+            <p>{ragAnswer.answer}</p>
+          </div>
+
+          {ragAnswer.sources && ragAnswer.sources.length > 0 && (
+            <div className="sp-rag-sources">
+              <h4>Sources from repository</h4>
+              {ragAnswer.sources.map((source, i) => (
+                <div key={i} className="sp-rag-source-item">
+                  <span className="sp-rag-source-dot">●</span>
+                  <div>
+                    <p className="sp-rag-source-title">{source.title}</p>
+                    <p className="sp-rag-source-authors">{source.authors}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
+            <button
+              className="sp-modal-cancel"
+              onClick={() => {
+                setRagAnswer(null)
+                setRagQuestion('')
+              }}
+            >
+              Ask another question
+            </button>
+            <button
+              className="sp-modal-submit"
+              onClick={() => {
+                setShowRagModal(false)
+                setRagAnswer(null)
+                setRagQuestion('')
+              }}
+            >
+              Done
+            </button>
+          </div>
         </>
       )}
     </div>
