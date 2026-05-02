@@ -41,8 +41,10 @@
 
 .myuploads-heading {
   font-size: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
   color: #333;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .myuploads-empty {
@@ -52,8 +54,16 @@
   padding: 40px 0;
 }
 
+/* ── Table: scrollable on mobile ── */
+.myuploads-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .myuploads-table {
   width: 100%;
+  min-width: 500px;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -65,6 +75,7 @@
   font-weight: 600;
   color: #444;
   border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
 }
 
 .myuploads-table td {
@@ -86,6 +97,7 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .myuploads-delete:hover {
@@ -97,11 +109,22 @@
   color: white;
   cursor: not-allowed;
 }
+
+/* ── Top bar ── */
 .myuploads-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.myuploads-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .myuploads-search {
@@ -109,15 +132,8 @@
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 14px;
-  width: 250px;
+  width: 220px;
   outline: none;
-}
-
-/* Modal myuploads styles */ 
-.myuploads-top-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .myuploads-new-btn {
@@ -136,6 +152,7 @@
   background-color: #047857;
 }
 
+/* ── Modal ── */
 .myuploads-modal-overlay {
   position: fixed;
   inset: 0;
@@ -272,4 +289,64 @@
   border-radius: 8px;
   font-size: 14px;
   margin-bottom: 16px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .myuploads-content {
+    padding: 16px;
+  }
+
+  .myuploads-card {
+    padding: 16px;
+  }
+
+  .myuploads-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .myuploads-heading {
+    font-size: 16px;
+  }
+
+  .myuploads-top-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .myuploads-new-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .myuploads-search {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .myuploads-table {
+    font-size: 12px;
+  }
+
+  .myuploads-table th,
+  .myuploads-table td {
+    padding: 8px 10px;
+  }
+
+  .myuploads-modal {
+    padding: 20px 16px;
+  }
+
+  .myuploads-modal-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .myuploads-heading {
+    font-size: 15px;
+  }
 }

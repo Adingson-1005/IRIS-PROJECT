@@ -130,38 +130,40 @@ function MyUploads() {
           </p>
         )}
         {!loading && filtered.length > 0 && (
-          <table className="myuploads-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Authors</th>
-                <th>Category</th>
-                <th>Year</th>
-                <th>Date Uploaded</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((paper) => (
-                <tr key={paper.id}>
-                  <td>{paper.title}</td>
-                  <td>{paper.authors}</td>
-                  <td>{paper.category}</td>
-                  <td>{paper.year}</td>
-                  <td>{new Date(paper.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <button
-                      className="myuploads-delete"
-                      onClick={() => setDeleteTarget({ id: paper.id, title: paper.title })}
-                      disabled={deleting === paper.id}
-                    >
-                      {deleting === paper.id ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </td>
+          <div className="myuploads-table-wrapper">
+            <table className="myuploads-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Authors</th>
+                  <th>Category</th>
+                  <th>Year</th>
+                  <th>Date Uploaded</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((paper) => (
+                  <tr key={paper.id}>
+                    <td>{paper.title}</td>
+                    <td>{paper.authors}</td>
+                    <td>{paper.category}</td>
+                    <td>{paper.year}</td>
+                    <td>{new Date(paper.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <button
+                        className="myuploads-delete"
+                        onClick={() => setDeleteTarget({ id: paper.id, title: paper.title })}
+                        disabled={deleting === paper.id}
+                      >
+                        {deleting === paper.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -212,7 +214,7 @@ function MyUploads() {
                 <label>Strand</label>
                 <select name="category" value={formData.category} onChange={handleChange}>
                   <option value="">Select strand</option>
-                  <option>STEM</option> 
+                  <option>STEM</option>
                   <option>HUMSS</option>
                   <option>ABM</option>
                   <option>GAS</option>

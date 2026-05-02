@@ -161,44 +161,46 @@ function ManageUsers() {
           <p className="mu-empty">No users found.</p>
         )}
         {!loading && filtered.length > 0 && (
-          <table className="mu-table">
-            <thead>
-              <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Date Joined</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((user) => (
-                <tr key={user.id}>
-                  <td className="mu-name">{user.full_name}</td>
-                  <td className="mu-email">{user.email}</td>
-                  <td>
-                    <span className={roleBadgeClass(user.role)}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                  <td>
-                    {user.role === 'admin' ? (
-                      <span className="mu-protected">Protected</span>
-                    ) : (
-                      <button
-                        className="mu-delete"
-                        onClick={() => handleDelete(user.id, user.full_name, user.role)}
-                        disabled={deleting === user.id}
-                      >
-                        {deleting === user.id ? 'Deleting...' : 'Delete'}
-                      </button>
-                    )}
-                  </td>
+          <div className="mu-table-wrapper">
+            <table className="mu-table">
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Date Joined</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((user) => (
+                  <tr key={user.id}>
+                    <td className="mu-name">{user.full_name}</td>
+                    <td className="mu-email">{user.email}</td>
+                    <td>
+                      <span className={roleBadgeClass(user.role)}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td>
+                      {user.role === 'admin' ? (
+                        <span className="mu-protected">Protected</span>
+                      ) : (
+                        <button
+                          className="mu-delete"
+                          onClick={() => handleDelete(user.id, user.full_name, user.role)}
+                          disabled={deleting === user.id}
+                        >
+                          {deleting === user.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

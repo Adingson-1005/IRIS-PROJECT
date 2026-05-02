@@ -129,30 +129,32 @@ function Analytics() {
           {topDownloads.length === 0 ? (
             <p className="an-empty">No downloads yet.</p>
           ) : (
-            <table className="an-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Authors</th>
-                  <th>Category</th>
-                  <th>Downloads</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topDownloads.map((paper, i) => (
-                  <tr key={i}>
-                    <td>{paper.title}</td>
-                    <td>{paper.authors}</td>
-                    <td>{paper.category}</td>
-                    <td>
-                      <span className="an-download-badge">
-                        {paper.downloads}
-                      </span>
-                    </td>
+            <div className="an-table-wrapper">
+              <table className="an-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Authors</th>
+                    <th>Category</th>
+                    <th>Downloads</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {topDownloads.map((paper, i) => (
+                    <tr key={i}>
+                      <td>{paper.title}</td>
+                      <td>{paper.authors}</td>
+                      <td>{paper.category}</td>
+                      <td>
+                        <span className="an-download-badge">
+                          {paper.downloads}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 

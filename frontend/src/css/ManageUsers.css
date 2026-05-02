@@ -105,8 +105,16 @@
   font-size: 14px;
 }
 
+/* ── Table: scrollable on mobile ── */
+.mu-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .mu-table {
   width: 100%;
+  min-width: 500px;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -118,6 +126,7 @@
   font-weight: 600;
   color: #444;
   border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
 }
 
 .mu-table td {
@@ -344,7 +353,17 @@
   margin-bottom: 16px;
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
+  .mu-heading {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .mu-card {
+    padding: 16px;
+  }
+
   .mu-top {
     flex-direction: column;
     align-items: stretch;
@@ -357,6 +376,20 @@
   .mu-search,
   .mu-select {
     width: 100%;
+    box-sizing: border-box;
+  }
+
+  .mu-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .mu-summary-card {
+    padding: 14px 10px;
+  }
+
+  .mu-summary-num {
+    font-size: 24px;
   }
 
   .mu-table {
@@ -367,12 +400,19 @@
   .mu-table td {
     padding: 8px 10px;
   }
+}
 
-  .mu-email {
-    display: none;
+@media (max-width: 480px) {
+  .mu-summary-num {
+    font-size: 20px;
   }
 
-  .mu-summary {
-    grid-template-columns: repeat(2, 1fr);
+  .mu-summary-label {
+    font-size: 10px;
+  }
+
+  .mu-add-btn {
+    width: 100%;
+    text-align: center;
   }
 }
