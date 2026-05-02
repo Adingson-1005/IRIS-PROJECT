@@ -4,7 +4,7 @@
   background-color: #f0f4f8;
 }
 
-/* Sidebar */
+/* ── Sidebar ── */
 .admin-sidebar {
   width: 220px;
   background-color: #1a56db;
@@ -14,11 +14,16 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  z-index: 100;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-brand {
   padding: 20px 20px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .sidebar-brand h1 {
@@ -65,7 +70,6 @@
   border-left-color: white;
 }
 
-/* Footer */
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
@@ -95,11 +99,11 @@
   background-color: rgba(255, 255, 255, 0.22);
 }
 
-/* Main content area */
 .admin-main {
   flex: 1;
   padding: 32px;
   overflow-y: auto;
+  min-width: 0;
 }
 
 .admin-placeholder {
@@ -107,4 +111,86 @@
   font-size: 15px;
   padding: 60px 0;
   text-align: center;
+}
+
+/* ── Mobile hamburger ── */
+.sidebar-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+
+/* ── Mobile top bar ── */
+.mobile-topbar {
+  display: none;
+  background-color: #1a56db;
+  padding: 14px 16px;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 98;
+}
+
+.mobile-topbar-title {
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.mobile-menu-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .admin-shell {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    width: 260px;
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay.open {
+    display: block;
+  }
+
+  .mobile-topbar {
+    display: flex;
+  }
+
+  .admin-main {
+    padding: 16px;
+  }
+
+  .sidebar-hamburger {
+    display: block;
+  }
 }

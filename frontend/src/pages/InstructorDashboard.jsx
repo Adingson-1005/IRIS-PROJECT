@@ -4,12 +4,14 @@ import MyUploads from './MyUploads'
 import BrowseRepository from './BrowseRepository'
 import UploadTemplate from './UploadTemplate'
 import '../css/InstructorDashboard.css'
+import '../css/ConfirmModal.css'
 
 function InstructorDashboard() {
   const navigate = useNavigate()
   const full_name = localStorage.getItem('full_name')
   const [activePage, setActivePage] = useState('uploads')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = () => {
     localStorage.clear()
@@ -22,6 +24,11 @@ function InstructorDashboard() {
     { key: 'template', label: 'Research Template' },
   ]
 
+  const handleNavClick = (key) => {
+    setActivePage(key)
+    setSidebarOpen(false)
+  }
+
   const renderContent = () => {
     switch (activePage) {
       case 'uploads':  return <MyUploads />
@@ -33,22 +40,50 @@ function InstructorDashboard() {
 
   return (
     <div className="instructor-shell">
-      <aside className="instructor-sidebar">
+
+      {/* Mobile top bar */}
+      <div className="mobile-topbar">
+        <span className="mobile-topbar-title">IRIS — Instructor</span>
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setSidebarOpen(true)}
+        >
+          ☰
+        </button>
+      </div>
+
+      {/* Overlay */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <aside className={`instructor-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <h1>IRIS</h1>
-          <p>Instructor Panel</p>
+          <div>
+            <h1>IRIS</h1>
+            <p>Instructor Panel</p>
+          </div>
+          <button
+            className="sidebar-hamburger"
+            onClick={() => setSidebarOpen(false)}
+          >
+            ✕
+          </button>
         </div>
+
         <nav className="sidebar-nav">
           {navItems.map((item) => (
             <button
               key={item.key}
               className={`nav-item ${activePage === item.key ? 'active' : ''}`}
-              onClick={() => setActivePage(item.key)}
+              onClick={() => handleNavClick(item.key)}
             >
               {item.label}
             </button>
           ))}
         </nav>
+
         <div className="sidebar-footer">
           <span className="instructor-name">Welcome, {full_name}</span>
           <button
