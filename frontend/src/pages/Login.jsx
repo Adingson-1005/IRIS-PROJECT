@@ -9,12 +9,13 @@ function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
   const handleLogin = async () => {
     setLoading(true)
     setError('')
     try {
-      const response = await axios.post('https://iris-backend-7717.onrender.com/auth/login', {
+      const response = await axios.post(`${API_BASE}/auth/login`, {
         email,
         password
       })
