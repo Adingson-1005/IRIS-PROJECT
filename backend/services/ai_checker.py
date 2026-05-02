@@ -3,7 +3,8 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from backend directory
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
 
 def extract_text(file_path: str) -> str:
     try:
