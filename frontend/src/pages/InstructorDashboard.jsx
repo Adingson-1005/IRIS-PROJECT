@@ -9,6 +9,7 @@ function InstructorDashboard() {
   const navigate = useNavigate()
   const full_name = localStorage.getItem('full_name')
   const [activePage, setActivePage] = useState('uploads')
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const handleLogout = () => {
     localStorage.clear()
@@ -50,12 +51,44 @@ function InstructorDashboard() {
         </nav>
         <div className="sidebar-footer">
           <span className="instructor-name">Welcome, {full_name}</span>
-          <button className="instructor-logout" onClick={handleLogout}>Logout</button>
+          <button
+            className="instructor-logout"
+            onClick={() => setShowLogoutModal(true)}
+          >
+            Logout
+          </button>
         </div>
       </aside>
+
       <main className="instructor-main">
         {renderContent()}
       </main>
+
+      {showLogoutModal && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">👋</div>
+            <h3 className="confirm-title">Logging out?</h3>
+            <p className="confirm-desc">
+              Are you sure you want to logout of your instructor account?
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Stay
+              </button>
+              <button
+                className="confirm-proceed"
+                onClick={handleLogout}
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import '../css/ManageUsers.css'
+import '../css/ConfirmModal.css'
 
 function ManageUsers() {
   const [users, setUsers] = useState([])

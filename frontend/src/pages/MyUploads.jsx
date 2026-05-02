@@ -5,7 +5,6 @@ import '../css/MyUploads.css'
 function MyUploads() {
   const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [deleting, setDeleting] = useState(null)
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
 
@@ -17,6 +16,10 @@ function MyUploads() {
   const [uploading, setUploading] = useState(false)
   const [uploadMessage, setUploadMessage] = useState('')
   const [uploadError, setUploadError] = useState('')
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showUploadingModal, setShowUploadingModal] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(null)
 
   useEffect(() => { fetchPapers() }, [])
 
@@ -33,22 +36,6 @@ function MyUploads() {
     setLoading(false)
   }
 
-  const handleDelete = async (paperId, title) => {
-    const confirm = window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)
-    if (!confirm) return
-    setDeleting(paperId)
-    try {
-      const token = localStorage.getItem('token')
-      await axios.delete(`https://iris-backend-7717.onrender.com/papers/delete/${paperId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      setPapers(papers.filter(p => p.id !== paperId))
-    } catch {
-      alert('Failed to delete paper')
-    }
-    setDeleting(null)
-  }
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
@@ -59,6 +46,7 @@ function MyUploads() {
     setUploading(true)
     setUploadError('')
     setUploadMessage('')
+    setShowUploadingModal(true)
     try {
       const data = new FormData()
       Object.entries(formData).forEach(([k, v]) => data.append(k, v))
@@ -70,11 +58,14 @@ function MyUploads() {
           'Authorization': `Bearer ${token}`
         }
       })
-      setUploadMessage('Paper uploaded successfully!')
+      setShowUploadingModal(false)
+      setShowModal(false)
+      setShowSuccessModal(true)
       setFormData({ title: '', authors: '', abstract: '', category: '', methodology: '', year: '' })
       setFile(null)
       fetchPapers()
     } catch {
+      setShowUploadingModal(false)
       setUploadError('Upload failed. Please try again.')
     }
     setUploading(false)
@@ -86,6 +77,22 @@ function MyUploads() {
     setUploadError('')
     setFormData({ title: '', authors: '', abstract: '', category: '', methodology: '', year: '' })
     setFile(null)
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(deleteTarget.id)
+    try {
+      const token = localStorage.getItem('token')
+      await axios.delete(`https://iris-backend-7717.onrender.com/papers/delete/${deleteTarget.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      setPapers(papers.filter(p => p.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    } catch {
+      alert('Failed to delete paper')
+    }
+    setDeleting(null)
   }
 
   const filtered = papers.filter(p =>
@@ -145,7 +152,7 @@ function MyUploads() {
                   <td>
                     <button
                       className="myuploads-delete"
-                      onClick={() => handleDelete(paper.id, paper.title)}
+                      onClick={() => setDeleteTarget({ id: paper.id, title: paper.title })}
                       disabled={deleting === paper.id}
                     >
                       {deleting === paper.id ? 'Deleting...' : 'Delete'}
@@ -262,6 +269,68 @@ function MyUploads() {
                 disabled={uploading}
               >
                 {uploading ? 'Uploading...' : 'Upload Paper'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUploadingModal && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="upload-spinner"></div>
+            <h3 className="confirm-title">Uploading Paper...</h3>
+            <p className="confirm-desc">
+              Please wait while your paper is being uploaded and indexed.
+              This may take a few seconds.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">✅</div>
+            <h3 className="confirm-title">Upload Successful!</h3>
+            <p className="confirm-desc">
+              Your research paper has been uploaded and indexed successfully.
+              Students can now search and find it in the repository.
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-proceed"
+                onClick={() => setShowSuccessModal(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">🗑️</div>
+            <h3 className="confirm-title">Delete Paper?</h3>
+            <p className="confirm-desc">
+              Are you sure you want to delete <strong>"{deleteTarget.title}"</strong>?
+              This action cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-delete"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
               </button>
             </div>
           </div>

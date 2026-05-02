@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import '../css/ManagePapers.css'
 import PaperView from '../components/PaperView'
+import '../css/ConfirmModal.css'
 
 function ManagePapers() {
   const [papers, setPapers] = useState([])
@@ -12,6 +13,8 @@ function ManagePapers() {
   const [methodology, setMethodology] = useState('')
   const [sortOrder, setSortOrder] = useState('desc')
   const [selectedPaper, setSelectedPaper] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  
 
   useEffect(() => { fetchPapers() }, [])
 
@@ -28,19 +31,16 @@ function ManagePapers() {
     setLoading(false)
   }
 
-  const handleDelete = async (e, paperId, title) => {
-    e.stopPropagation()
-    const confirm = window.confirm(
-      `Are you sure you want to delete "${title}"? This cannot be undone.`
-    )
-    if (!confirm) return
-    setDeleting(paperId)
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(deleteTarget.id)
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(`https://iris-backend-7717.onrender.com/papers/delete/${paperId}`, {
+      await axios.delete(`https://iris-backend-7717.onrender.com/papers/delete/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setPapers(papers.filter(p => p.id !== paperId))
+      setPapers(papers.filter(p => p.id !== deleteTarget.id))
+      setDeleteTarget(null)
     } catch {
       alert('Failed to delete paper')
     }
@@ -155,7 +155,10 @@ function ManagePapers() {
                 <span className="mp-method-badge">{paper.methodology}</span>
                 <button
                   className="mp-delete-btn"
-                  onClick={(e) => handleDelete(e, paper.id, paper.title)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setDeleteTarget({ id: paper.id, title: paper.title })
+                  }}
                   disabled={deleting === paper.id}
                 >
                   {deleting === paper.id ? 'Deleting...' : 'Delete'}
@@ -171,6 +174,34 @@ function ManagePapers() {
           paper={selectedPaper}
           onClose={() => setSelectedPaper(null)}
         />
+      )}
+
+      {deleteTarget && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">🗑️</div>
+            <h3 className="confirm-title">Delete Paper?</h3>
+            <p className="confirm-desc">
+              Are you sure you want to delete <strong>"{deleteTarget.title}"</strong>?
+              This cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-delete"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

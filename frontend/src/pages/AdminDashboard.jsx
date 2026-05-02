@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ManagePapers from './ManagePapers'
 import Analytics from './Analytics'
-import '../css/AdminDashboard.css'
 import ManageUsers from './ManageUsers'
+import '../css/AdminDashboard.css'
 
 function AdminDashboard() {
   const navigate = useNavigate()
   const full_name = localStorage.getItem('full_name')
   const [activePage, setActivePage] = useState('papers')
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const handleLogout = () => {
     localStorage.clear()
@@ -25,7 +26,7 @@ function AdminDashboard() {
     switch (activePage) {
       case 'papers':    return <ManagePapers />
       case 'analytics': return <Analytics />
-      case 'users':    return <ManageUsers />
+      case 'users':     return <ManageUsers />
       default:          return <ManageUsers />
     }
   }
@@ -50,12 +51,44 @@ function AdminDashboard() {
         </nav>
         <div className="sidebar-footer">
           <span className="admin-name">Welcome, {full_name}</span>
-          <button className="admin-logout" onClick={handleLogout}>Logout</button>
+          <button
+            className="admin-logout"
+            onClick={() => setShowLogoutModal(true)}
+          >
+            Logout
+          </button>
         </div>
       </aside>
+
       <main className="admin-main">
         {renderContent()}
       </main>
+
+      {showLogoutModal && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">👋</div>
+            <h3 className="confirm-title">Logging out?</h3>
+            <p className="confirm-desc">
+              Are you sure you want to logout of your admin account?
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Stay
+              </button>
+              <button
+                className="confirm-proceed"
+                onClick={handleLogout}
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
