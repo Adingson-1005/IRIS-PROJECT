@@ -512,8 +512,8 @@
 
 .sp-rag-btn {
   padding: 7px 14px;
-  background-color: #1a56db;
-  color: white;
+  background-color: white;
+  color: black;
   border: none;
   border-radius: 8px;
   cursor: pointer;
