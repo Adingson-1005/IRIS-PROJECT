@@ -2,15 +2,12 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
+from services.storage import upload_file
 from jose import jwt
 import os
-import shutil
 import uuid
 
 router = APIRouter()
-
-TEMPLATE_FOLDER = "uploads/templates"
-os.makedirs(TEMPLATE_FOLDER, exist_ok=True)
 
 SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
 ALGORITHM = "HS256"
@@ -24,7 +21,7 @@ def get_current_user_id(authorization: str = Header(...)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/upload")
-def upload_template(
+async def upload_template(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id)
@@ -48,16 +45,15 @@ def upload_template(
             db.execute(text("DELETE FROM templates"))
             db.commit()
 
+        file_bytes = await file.read()
         file_id = str(uuid.uuid4())
-        file_path = f"{TEMPLATE_FOLDER}/{file_id}_{file.filename}"
-
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        filename = f"{file_id}_{file.filename}"
+        file_url = upload_file(file_bytes, filename, "templates")
 
         db.execute(text("""
             INSERT INTO templates (file_url, uploaded_by)
             VALUES (:file_url, :uploaded_by)
-        """), {"file_url": file_path, "uploaded_by": user_id})
+        """), {"file_url": file_url, "uploaded_by": user_id})
         db.commit()
 
         return {"message": "Template uploaded successfully"}
@@ -87,7 +83,6 @@ def get_current_template(
             return {"template": None, "is_owner": False}
 
         is_owner = str(template.uploaded_by) == str(user_id)
-
         return {
             "template": dict(template._mapping),
             "is_owner": is_owner

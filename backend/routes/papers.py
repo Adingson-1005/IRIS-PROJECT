@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.inverted_index import build_index
+from services.storage import upload_file
 import os
 import shutil
 import uuid
@@ -15,7 +16,7 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @router.post("/upload")
-def upload_paper(
+async def upload_paper(
     title: str = Form(...),
     authors: str = Form(...),
     abstract: str = Form(...),
@@ -36,11 +37,10 @@ def upload_paper(
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
+        file_bytes = await file.read()
         file_id = str(uuid.uuid4())
-        file_path = f"{UPLOAD_FOLDER}/{file_id}_{file.filename}"
-
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        filename = f"{file_id}_{file.filename}"
+        file_path = upload_file(file_bytes, filename, "papers")
 
         result = db.execute(text("""
             INSERT INTO papers (title, authors, abstract, category, methodology, year, file_url, uploaded_by)

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.ai_checker import check_research
+from services.storage import upload_file
 from jose import jwt
 import os
 import shutil
@@ -43,11 +44,10 @@ async def submit_draft(
                 detail="No template has been uploaded yet. Please ask your instructor to upload a research template first."
             )
 
+        file_bytes = await file.file.read()
         file_id = str(uuid.uuid4())
-        draft_path = f"{DRAFT_FOLDER}/{file_id}_{file.filename}"
-
-        with open(draft_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        filename = f"{file_id}_{file.filename}"
+        draft_path = upload_file(file_bytes, filename, "drafts")
 
         result = check_research(draft_path, template.file_url)
 

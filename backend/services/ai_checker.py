@@ -1,12 +1,25 @@
 import fitz
 import os
+import httpx
 from groq import Groq
 from dotenv import load_dotenv
 
-# Load .env from backend directory
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+load_dotenv()
 
-def extract_text(file_path: str) -> str:
+def extract_text_from_url(file_url: str) -> str:
+    try:
+        response = httpx.get(file_url, timeout=30)
+        pdf_bytes = response.content
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+        return text.strip()
+    except Exception as e:
+        return ""
+
+def extract_text_from_path(file_path: str) -> str:
     try:
         doc = fitz.open(file_path)
         text = ""
@@ -16,6 +29,11 @@ def extract_text(file_path: str) -> str:
         return text.strip()
     except Exception as e:
         return ""
+
+def extract_text(source: str) -> str:
+    if source.startswith("http"):
+        return extract_text_from_url(source)
+    return extract_text_from_path(source)
 
 def check_research(student_path: str, template_path: str) -> dict:
     student_text = extract_text(student_path)
