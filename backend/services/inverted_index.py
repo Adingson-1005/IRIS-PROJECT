@@ -5,7 +5,12 @@ from sqlalchemy import text
 
 def extract_text_from_pdf(file_path: str) -> str:
     try:
-        doc = fitz.open(file_path)
+        if file_path.startswith("http"):
+            import httpx
+            response = httpx.get(file_path, timeout=30)
+            doc = fitz.open(stream=response.content, filetype="pdf")
+        else:
+            doc = fitz.open(file_path)
         full_text = ""
         for page in doc:
             full_text += page.get_text()
