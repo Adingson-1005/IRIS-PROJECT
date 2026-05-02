@@ -44,7 +44,7 @@ async def submit_draft(
                 detail="No template has been uploaded yet. Please ask your instructor to upload a research template first."
             )
 
-        file_bytes = await file.file.read()
+        file_bytes = await file.read()
         file_id = str(uuid.uuid4())
         filename = f"{file_id}_{file.filename}"
         draft_path = upload_file(file_bytes, filename, "drafts")
