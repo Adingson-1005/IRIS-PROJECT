@@ -154,11 +154,6 @@ def download_paper(paper_id: str, db: Session = Depends(get_db)):
         if not paper:
             raise HTTPException(status_code=404, detail="Paper not found")
 
-        file_path = paper.file_url
-
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="File not found on server")
-
         db.execute(
             text("UPDATE papers SET downloads = COALESCE(downloads, 0) + 1 WHERE id = :id"),
             {"id": paper_id}
@@ -172,11 +167,7 @@ def download_paper(paper_id: str, db: Session = Depends(get_db)):
         })
         db.commit()
 
-        return FileResponse(
-            path=file_path,
-            filename=f"{paper.title}.pdf",
-            media_type="application/pdf"
-        )
+        return {"download_url": paper.file_url}
 
     except HTTPException:
         raise

@@ -11,29 +11,32 @@ function PaperView({ paper, onClose }) {
     : []
 
   const handleDownload = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const paperId = paper.paper_id || paper.id
-      const response = await fetch(
-        `https://iris-backend-7717.onrender.com/papers/download/${paperId}`,
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      )
-      if (!response.ok) throw new Error('Download failed')
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
+  try {
+    const token = localStorage.getItem('token')
+    const paperId = paper.paper_id || paper.id
+    const response = await fetch(
+      `https://iris-backend-7717.onrender.com/papers/download/${paperId}`,
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    )
+    const data = await response.json()
+
+    if (data.download_url) {
       const a = document.createElement('a')
-      a.href = url
+      a.href = data.download_url
       a.download = `${paper.title}.pdf`
+      a.target = '_blank'
       document.body.appendChild(a)
       a.click()
-      window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch (err) {
+    } else {
       alert('Download failed. The file may not be available.')
     }
+  } catch (err) {
+    alert('Download failed. The file may not be available.')
   }
+}
 
   return (
     <div className="pv-overlay" onClick={onClose}>
