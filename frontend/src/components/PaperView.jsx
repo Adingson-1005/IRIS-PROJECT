@@ -14,25 +14,30 @@ function PaperView({ paper, onClose }) {
   try {
     const token = localStorage.getItem('token')
     const paperId = paper.paper_id || paper.id
+
     const response = await fetch(
       `https://iris-backend-7717.onrender.com/papers/download/${paperId}`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
+      { headers: { 'Authorization': `Bearer ${token}` } }
     )
     const data = await response.json()
 
-    if (data.download_url) {
-      const a = document.createElement('a')
-      a.href = data.download_url
-      a.download = `${paper.title}.pdf`
-      a.target = '_blank'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-    } else {
+    if (!data.download_url) {
       alert('Download failed. The file may not be available.')
+      return
     }
+
+    const fileResponse = await fetch(data.download_url)
+    const blob = await fileResponse.blob()
+    const blobUrl = window.URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = `${paper.title}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(blobUrl)
+    document.body.removeChild(a)
+
   } catch (err) {
     alert('Download failed. The file may not be available.')
   }
