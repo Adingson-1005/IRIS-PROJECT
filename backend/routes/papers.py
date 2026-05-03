@@ -38,35 +38,52 @@ async def upload_paper(
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
         file_bytes = await file.read()
+
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="File is empty")
+
         file_id = str(uuid.uuid4())
         filename = f"{file_id}_{file.filename}"
-        file_path = upload_file(file_bytes, filename, "papers")
 
-        result = db.execute(text("""
-            INSERT INTO papers (title, authors, abstract, category, methodology, year, file_url, uploaded_by)
-            VALUES (:title, :authors, :abstract, :category, :methodology, :year, :file_url, :uploaded_by)
-            RETURNING id
-        """), {
-            "title": title,
-            "authors": authors,
-            "abstract": abstract,
-            "category": category,
-            "methodology": methodology,
-            "year": year,
-            "file_url": file_path,
-            "uploaded_by": user_id
-        })
-        db.commit()
+        try:
+            file_path = upload_file(file_bytes, filename, "papers")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
-        paper_id = str(result.fetchone()[0])
-        build_index(paper_id, file_path, db)
+        if not file_path or not file_path.startswith("http"):
+            raise HTTPException(status_code=500, detail="File upload to storage failed")
+
+        try:
+            result = db.execute(text("""
+                INSERT INTO papers (title, authors, abstract, category, methodology, year, file_url, uploaded_by)
+                VALUES (:title, :authors, :abstract, :category, :methodology, :year, :file_url, :uploaded_by)
+                RETURNING id
+            """), {
+                "title": title,
+                "authors": authors,
+                "abstract": abstract,
+                "category": category,
+                "methodology": methodology,
+                "year": year,
+                "file_url": file_path,
+                "uploaded_by": user_id
+            })
+            db.commit()
+            paper_id = str(result.fetchone()[0])
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Database save failed: {str(e)}")
+
+        try:
+            build_index(paper_id, file_path, db)
+        except Exception as e:
+            print(f"Index build failed for {paper_id}: {e}")
 
         return {"message": "Paper uploaded and indexed successfully"}
 
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/list")
 def list_papers(db: Session = Depends(get_db)):

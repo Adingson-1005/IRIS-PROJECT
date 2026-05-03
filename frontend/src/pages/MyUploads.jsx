@@ -64,10 +64,11 @@ function MyUploads() {
       setFormData({ title: '', authors: '', abstract: '', category: '', methodology: '', year: '' })
       setFile(null)
       fetchPapers()
-    } catch {
-      setShowUploadingModal(false)
-      setUploadError('Upload failed. Please try again.')
-    }
+    } catch (err) {
+  setShowUploadingModal(false)
+  const detail = err.response?.data?.detail
+  setUploadError(detail || 'Upload failed. Please try again.')
+}
     setUploading(false)
   }
 
