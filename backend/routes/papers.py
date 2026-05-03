@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.inverted_index import build_index
 from services.storage import upload_file
-import os
-import shutil
-import uuid
 from fastapi.responses import FileResponse
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Header
+import os
+import uuid
+import re
 
 router = APIRouter()
 
@@ -43,7 +42,9 @@ async def upload_paper(
             raise HTTPException(status_code=400, detail="File is empty")
 
         file_id = str(uuid.uuid4())
-        filename = f"{file_id}_{file.filename}"
+        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename)
+        safe_name = re.sub(r"_+", "_", safe_name)
+        filename = f"{file_id}_{safe_name}"
 
         try:
             file_path = upload_file(file_bytes, filename, "papers")

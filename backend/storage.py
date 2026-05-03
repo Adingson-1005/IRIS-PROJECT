@@ -22,11 +22,9 @@ def get_supabase():
     return create_client(url, key)
 
 def sanitize_filename(filename: str) -> str:
-    # Remove special characters that Supabase doesn't allow
-    filename = re.sub(r"['\"\(\)\[\]\{\}\#\%\&\+\,\=\@\!\$\^\*\<\>\?\|\\]", "", filename)
-    # Replace spaces with underscores
-    filename = filename.replace(" ", "_")
-    # Remove any double underscores
+    # Keep only alphanumeric, dots, dashes and underscores
+    filename = re.sub(r"[^a-zA-Z0-9._-]", "_", filename)
+    # Remove multiple consecutive underscores
     filename = re.sub(r"_+", "_", filename)
     return filename
 
