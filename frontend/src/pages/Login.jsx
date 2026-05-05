@@ -2,6 +2,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import '../css/Login.css'
+import { useState, useEffect } from 'react'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -32,6 +33,17 @@ function Login() {
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+  const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
+
+  if (token && role) {
+    if (role === 'admin') navigate('/admin', { replace: true })
+    else if (role === 'instructor') navigate('/instructor', { replace: true })
+    else navigate('/search-papers', { replace: true })
+  }
+}, [])
 
   return (
     <div className="container">
