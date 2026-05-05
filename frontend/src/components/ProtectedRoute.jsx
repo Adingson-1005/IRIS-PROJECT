@@ -8,10 +8,7 @@ function ProtectedRoute({ children, allowedRole }) {
   const role = localStorage.getItem('role')
 
   useEffect(() => {
-    // Replace current history entry so forward button has nowhere to go
     window.history.replaceState(null, '', window.location.href)
-
-    // Keep pushing state so back button is always intercepted
     window.history.pushState(null, '', window.location.href)
 
     const handlePopState = () => {
@@ -24,21 +21,18 @@ function ProtectedRoute({ children, allowedRole }) {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [navigate])
 
-  // No token
   if (!token) {
     localStorage.clear()
     navigate('/', { replace: true })
     return null
   }
 
-  // Wrong role
   if (allowedRole && role !== allowedRole) {
     localStorage.clear()
     navigate('/', { replace: true })
     return null
   }
 
-  // Check token expiry
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     const expiry = payload.exp * 1000
