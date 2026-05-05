@@ -1,20 +1,22 @@
 import { useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 function ProtectedRoute({ children, allowedRole }) {
   const navigate = useNavigate()
-  const location = useLocation()
 
   const token = localStorage.getItem('token')
   const role = localStorage.getItem('role')
 
   useEffect(() => {
-    // Push current path to history so back button works correctly
+    // Replace current history entry so forward button has nowhere to go
+    window.history.replaceState(null, '', window.location.href)
+
+    // Keep pushing state so back button is always intercepted
     window.history.pushState(null, '', window.location.href)
 
     const handlePopState = () => {
-      // When back button is pressed, clear session and redirect to login
       localStorage.clear()
+      window.history.pushState(null, '', '/')
       navigate('/', { replace: true })
     }
 
@@ -22,14 +24,14 @@ function ProtectedRoute({ children, allowedRole }) {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [navigate])
 
-  // No token — redirect to login
+  // No token
   if (!token) {
     localStorage.clear()
     navigate('/', { replace: true })
     return null
   }
 
-  // Wrong role — redirect to login
+  // Wrong role
   if (allowedRole && role !== allowedRole) {
     localStorage.clear()
     navigate('/', { replace: true })
