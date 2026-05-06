@@ -83,7 +83,7 @@ A valid research paper or draft must contain at least some of these elements:
 - References or bibliography
 - Academic writing style
 
-If the submission is NOT a research paper (for example: a quiz, exam, questionnaire, list of questions, 
+If the submission is NOT a research paper (for example: a quiz, exam, questionnaire, list of questions,
 story, poem, personal letter, or any non-academic document), you must:
 - Give a SCORE of 0
 - Clearly state it is not a valid research paper submission
@@ -96,9 +96,13 @@ If it IS a research paper or draft, compare it against the template and evaluate
 - A score of 0-30 means very incomplete or poor quality
 - A score of 31-60 means partial completion with major sections missing
 - A score of 61-80 means mostly complete with some sections needing improvement
-- A score of 81-100 means very complete and closely follows the template
+- A score of 81-99 means very complete with only minor improvements needed
+- A score of 100 means the paper perfectly follows the template with nothing missing
 
-Be STRICT and ACCURATE with scoring. Do not give high scores to incomplete drafts.
+IMPORTANT RULE FOR SCORING:
+- If you give a score of 100, the TO IMPROVE section must say "None - this paper fully follows the template"
+- If you give a score above 80, the TO IMPROVE section should only list very minor suggestions
+- Never list major missing sections if the score is above 80
 
 ---
 
@@ -113,10 +117,10 @@ STRENGTHS:
 - [strength 2]
 - [strength 3]
 
-MISSING OR INCOMPLETE:
-- [issue 1 or "N/A - Not a valid research paper submission"]
-- [issue 2]
-- [issue 3]
+TO IMPROVE:
+- [area to improve 1 or "None - this paper fully follows the template" if score is 100]
+- [area to improve 2]
+- [area to improve 3]
 
 SUGGESTIONS:
 - [suggestion 1 or "Please submit an actual research paper or draft"]

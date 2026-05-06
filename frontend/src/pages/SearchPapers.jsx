@@ -391,9 +391,8 @@ const handleAskRag = async () => {
 
           <div className="sp-feedback-box">
             {aiResult.feedback.split('\n').map((line, i) => {
-              if (line.startsWith('SCORE:')) return null
               if (line.startsWith('STRENGTHS:') ||
-              line.startsWith('MISSING OR INCOMPLETE:') ||
+              line.startsWith('TO IMPROVE:') ||
               line.startsWith('SUGGESTIONS:') ||
               line.startsWith('OVERALL FEEDBACK:') ||
               line.startsWith('DOCUMENT TYPE:')) {
