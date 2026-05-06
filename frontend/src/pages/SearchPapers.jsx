@@ -14,13 +14,17 @@ function SearchPapers() {
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState('')
+  const [selectedPaper, setSelectedPaper] = useState(null)
+
+  // AI Checker states
   const [showModal, setShowModal] = useState(false)
   const [submitFile, setSubmitFile] = useState(null)
   const [submitTitle, setSubmitTitle] = useState('')
   const [submitLoading, setSubmitLoading] = useState(false)
-  const [submitMessage, setSubmitMessage] = useState('')
   const [submitError, setSubmitError] = useState('')
-  const [selectedPaper, setSelectedPaper] = useState(null)
+  const [aiResult, setAiResult] = useState(null)
+
+  // RAG states
   const [showRagModal, setShowRagModal] = useState(false)
   const [ragQuestion, setRagQuestion] = useState('')
   const [ragLoading, setRagLoading] = useState(false)
@@ -83,55 +87,75 @@ function SearchPapers() {
     return true
   })
 
-  const [aiResult, setAiResult] = useState(null)
+  const handleSubmitPaper = async () => {
+    if (!submitFile) { setSubmitError('Please select a PDF file'); return }
+    if (!submitTitle.trim()) { setSubmitError('Please enter a title'); return }
+    setSubmitLoading(true)
+    setSubmitError('')
+    setAiResult(null)
+    try {
+      const data = new FormData()
+      data.append('title', submitTitle)
+      data.append('file', submitFile)
+      const token = localStorage.getItem('token')
+      const response = await axios.post(
+        'https://iris-backend-7717.onrender.com/ai/submit-draft',
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      )
+      setAiResult(response.data)
+      setSubmitFile(null)
+      setSubmitTitle('')
+    } catch (err) {
+      setSubmitError(err.response?.data?.detail || 'Submission failed. Please try again.')
+    }
+    setSubmitLoading(false)
+  }
 
-const handleSubmitPaper = async () => {
-  if (!submitFile) { setSubmitError('Please select a PDF file'); return }
-  if (!submitTitle.trim()) { setSubmitError('Please enter a title'); return }
-  setSubmitLoading(true)
-  setSubmitError('')
-  setSubmitMessage('')
-  setAiResult(null)
-  try {
-    const data = new FormData()
-    data.append('title', submitTitle)
-    data.append('file', submitFile)
-    const token = localStorage.getItem('token')
-    const response = await axios.post('https://iris-backend-7717.onrender.com/ai/submit-draft', data, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    setAiResult(response.data)
+  const handleAskRag = async () => {
+    if (!ragQuestion.trim()) { setRagError('Please enter a question'); return }
+    setRagLoading(true)
+    setRagError('')
+    setRagAnswer(null)
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.post(
+        'https://iris-backend-7717.onrender.com/rag/ask',
+        { question: ragQuestion },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setRagAnswer(response.data)
+    } catch (err) {
+      setRagError(err.response?.data?.detail || 'Failed to get answer. Please try again.')
+    }
+    setRagLoading(false)
+  }
+
+  const closeCheckerModal = () => {
+    setShowModal(false)
+    setSubmitError('')
     setSubmitFile(null)
     setSubmitTitle('')
-  } catch (err) {
-    setSubmitError(
-      err.response?.data?.detail || 'Submission failed. Please try again.'
-    )
+    setAiResult(null)
   }
-  setSubmitLoading(false)
-}
 
-const handleAskRag = async () => {
-  if (!ragQuestion.trim()) { setRagError('Please enter a question'); return }
-  setRagLoading(true)
-  setRagError('')
-  setRagAnswer(null)
-  try {
-    const token = localStorage.getItem('token')
-    const response = await axios.post(
-      'https://iris-backend-7717.onrender.com/rag/ask',
-      { question: ragQuestion },
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    setRagAnswer(response.data)
-  } catch (err) {
-    setRagError(err.response?.data?.detail || 'Failed to get answer. Please try again.')
+  const closeRagModal = () => {
+    setShowRagModal(false)
+    setRagQuestion('')
+    setRagAnswer(null)
+    setRagError('')
   }
-  setRagLoading(false)
-}
+
+  const initials = (name) => {
+    if (!name) return '?'
+    return name.split(',')[0].trim().split(' ')
+      .map(n => n[0]).join('').substring(0, 2).toUpperCase()
+  }
 
   const displayPapers = mode === 'search'
     ? searchResults
@@ -139,32 +163,19 @@ const handleAskRag = async () => {
 
   return (
     <div className="sp-container">
+
+      {/* Header */}
       <div className="sp-header">
         <h1 className="sp-header-title">IRIS — Research Repository</h1>
-        <div className="sp-header-right">
-          <button
-            className="sp-rag-btn"
-            onClick={() => setShowRagModal(true)}
-            title="Ask AI about research"
-          >
-            Ask AI
-          </button>
-          <button
-            className="sp-submit-btn"
-            onClick={() => setShowModal(true)}
-            title="Submit your research draft"
-          >
-            +
-          </button>
-          <button
-            className="sp-logout-btn"
-            onClick={() => { localStorage.clear(); navigate('/') }}
-          >
-            Logout
-          </button>
-        </div>
+        <button
+          className="sp-logout-btn"
+          onClick={() => { localStorage.clear(); navigate('/') }}
+        >
+          Logout
+        </button>
       </div>
 
+      {/* Body */}
       <div className="sp-body">
         <div className="sp-search-row">
           <input
@@ -193,7 +204,7 @@ const handleAskRag = async () => {
             value={filters.category}
             onChange={(e) => setFilters({ ...filters, category: e.target.value })}
           >
-            <option value="">All Categories</option>
+            <option value="">All Strands</option>
             <option value="STEM">STEM</option>
             <option value="HUMSS">HUMSS</option>
             <option value="ABM">ABM</option>
@@ -255,285 +266,298 @@ const handleAskRag = async () => {
         )}
 
         <div className="sp-grid">
-  {displayPapers.map((paper) => {
-    const id = paper.paper_id || paper.id
-    const initials = (name) => {
-      if (!name) return '?'
-      return name.split(',')[0].trim().split(' ')
-        .map(n => n[0]).join('').substring(0, 2).toUpperCase()
-    }
-    return (
-      <div
-        key={id}
-        className="sp-card"
-        onClick={() => setSelectedPaper(paper)}
-      >
-        <div className="sp-card-top">
-          <span className="sp-strand-badge">{paper.category || 'N/A'}</span>
-          <span className="sp-card-year">{paper.year}</span>
-        </div>
-
-        <h3 className="sp-card-title">{paper.title}</h3>
-
-        <div className="sp-card-authors-row">
-          <div className="sp-avatar">{initials(paper.authors)}</div>
-          <span className="sp-author-name">
-            {paper.authors?.split(',')[0]?.trim()}
-            {paper.authors?.split(',').length > 1 &&
-              ` +${paper.authors.split(',').length - 1}`}
-          </span>
-        </div>
-
-        <p className="sp-card-abstract">
-          {paper.abstract
-            ? paper.abstract.substring(0, 120) + '...'
-            : 'No abstract available.'}
-        </p>
-
-        <div className="sp-card-footer">
-          <span className="sp-method-badge">{paper.methodology}</span>
-          {mode === 'search' && paper.score && (
-            <span className="sp-relevance-score">Score: {paper.score}</span>
-          )}
+          {displayPapers.map((paper) => {
+            const id = paper.paper_id || paper.id
+            return (
+              <div key={id} className="sp-card" onClick={() => setSelectedPaper(paper)}>
+                <div className="sp-card-top">
+                  <span className="sp-strand-badge">{paper.category || 'N/A'}</span>
+                  <span className="sp-card-year">{paper.year}</span>
+                </div>
+                <h3 className="sp-card-title">{paper.title}</h3>
+                <div className="sp-card-authors-row">
+                  <div className="sp-avatar">{initials(paper.authors)}</div>
+                  <span className="sp-author-name">
+                    {paper.authors?.split(',')[0]?.trim()}
+                    {paper.authors?.split(',').length > 1 &&
+                      ` +${paper.authors.split(',').length - 1}`}
+                  </span>
+                </div>
+                <p className="sp-card-abstract">
+                  {paper.abstract
+                    ? paper.abstract.substring(0, 120) + '...'
+                    : 'No abstract available.'}
+                </p>
+                <div className="sp-card-footer">
+                  <span className="sp-method-badge">{paper.methodology}</span>
+                  {mode === 'search' && paper.score && (
+                    <span className="sp-relevance-score">Score: {paper.score}</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
-    )
-  })}
-</div>
-      </div>
 
-      {showModal && (
-  <div className="sp-modal-overlay" onClick={() => {
-    setShowModal(false)
-    setSubmitMessage('')
-    setSubmitError('')
-    setSubmitFile(null)
-    setSubmitTitle('')
-    setAiResult(null)
-  }}>
-    <div className="sp-modal" onClick={(e) => e.stopPropagation()}>
-
-      {!aiResult ? (
-        <>
-          <h2>Submit Research Draft</h2>
-          <p className="sp-modal-desc">
-            Upload your draft PDF and the AI will compare it against
-            the instructor's template and give you a score with suggestions.
-          </p>
-
-          {submitError && <p className="sp-modal-error">{submitError}</p>}
-
-          <div className="sp-modal-field">
-            <label>Title of your paper</label>
-            <input
-              type="text"
-              placeholder="Enter your paper title"
-              value={submitTitle}
-              onChange={(e) => setSubmitTitle(e.target.value)}
-            />
-          </div>
-
-          <div className="sp-modal-field">
-            <label>Upload your draft (PDF)</label>
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={(e) => setSubmitFile(e.target.files[0])}
-            />
-            {submitFile && (
-              <p className="sp-modal-filename">Selected: {submitFile.name}</p>
-            )}
-          </div>
-
-          <div className="sp-modal-actions">
-  <button
-    className="sp-modal-cancel"
-    onClick={() => {
-      setShowModal(false)
-      setSubmitError('')
-      setSubmitFile(null)
-      setSubmitTitle('')
-    }}
-    disabled={submitLoading}
-  >
-    Cancel
-  </button>
-  <button
-    className="sp-modal-submit"
-    onClick={handleSubmitPaper}
-    disabled={submitLoading}
-  >
-    {submitLoading ? 'Analyzing...' : 'Submit for AI Review'}
-  </button>
-</div>
-
-{submitLoading && (
-  <div className="sp-analyzing">
-    <div className="sp-spinner"></div>
-    <p>AI is analyzing your paper. This may take 15–30 seconds...</p>
-  </div>
-)}
-        </>
-      ) : (
-        <>
-          <div className="sp-result-header">
-            <h2>AI Feedback Results</h2>
-            <p className="sp-result-title">{aiResult.title}</p>
-          </div>
-
-          <div className={`sp-score-circle ${
-            aiResult.score >= 75 ? 'sp-score-high' :
-            aiResult.score >= 50 ? 'sp-score-mid' : 'sp-score-low'
-          }`}>
-            <span className="sp-score-num">{aiResult.score}%</span>
-            <span className="sp-score-label">Accuracy Score</span>
-          </div>
-
-          <div className="sp-feedback-box">
-            {aiResult.feedback.split('\n').map((line, i) => {
-              if (line.startsWith('STRENGTHS:') ||
-              line.startsWith('TO IMPROVE:') ||
-              line.startsWith('SUGGESTIONS:') ||
-              line.startsWith('OVERALL FEEDBACK:') ||
-              line.startsWith('DOCUMENT TYPE:')) {
-                return <p key={i} className="sp-feedback-section">{line}</p>
-              }
-              if (line.startsWith('- ')) {
-                return <p key={i} className="sp-feedback-item">{line}</p>
-              }
-              if (line.trim()) {
-                return <p key={i} className="sp-feedback-text">{line}</p>
-              }
-              return null
-            })}
-          </div>
-
+      {/* Floating Action Buttons */}
+      <div className="sp-fab-container">
+        <div className="sp-fab-group">
+          <span className="sp-fab-label">Ask AI</span>
           <button
-            className="sp-modal-submit"
-            onClick={() => {
-              setAiResult(null)
-              setShowModal(false)
-              setSubmitTitle('')
-              setSubmitFile(null)
-            }}
+            className="sp-fab sp-fab-rag"
+            onClick={() => setShowRagModal(true)}
+            title="Ask AI about research"
           >
-            Done
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" fill="white" stroke="white" strokeWidth="0.5"/>
+              <circle cx="8" cy="10" r="1.2" fill="#1a56db"/>
+              <circle cx="12" cy="10" r="1.2" fill="#1a56db"/>
+              <circle cx="16" cy="10" r="1.2" fill="#1a56db"/>
+            </svg>
           </button>
-        </>
-      )}
-    </div>
-  </div>
-)}
+        </div>
 
-      {showRagModal && (
-  <div className="sp-modal-overlay" onClick={() => {
-    setShowRagModal(false)
-    setRagQuestion('')
-    setRagAnswer(null)
-    setRagError('')
-  }}>
-    <div className="sp-modal sp-rag-modal" onClick={(e) => e.stopPropagation()}>
-      {!ragAnswer ? (
-        <>
-          <h2>Ask AI about Research</h2>
-          <p className="sp-modal-desc">
-            Ask any research-related question and the AI will answer
-            based on papers in the IRIS repository.
-          </p>
+        <div className="sp-fab-group">
+          <span className="sp-fab-label">Check Paper</span>
+          <button
+            className="sp-fab sp-fab-checker"
+            onClick={() => setShowModal(true)}
+            title="Submit your research draft"
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="white"/>
+              <path d="M14 2V8H20" stroke="#7e3af2" strokeWidth="1.5" fill="none"/>
+              <path d="M9 13L11 15L15 11" stroke="#7e3af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
 
-          {ragError && <p className="sp-modal-error">{ragError}</p>}
-
-          <div className="sp-modal-field">
-            <label>Your research question</label>
-            <textarea
-              className="sp-rag-textarea"
-              placeholder="e.g. What methodologies are used in studies about social media?"
-              value={ragQuestion}
-              onChange={(e) => setRagQuestion(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <div className="sp-modal-actions">
-            <button
-              className="sp-modal-cancel"
-              onClick={() => {
-                setShowRagModal(false)
-                setRagQuestion('')
-                setRagError('')
-              }}
-              disabled={ragLoading}
-            >
-              Cancel
-            </button>
-            <button
-              className="sp-modal-submit"
-              onClick={handleAskRag}
-              disabled={ragLoading}
-            >
-              {ragLoading ? 'Thinking...' : 'Ask AI'}
-            </button>
-          </div>
-
-          {ragLoading && (
-            <div className="sp-analyzing">
-              <div className="sp-spinner"></div>
-              <p>AI is searching the repository...</p>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <h2>AI Answer</h2>
-          <p className="sp-modal-desc" style={{ fontStyle: 'italic' }}>
-            "{ragQuestion}"
-          </p>
-
-          <div className="sp-rag-answer">
-            <p>{ragAnswer.answer}</p>
-          </div>
-
-          {ragAnswer.sources && ragAnswer.sources.length > 0 && (
-            <div className="sp-rag-sources">
-              <h4>Sources from repository</h4>
-              {ragAnswer.sources.map((source, i) => (
-                <div key={i} className="sp-rag-source-item">
-                  <span className="sp-rag-source-dot">●</span>
+      {/* AI Checker Modal */}
+      {showModal && (
+        <div className="sp-modal-overlay" onClick={closeCheckerModal}>
+          <div className="sp-modal" onClick={(e) => e.stopPropagation()}>
+            {!aiResult ? (
+              <>
+                <div className="sp-modal-header">
+                  <div className="sp-modal-icon sp-modal-icon-checker">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="#ede9fe"/>
+                      <path d="M14 2V8H20" stroke="#7e3af2" strokeWidth="1.5" fill="none"/>
+                      <path d="M9 13L11 15L15 11" stroke="#7e3af2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
                   <div>
-                    <p className="sp-rag-source-title">{source.title}</p>
-                    <p className="sp-rag-source-authors">{source.authors}</p>
+                    <h2>Check My Research</h2>
+                    <p className="sp-modal-desc">
+                      Upload your draft and AI will compare it against the instructor's template.
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
 
-          <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
-            <button
-              className="sp-modal-cancel"
-              onClick={() => {
-                setRagAnswer(null)
-                setRagQuestion('')
-              }}
-            >
-              Ask another question
-            </button>
-            <button
-              className="sp-modal-submit"
-              onClick={() => {
-                setShowRagModal(false)
-                setRagAnswer(null)
-                setRagQuestion('')
-              }}
-            >
-              Done
-            </button>
+                {submitError && <p className="sp-modal-error">{submitError}</p>}
+
+                <div className="sp-modal-field">
+                  <label>Title of your paper</label>
+                  <input
+                    type="text"
+                    placeholder="Enter your paper title"
+                    value={submitTitle}
+                    onChange={(e) => setSubmitTitle(e.target.value)}
+                  />
+                </div>
+
+                <div className="sp-modal-field">
+                  <label>Upload your draft (PDF only)</label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setSubmitFile(e.target.files[0])}
+                  />
+                  {submitFile && (
+                    <p className="sp-modal-filename">📄 {submitFile.name}</p>
+                  )}
+                </div>
+
+                <div className="sp-modal-actions">
+                  <button
+                    className="sp-modal-cancel"
+                    onClick={closeCheckerModal}
+                    disabled={submitLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="sp-modal-submit sp-modal-submit-checker"
+                    onClick={handleSubmitPaper}
+                    disabled={submitLoading}
+                  >
+                    {submitLoading ? 'Analyzing...' : 'Submit for AI Review'}
+                  </button>
+                </div>
+
+                {submitLoading && (
+                  <div className="sp-analyzing">
+                    <div className="sp-spinner sp-spinner-checker"></div>
+                    <p>AI is analyzing your paper. This may take 15–30 seconds...</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="sp-result-header">
+                  <h2>AI Feedback Results</h2>
+                  <p className="sp-result-title">{aiResult.title}</p>
+                </div>
+
+                <div className={`sp-score-circle ${
+                  aiResult.score >= 75 ? 'sp-score-high' :
+                  aiResult.score >= 50 ? 'sp-score-mid' : 'sp-score-low'
+                }`}>
+                  <span className="sp-score-num">{aiResult.score}%</span>
+                  <span className="sp-score-label">Accuracy Score</span>
+                </div>
+
+                <div className="sp-feedback-box">
+                  {aiResult.feedback.split('\n').map((line, i) => {
+                    if (line.startsWith('SCORE:')) return null
+                    if (
+                      line.startsWith('STRENGTHS:') ||
+                      line.startsWith('TO IMPROVE:') ||
+                      line.startsWith('SUGGESTIONS:') ||
+                      line.startsWith('OVERALL FEEDBACK:') ||
+                      line.startsWith('DOCUMENT TYPE:')
+                    ) {
+                      return <p key={i} className="sp-feedback-section">{line}</p>
+                    }
+                    if (line.startsWith('- ')) {
+                      return <p key={i} className="sp-feedback-item">{line}</p>
+                    }
+                    if (line.trim()) {
+                      return <p key={i} className="sp-feedback-text">{line}</p>
+                    }
+                    return null
+                  })}
+                </div>
+
+                <button
+                  className="sp-modal-submit sp-modal-submit-checker"
+                  onClick={closeCheckerModal}
+                >
+                  Done
+                </button>
+              </>
+            )}
           </div>
-        </>
+        </div>
       )}
-    </div>
-  </div>
-)}
+
+      {/* RAG Modal */}
+      {showRagModal && (
+        <div className="sp-modal-overlay" onClick={closeRagModal}>
+          <div className="sp-modal sp-rag-modal" onClick={(e) => e.stopPropagation()}>
+            {!ragAnswer ? (
+              <>
+                <div className="sp-modal-header">
+                  <div className="sp-modal-icon sp-modal-icon-rag">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" fill="#dbeafe" stroke="#1a56db" strokeWidth="1"/>
+                      <circle cx="8" cy="10" r="1.2" fill="#1a56db"/>
+                      <circle cx="12" cy="10" r="1.2" fill="#1a56db"/>
+                      <circle cx="16" cy="10" r="1.2" fill="#1a56db"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h2>Ask AI Guidance</h2>
+                    <p className="sp-modal-desc">
+                      Ask a research question and AI will answer based on papers in the repository.
+                    </p>
+                  </div>
+                </div>
+
+                {ragError && <p className="sp-modal-error">{ragError}</p>}
+
+                <div className="sp-modal-field">
+                  <label>Your research question</label>
+                  <textarea
+                    className="sp-rag-textarea"
+                    placeholder="e.g. What methodologies are used in studies about social media?"
+                    value={ragQuestion}
+                    onChange={(e) => setRagQuestion(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="sp-modal-actions">
+                  <button
+                    className="sp-modal-cancel"
+                    onClick={closeRagModal}
+                    disabled={ragLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="sp-modal-submit sp-modal-submit-rag"
+                    onClick={handleAskRag}
+                    disabled={ragLoading}
+                  >
+                    {ragLoading ? 'Thinking...' : 'Ask AI'}
+                  </button>
+                </div>
+
+                {ragLoading && (
+                  <div className="sp-analyzing">
+                    <div className="sp-spinner sp-spinner-rag"></div>
+                    <p>AI is searching the repository...</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h2>AI Answer</h2>
+                <p className="sp-modal-desc" style={{ fontStyle: 'italic' }}>
+                  "{ragQuestion}"
+                </p>
+
+                <div className="sp-rag-answer">
+                  <p>{ragAnswer.answer}</p>
+                </div>
+
+                {ragAnswer.sources && ragAnswer.sources.length > 0 && (
+                  <div className="sp-rag-sources">
+                    <h4>Sources from repository</h4>
+                    {ragAnswer.sources.map((source, i) => (
+                      <div key={i} className="sp-rag-source-item">
+                        <span className="sp-rag-source-dot">●</span>
+                        <div>
+                          <p className="sp-rag-source-title">{source.title}</p>
+                          <p className="sp-rag-source-authors">{source.authors}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
+                  <button
+                    className="sp-modal-cancel"
+                    onClick={() => { setRagAnswer(null); setRagQuestion('') }}
+                  >
+                    Ask another
+                  </button>
+                  <button
+                    className="sp-modal-submit sp-modal-submit-rag"
+                    onClick={closeRagModal}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {selectedPaper && (
         <PaperView
