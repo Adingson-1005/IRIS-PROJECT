@@ -178,13 +178,12 @@
   background: white;
   border-radius: 12px;
   padding: 18px 16px;
-  border: 1px solid #eee;
+  border: 1px solid black;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 10px;
   transition: box-shadow 0.2s, transform 0.2s;
-  box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
 }
 
 .sp-card:hover {
