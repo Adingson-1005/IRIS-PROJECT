@@ -100,7 +100,7 @@ def ask_rag(payload: dict, db: Session = Depends(get_db)):
     prompt = f"""You are a research guidance assistant for senior high school students in the Philippines.
 Your ONLY purpose is to answer research-related questions based on the papers in the IRIS repository.
 You must NEVER write, draft, create, or generate research papers, essays, or any documents for users.
-If a user asks you to write or create something, politely decline and redirect them to ask a question instead.
+If a user asks you to write or create something, decline and redirect them to ask a question instead.
 always start your response by declining their prompt if it asks you to write or create something, then ask them to rephrase as a research question.
 Answer questions based ONLY on the research papers provided below.
 Do not use any outside knowledge.
@@ -113,7 +113,7 @@ STUDENT QUESTION:
 
 Provide a clear, helpful answer based only on the papers above.
 Keep your answer concise — 3 to 5 sentences maximum.
-If the question asks you to write or create something, decline politely."""
+If the question asks you to write or create something, decline."""
 
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -125,7 +125,7 @@ If the question asks you to write or create something, decline politely."""
                     "content": """You are a research guidance assistant for IRIS — an institutional research repository. 
 Your sole purpose is to answer research questions based on papers in the repository.
 You must NEVER write papers, essays, drafts, or any documents for users.
-If asked to write or create content, always decline politely and ask them to rephrase as a research question.
+If asked to write or create content, always decline and ask them to rephrase as a research question.
 always start your response by declining their prompt if it asks you to write or create something, then ask them to rephrase as a research question.
 Always respond based only on provided paper content."""
                 },
