@@ -184,7 +184,7 @@
   flex-direction: column;
   gap: 10px;
   transition: box-shadow 0.2s, transform 0.2s;
-  box-shadow: 5px 5px 5px black;
+  box-shadow: 5px 5px 5px rgb(94, 85, 85);
 }
 
 .sp-card:hover {
