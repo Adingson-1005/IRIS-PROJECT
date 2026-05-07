@@ -15,6 +15,8 @@ function SearchPapers() {
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState('')
   const [selectedPaper, setSelectedPaper] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const papersPerPage = 12
 
   // AI Checker states
   const [showModal, setShowModal] = useState(false)
@@ -161,6 +163,18 @@ function SearchPapers() {
     ? searchResults
     : applyFilters(allPapers)
 
+
+    const totalPages = Math.ceil(displayPapers.length / papersPerPage)
+const paginatedPapers = displayPapers.slice(
+  (currentPage - 1) * papersPerPage,
+  currentPage * papersPerPage
+)
+
+// Reset to page 1 when search/filter changes
+useEffect(() => {
+  setCurrentPage(1)
+}, [keyword, filters, mode])
+
   return (
     <div className="sp-container">
 
@@ -266,38 +280,100 @@ function SearchPapers() {
         )}
 
         <div className="sp-grid">
-          {displayPapers.map((paper) => {
-            const id = paper.paper_id || paper.id
-            return (
-              <div key={id} className="sp-card" onClick={() => setSelectedPaper(paper)}>
-                <div className="sp-card-top">
-                  <span className="sp-strand-badge">{paper.category || 'N/A'}</span>
-                  <span className="sp-card-year">{paper.year}</span>
-                </div>
-                <h3 className="sp-card-title">{paper.title}</h3>
-                <div className="sp-card-authors-row">
-                  <div className="sp-avatar">{initials(paper.authors)}</div>
-                  <span className="sp-author-name">
-                    {paper.authors?.split(',')[0]?.trim()}
-                    {paper.authors?.split(',').length > 1 &&
-                      ` +${paper.authors.split(',').length - 1}`}
-                  </span>
-                </div>
-                <p className="sp-card-abstract">
-                  {paper.abstract
-                    ? paper.abstract.substring(0, 120) + '...'
-                    : 'No abstract available.'}
-                </p>
-                <div className="sp-card-footer">
-                  <span className="sp-method-badge">{paper.methodology}</span>
-                  {mode === 'search' && paper.score && (
-                    <span className="sp-relevance-score">Score: {paper.score}</span>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+  {paginatedPapers.map((paper) => {
+    const id = paper.paper_id || paper.id
+    return (
+      <div key={id} className="sp-card" onClick={() => setSelectedPaper(paper)}>
+        <div className="sp-card-top">
+          <span className="sp-strand-badge">{paper.category || 'N/A'}</span>
+          <span className="sp-card-year">{paper.year}</span>
         </div>
+        <h3 className="sp-card-title">{paper.title}</h3>
+        <div className="sp-card-authors-row">
+          <div className="sp-avatar">{initials(paper.authors)}</div>
+          <span className="sp-author-name">
+            {paper.authors?.split(',')[0]?.trim()}
+            {paper.authors?.split(',').length > 1 &&
+              ` +${paper.authors.split(',').length - 1}`}
+          </span>
+        </div>
+        <p className="sp-card-abstract">
+          {paper.abstract
+            ? paper.abstract.substring(0, 120) + '...'
+            : 'No abstract available.'}
+        </p>
+        <div className="sp-card-footer">
+          <span className="sp-method-badge">{paper.methodology}</span>
+          {mode === 'search' && paper.score && (
+            <span className="sp-relevance-score">Score: {paper.score}</span>
+          )}
+        </div>
+      </div>
+    )
+  })}
+</div>
+
+{/* Pagination */}
+{totalPages > 1 && (
+  <div className="sp-pagination">
+    <button
+      className="sp-page-btn"
+      onClick={() => setCurrentPage(1)}
+      disabled={currentPage === 1}
+    >
+      «
+    </button>
+    <button
+      className="sp-page-btn"
+      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+      disabled={currentPage === 1}
+    >
+      ‹
+    </button>
+
+    {Array.from({ length: totalPages }, (_, i) => i + 1)
+      .filter(page =>
+        page === 1 ||
+        page === totalPages ||
+        Math.abs(page - currentPage) <= 1
+      )
+      .reduce((acc, page, idx, arr) => {
+        if (idx > 0 && page - arr[idx - 1] > 1) {
+          acc.push('...')
+        }
+        acc.push(page)
+        return acc
+      }, [])
+      .map((item, idx) =>
+        item === '...' ? (
+          <span key={`dots-${idx}`} className="sp-page-dots">...</span>
+        ) : (
+          <button
+            key={item}
+            className={`sp-page-btn ${currentPage === item ? 'sp-page-active' : ''}`}
+            onClick={() => setCurrentPage(item)}
+          >
+            {item}
+          </button>
+        )
+      )}
+
+    <button
+      className="sp-page-btn"
+      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+      disabled={currentPage === totalPages}
+    >
+      ›
+    </button>
+    <button
+      className="sp-page-btn"
+      onClick={() => setCurrentPage(totalPages)}
+      disabled={currentPage === totalPages}
+    >
+      »
+    </button>
+  </div>
+)}
       </div>
 
       {/* Floating Action Buttons */}
@@ -565,6 +641,40 @@ function SearchPapers() {
           onClose={() => setSelectedPaper(null)}
         />
       )}
+
+      {/* Footer */}
+<footer className="sp-footer">
+  <div className="sp-footer-content">
+    <div className="sp-footer-brand">
+      <h3>IRIS</h3>
+      <p>Institutional Research Repository System</p>
+    </div>
+    <div className="sp-footer-links">
+      <div className="sp-footer-col">
+        <h4>System</h4>
+        <p>Search Repository</p>
+        <p>AI Research Checker</p>
+        <p>AI Guidance (RAG)</p>
+      </div>
+      <div className="sp-footer-col">
+        <h4>Institution</h4>
+        <p>St. Joseph College</p>
+        <p>Olongapo City</p>
+        <p>Philippines</p>
+      </div>
+      <div className="sp-footer-col">
+        <h4>Developed by</h4>
+        <p>Team TECHRIFT</p>
+        <p>BSCS Capstone 2026</p>
+        <p>Allynson Ibanez</p>
+      </div>
+    </div>
+  </div>
+  <div className="sp-footer-bottom">
+    <p>© 2026 IRIS — Institutional Research Repository System. St. Joseph College Olongapo.</p>
+    <p>Built with ReactJS · FastAPI · PostgreSQL · Groq AI</p>
+  </div>
+</footer>
     </div>
   )
 }
