@@ -64,6 +64,24 @@ def ask_rag(payload: dict, db: Session = Depends(get_db)):
     if not question:
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
+    # Check if the question is trying to make the AI do something it shouldn't
+    rejected_keywords = [
+        "make me", "write me", "draft me", "create me", "generate me",
+        "write a paper", "make a paper", "draft a paper", "create a paper",
+        "write my", "do my", "finish my", "complete my",
+        "write an essay", "make an essay", "write a thesis",
+        "write a research", "make a research", "draft a research",
+        "write for me", "do this for me", "make this for me"
+    ]
+
+    question_lower = question.lower()
+    for keyword in rejected_keywords:
+        if keyword in question_lower:
+            return {
+                "answer": "I'm sorry, but I'm only able to assist with research-related questions based on the papers in the IRIS repository. I cannot write, draft, or create research papers or documents for you. Please ask me a question about research topics, methodologies, or findings from the repository instead.",
+                "sources": []
+            }
+
     relevant_papers = search_relevant_papers(question, db)
 
     if not relevant_papers:
@@ -79,9 +97,13 @@ def ask_rag(payload: dict, db: Session = Depends(get_db)):
         context += f"Abstract: {paper['abstract'][:1000]}\n"
         context += "---\n"
 
-    prompt = f"""You are a research assistant for senior high school students in the Philippines.
-You answer questions based ONLY on the research papers provided below.
-Do not use any outside knowledge. If the papers do not contain enough information to answer the question, say so clearly.
+    prompt = f"""You are a research guidance assistant for senior high school students in the Philippines.
+Your ONLY purpose is to answer research-related questions based on the papers in the IRIS repository.
+You must not write, draft, generate, or complete research papers, essays, or any academic documents for users.
+If a user asks you to create written content for them — including writing sections of a paper, essays, conclusions, introductions, or rephrasing pasted academic content — politely decline the request first and ask them to instead ask a research-related question about the papers in the IRIS repository.
+Only decline when the user is requesting content creation or rewriting. If the user is simply asking a research-related question, answer normally without declining., then ask them to rephrase as a research question.
+Answer questions based ONLY on the research papers provided below.
+Do not use any outside knowledge.
 
 RESEARCH PAPERS FROM THE REPOSITORY:
 {context}
@@ -91,7 +113,7 @@ STUDENT QUESTION:
 
 Provide a clear, helpful answer based only on the papers above.
 Keep your answer concise — 3 to 5 sentences maximum.
-Do not mention paper numbers in your answer."""
+If the question asks you to write or create something, decline."""
 
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -100,7 +122,12 @@ Do not mention paper numbers in your answer."""
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a research assistant that answers questions based only on provided research papers. Always cite which papers informed your answer."
+                    "content": """You are a research guidance assistant for IRIS — an institutional research repository. 
+Your sole purpose is to answer research questions based on papers in the repository.
+You must not write, draft, generate, or complete research papers, essays, or any academic documents for users.
+If a user asks you to create written content for them — including writing sections of a paper, essays, conclusions, introductions, or rephrasing pasted academic content — politely decline the request first and ask them to instead ask a research-related question about the papers in the IRIS repository.
+Only decline when the user is requesting content creation or rewriting. If the user is simply asking a research-related question, answer normally without declining., then ask them to rephrase as a research question.
+Always respond based only on provided paper content."""
                 },
                 {
                     "role": "user",
