@@ -184,7 +184,7 @@ useEffect(() => {
         <img
                     src={IRISlogo}
                     alt="IRIS Logo"
-                    className="login-logo-text"
+                    className="sp-login-logo-text"
                   />
         <button
           className="sp-logout-btn"

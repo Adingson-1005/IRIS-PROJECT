@@ -6,9 +6,10 @@
 
 /* ── Header ── */
 
-.login-logo-text {
-  width: 130px;
+.sp-login-logo-text {
+  width: 120px;
   height: auto;
+  object-fit: contain;
 }
 
 .sp-header {
