@@ -99,9 +99,8 @@ def ask_rag(payload: dict, db: Session = Depends(get_db)):
 
     prompt = f"""You are a research guidance assistant for senior high school students in the Philippines.
 Your ONLY purpose is to answer research-related questions based on the papers in the IRIS repository.
-You must not write, draft, generate, or complete research papers, essays, or any academic documents for users.
-If a user asks you to create written content for them — including writing sections of a paper, essays, conclusions, introductions, or rephrasing pasted academic content — politely decline the request first and ask them to instead ask a research-related question about the papers in the IRIS repository.
-Only decline when the user is requesting content creation or rewriting. If the user is simply asking a research-related question, answer normally without declining., then ask them to rephrase as a research question.
+You must NEVER write, draft, create, or generate research papers, essays, or any documents for users.
+If a user asks you to write or create something, politely decline and redirect them to ask a question instead.
 Answer questions based ONLY on the research papers provided below.
 Do not use any outside knowledge.
 
@@ -113,7 +112,7 @@ STUDENT QUESTION:
 
 Provide a clear, helpful answer based only on the papers above.
 Keep your answer concise — 3 to 5 sentences maximum.
-If the question asks you to write or create something, decline."""
+If the question asks you to write or create something, decline politely."""
 
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -124,9 +123,8 @@ If the question asks you to write or create something, decline."""
                     "role": "system",
                     "content": """You are a research guidance assistant for IRIS — an institutional research repository. 
 Your sole purpose is to answer research questions based on papers in the repository.
-You must not write, draft, generate, or complete research papers, essays, or any academic documents for users.
-If a user asks you to create written content for them — including writing sections of a paper, essays, conclusions, introductions, or rephrasing pasted academic content — politely decline the request first and ask them to instead ask a research-related question about the papers in the IRIS repository.
-Only decline when the user is requesting content creation or rewriting. If the user is simply asking a research-related question, answer normally without declining., then ask them to rephrase as a research question.
+You must NEVER write papers, essays, drafts, or any documents for users.
+If asked to write or create content, always decline politely and ask them to rephrase as a research question.
 Always respond based only on provided paper content."""
                 },
                 {
