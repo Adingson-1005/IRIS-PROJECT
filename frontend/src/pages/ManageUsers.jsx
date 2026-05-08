@@ -16,6 +16,7 @@ function ManageUsers() {
   const [adding, setAdding] = useState(false)
   const [addMessage, setAddMessage] = useState('')
   const [addError, setAddError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState(null)
 
   useEffect(() => { fetchUsers() }, [])
 
@@ -32,27 +33,26 @@ function ManageUsers() {
     setLoading(false)
   }
 
-  const handleDelete = async (userId, name, role) => {
-    if (role === 'admin') {
-      alert('Admin accounts cannot be deleted.')
-      return
-    }
-    const confirm = window.confirm(
-      `Are you sure you want to delete "${name}"? This cannot be undone.`
-    )
-    if (!confirm) return
-    setDeleting(userId)
-    try {
-      const token = localStorage.getItem('token')
-      await axios.delete(`https://iris-backend-7717.onrender.com/users/delete/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setUsers(users.filter(u => u.id !== userId))
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to delete user')
-    }
-    setDeleting(null)
+  const handleDelete = async () => {
+  if (!deleteTarget) return
+  if (deleteTarget.role === 'admin') {
+    alert('Admin accounts cannot be deleted.')
+    setDeleteTarget(null)
+    return
   }
+  setDeleting(deleteTarget.id)
+  try {
+    const token = localStorage.getItem('token')
+    await axios.delete(`https://iris-backend-7717.onrender.com/users/delete/${deleteTarget.id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    setUsers(users.filter(u => u.id !== deleteTarget.id))
+    setDeleteTarget(null)
+  } catch (err) {
+    alert(err.response?.data?.detail || 'Failed to delete user')
+  }
+  setDeleting(null)
+}
 
   const handleAddUser = async () => {
     if (!formData.full_name.trim()) { setAddError('Full name is required'); return }
@@ -188,12 +188,12 @@ function ManageUsers() {
                         <span className="mu-protected">Protected</span>
                       ) : (
                         <button
-                          className="mu-delete"
-                          onClick={() => handleDelete(user.id, user.full_name, user.role)}
-                          disabled={deleting === user.id}
-                        >
-                          {deleting === user.id ? 'Deleting...' : 'Delete'}
-                        </button>
+                        className="mu-delete"
+                        onClick={() => setDeleteTarget({ id: user.id, name: user.full_name, role: user.role })}
+                        disabled={deleting === user.id}
+                      >
+                        {deleting === user.id ? 'Deleting...' : 'Delete'}
+                      </button>
                       )}
                     </td>
                   </tr>
@@ -271,6 +271,34 @@ function ManageUsers() {
           </div>
         </div>
       )}
+
+      {deleteTarget && (
+  <div className="confirm-overlay">
+    <div className="confirm-modal">
+      <div className="confirm-icon">🗑️</div>
+      <h3 className="confirm-title">Delete User?</h3>
+      <p className="confirm-desc">
+        Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>?
+        This cannot be undone.
+      </p>
+      <div className="confirm-actions">
+        <button
+          className="confirm-cancel"
+          onClick={() => setDeleteTarget(null)}
+        >
+          Cancel
+        </button>
+        <button
+          className="confirm-delete"
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? 'Deleting...' : 'Yes, Delete'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   )
 }

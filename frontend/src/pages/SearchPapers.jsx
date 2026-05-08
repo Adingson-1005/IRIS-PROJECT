@@ -665,8 +665,7 @@ useEffect(() => {
       <div className="sp-footer-col">
         <h4>Developed by</h4>
         <p>Team TECHRIFT</p>
-        <p>BSCS Capstone 2026</p>
-        <p>Allynson Ibanez</p>
+        <p>BSCS Thesis 2026</p>
       </div>
     </div>
   </div>
