@@ -236,12 +236,14 @@
   .login-right {
     width: 100%;
     padding: 32px 20px;
+    margin: auto 0;
   }
 
   .login-form-card {
     padding: 28px 24px;
     box-shadow: none;
     border-radius: 16px;
+    box-shadow: 0 0px 10px rgba(0, 0, 0, 0.412);
   }
 }
 
@@ -249,6 +251,7 @@
   .login-left {
     min-height: 200px;
     padding: 28px 20px;
+    display: none;
   }
 
   .login-headline {
