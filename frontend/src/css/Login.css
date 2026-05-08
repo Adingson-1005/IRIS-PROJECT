@@ -13,9 +13,8 @@
   flex: 1;
   background: linear-gradient(135deg, #1a1a2e 0%, #1a56db 60%, #7e3af2 100%);
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 48px 56px;
+  padding: 10% 56px;
   position: relative;
   overflow: hidden;
   width: 60vw;
@@ -24,7 +23,6 @@
 .login-left::before {
   content: '';
   position: absolute;
-  width: 400px;
   height: 400px;
   border-radius: 50%;
   background: rgba(126, 58, 242, 0.15);
@@ -35,7 +33,6 @@
 .login-left::after {
   content: '';
   position: absolute;
-  width: 300px;
   height: 300px;
   border-radius: 50%;
   background: rgba(26, 86, 219, 0.2);
@@ -46,7 +43,6 @@
 .login-left-content {
   position: relative;
   z-index: 1;
-  max-width: 480px;
 }
 
 .login-logo {
@@ -58,7 +54,6 @@
   font-weight: 800;
   color: white;
   letter-spacing: 4px;
-  border: 3px solid rgba(255,255,255,0.4);
   padding: 6px 20px;
   border-radius: 8px;
 }
@@ -79,36 +74,9 @@
   margin-bottom: 36px;
 }
 
-.login-features {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.login-feature-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: rgba(255,255,255,0.85);
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.login-feature-icon {
-  font-size: 18px;
-  width: 36px;
-  height: 36px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 /* ── Right side ── */
 .login-right {
-  width: 460px;
+  width: 45vw;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -232,7 +200,7 @@
 .login-footer-text {
   text-align: center;
   font-size: 12px;
-  color: #bbb;
+  color: #1a1a2e;
   margin-top: 24px;
 }
 

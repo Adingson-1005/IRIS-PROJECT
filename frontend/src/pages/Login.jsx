@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import '../css/Login.css'
+import IRISlogo from '../assets/IRISlogo.png'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -54,8 +55,12 @@ function Login() {
       <div className="login-left">
         <div className="login-left-content">
           <div className="login-logo">
-            <span className="login-logo-text">IRIS</span>
-          </div>
+          <img
+            src={IRISlogo}
+            alt="IRIS Logo"
+            className="login-logo-text"
+          />
+        </div>
           <h1 className="login-headline">
             A Smarter Way to Search and Manage Research
           </h1>
@@ -64,20 +69,6 @@ function Login() {
             and researchers quickly find, analyze, and access academic papers
             with AI-assisted guidance.
           </p>
-          <div className="login-features">
-            <div className="login-feature-item">
-              <span className="login-feature-icon">🔍</span>
-              <span>Inverted Index Search Algorithm</span>
-            </div>
-            <div className="login-feature-item">
-              <span className="login-feature-icon">🤖</span>
-              <span>AI Research Checker</span>
-            </div>
-            <div className="login-feature-item">
-              <span className="login-feature-icon">💬</span>
-              <span>RAG-Based AI Guidance</span>
-            </div>
-          </div>
         </div>
       </div>
 
