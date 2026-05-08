@@ -134,7 +134,7 @@ function Login() {
           </button>
 
           <p className="login-footer-text">
-            St. Joseph College Olongapo · BSCS Capstone 2026
+            St. Joseph College Olongapo
           </p>
         </div>
       </div>

@@ -18,6 +18,7 @@
   padding: 48px 56px;
   position: relative;
   overflow: hidden;
+  width: 60vw;
 }
 
 .login-left::before {
