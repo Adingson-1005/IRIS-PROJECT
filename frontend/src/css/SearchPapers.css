@@ -5,6 +5,12 @@
 }
 
 /* ── Header ── */
+
+.login-logo-text {
+  width: 130px;
+  height: auto;
+}
+
 .sp-header {
   background-color: #7e3af2;
   padding: 14px 20px;
@@ -16,12 +22,6 @@
   position: sticky;
   top: 0;
   z-index: 90;
-}
-
-.sp-header-title {
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
 }
 
 .sp-logout-btn {
@@ -850,7 +850,6 @@
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
-  .sp-header-title { font-size: 15px; }
   .sp-body { padding: 16px 12px 100px; }
   .sp-input { font-size: 13px; padding: 10px 12px; }
   .sp-search-btn { padding: 10px 14px; font-size: 13px; }

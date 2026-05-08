@@ -3,6 +3,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import '../css/SearchPapers.css'
 import PaperView from '../components/PaperView'
+import IRISlogo from '../assets/IRISlogo.png'
 
 function SearchPapers() {
   const navigate = useNavigate()
@@ -180,7 +181,11 @@ useEffect(() => {
 
       {/* Header */}
       <div className="sp-header">
-        <h1 className="sp-header-title">IRIS — Research Repository</h1>
+        <img
+                    src={IRISlogo}
+                    alt="IRIS Logo"
+                    className="login-logo-text"
+                  />
         <button
           className="sp-logout-btn"
           onClick={() => { localStorage.clear(); navigate('/') }}
