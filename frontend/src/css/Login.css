@@ -213,6 +213,7 @@
   .login-left {
     padding: 40px 28px;
     min-height: 280px;
+    display: none;
   }
 
   .login-headline {
