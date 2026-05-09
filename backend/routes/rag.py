@@ -10,15 +10,34 @@ load_dotenv()
 
 router = APIRouter()
 
+REJECTED_KEYWORDS = [
+    "make me", "write me", "draft me", "create me", "generate me",
+    "write a paper", "make a paper", "draft a paper", "create a paper",
+    "write my", "do my", "finish my", "complete my",
+    "write an essay", "make an essay", "write a thesis",
+    "write a research", "make a research", "draft a research",
+    "write for me", "do this for me", "make this for me"
+]
+
+SYSTEM_PROMPT = """You are a research guidance assistant for IRIS, an institutional research repository for St. Joseph College Olongapo.
+You help senior high school students understand research concepts, methodologies, and academic topics.
+You can answer general research questions using your knowledge, and also reference papers from the repository when relevant.
+You must NEVER write papers, essays, drafts, or complete any research task for students.
+If asked to write or create content, always decline politely."""
+
+
 def search_relevant_papers(question: str, db: Session, limit: int = 3):
-    words = question.lower().split()
     stop_words = {
         'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to',
         'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were',
         'be', 'been', 'have', 'has', 'do', 'does', 'did', 'this', 'that',
         'it', 'as', 'what', 'how', 'why', 'when', 'where', 'who', 'which'
     }
-    keywords = [w for w in words if w not in stop_words and len(w) > 2]
+
+    keywords = [
+        w for w in question.lower().split()
+        if w not in stop_words and len(w) > 2
+    ]
 
     if not keywords:
         return []
@@ -44,7 +63,6 @@ def search_relevant_papers(question: str, db: Session, limit: int = 3):
             }
 
     sorted_papers = sorted(paper_scores.items(), key=lambda x: x[1], reverse=True)
-    top_papers = sorted_papers[:limit]
 
     return [
         {
@@ -54,8 +72,40 @@ def search_relevant_papers(question: str, db: Session, limit: int = 3):
             "authors": paper_info[pid]["authors"],
             "abstract": paper_info[pid]["abstract"]
         }
-        for pid, score in top_papers
+        for pid, score in sorted_papers[:limit]
     ]
+
+
+def build_context(relevant_papers: list) -> str:
+    if not relevant_papers:
+        return "No directly relevant papers found in the repository for this question."
+
+    context = ""
+    for i, paper in enumerate(relevant_papers):
+        context += f"\nPaper {i + 1}: {paper['title']}\n"
+        context += f"Authors: {paper['authors']}\n"
+        context += f"Abstract: {paper['abstract'][:1000]}\n"
+        context += "---\n"
+    return context
+
+
+def build_prompt(question: str, context: str) -> str:
+    return f"""You are a research guidance assistant for senior high school students in the Philippines.
+You help students understand research concepts, methodologies, and academic topics.
+
+REPOSITORY PAPERS (use these as references when relevant):
+{context}
+
+STUDENT QUESTION:
+{question}
+
+INSTRUCTIONS:
+- Answer research-related questions using your general knowledge about research and academics
+- If the repository papers above are relevant to the question, incorporate them and cite the paper titles
+- If no papers are relevant, answer from your general knowledge about research
+- Keep your answer clear and helpful — 3 to 5 sentences maximum
+- Do not write, draft, or create research papers or documents for the student"""
+
 
 @router.post("/ask")
 def ask_rag(payload: dict, db: Session = Depends(get_db)):
@@ -64,91 +114,37 @@ def ask_rag(payload: dict, db: Session = Depends(get_db)):
     if not question:
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-    # Check if the question is trying to make the AI do something it shouldn't
-    rejected_keywords = [
-        "make me", "write me", "draft me", "create me", "generate me",
-        "write a paper", "make a paper", "draft a paper", "create a paper",
-        "write my", "do my", "finish my", "complete my",
-        "write an essay", "make an essay", "write a thesis",
-        "write a research", "make a research", "draft a research",
-        "write for me", "do this for me", "make this for me"
-    ]
-
     question_lower = question.lower()
-    for keyword in rejected_keywords:
+    for keyword in REJECTED_KEYWORDS:
         if keyword in question_lower:
             return {
-                "answer": "I'm sorry, but I'm only able to assist with research-related questions based on the papers in the IRIS repository. I cannot write, draft, or create research papers or documents for you. Please ask me a question about research topics, methodologies, or findings from the repository instead.",
+                "answer": "I'm sorry, but I'm only able to assist with research-related questions. I cannot write, draft, or create research papers or documents for you. Please ask me a question about research topics, concepts, or methodologies instead.",
                 "sources": []
             }
 
     relevant_papers = search_relevant_papers(question, db)
-
-    if not relevant_papers:
-        return {
-            "answer": "I could not find any relevant research papers in the repository to answer your question. Try asking about topics covered in the uploaded papers.",
-            "sources": []
-        }
-
-    context = ""
-    for i, paper in enumerate(relevant_papers):
-        context += f"\nPaper {i+1}: {paper['title']}\n"
-        context += f"Authors: {paper['authors']}\n"
-        context += f"Abstract: {paper['abstract'][:1000]}\n"
-        context += "---\n"
-
-    prompt = f"""You are a research guidance assistant for senior high school students in the Philippines.
-Your ONLY purpose is to answer research-related questions based on the papers in the IRIS repository.
-You must not write, draft, generate, or complete research papers, essays, or any academic documents for users.
-If a user asks you to create written content for them — including writing sections of a paper, essays, conclusions, introductions, or rephrasing pasted academic content — politely decline the request first and ask them to instead ask a research-related question about the papers in the IRIS repository.
-Only decline when the user is requesting content creation or rewriting. If the user is simply asking a research-related question, answer normally without declining., then ask them to rephrase as a research question.
-Answer questions based ONLY on the research papers provided below.
-Do not use any outside knowledge.
-
-RESEARCH PAPERS FROM THE REPOSITORY:
-{context}
-
-STUDENT QUESTION:
-{question}
-
-Provide a clear, helpful answer based only on the papers above.
-Keep your answer concise — 3 to 5 sentences maximum.
-If the question asks you to write or create something, decline."""
+    context = build_context(relevant_papers)
+    prompt = build_prompt(question, context)
 
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {
-                    "role": "system",
-                    "content": """You are a research guidance assistant for IRIS — an institutional research repository. 
-Your sole purpose is to answer research questions based on papers in the repository.
-You must not write, draft, generate, or complete research papers, essays, or any academic documents for users.
-If a user asks you to create written content for them — including writing sections of a paper, essays, conclusions, introductions, or rephrasing pasted academic content — politely decline the request first and ask them to instead ask a research-related question about the papers in the IRIS repository.
-Only decline when the user is requesting content creation or rewriting. If the user is simply asking a research-related question, answer normally without declining., then ask them to rephrase as a research question.
-Always respond based only on provided paper content."""
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
             ],
-            temperature=0.2,
+            temperature=0.3,
             max_tokens=500
         )
 
         answer = response.choices[0].message.content.strip()
-
         sources = [
             {"title": p["title"], "authors": p["authors"]}
             for p in relevant_papers
         ]
 
-        return {
-            "answer": answer,
-            "sources": sources
-        }
+        return {"answer": answer, "sources": sources}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
