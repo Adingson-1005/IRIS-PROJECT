@@ -909,6 +909,123 @@
   color: #aaa;
 }
 
+/* ── Header right ── */
+.sp-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sp-greeting {
+  color: rgba(255,255,255,0.9);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Search history ── */
+.sp-search-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.sp-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.sp-history-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.sp-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sp-history-clear {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: #7e3af2;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+}
+
+.sp-history-clear:hover {
+  text-decoration: underline;
+}
+
+.sp-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.sp-history-item:hover {
+  background-color: #f9fafb;
+}
+
+.sp-history-icon {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* ── APA Citation button ── */
+.sp-copy-btn {
+  padding: 3px 8px;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.sp-copy-btn:hover {
+  background-color: #ede9fe;
+  border-color: #7e3af2;
+  color: #7e3af2;
+}
+
+.sp-copy-done {
+  background-color: #d1fae5;
+  border-color: #0e9f6e;
+  color: #065f46;
+}
+
+@media (max-width: 600px) {
+  .sp-greeting { display: none; }
+  .sp-recent-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 600px) {
   .sp-footer-content {
     flex-direction: column;

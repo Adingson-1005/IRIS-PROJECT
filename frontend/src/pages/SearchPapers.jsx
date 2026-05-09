@@ -7,8 +7,12 @@ import IRISlogo from '../assets/IRISlogo.png'
 
 function SearchPapers() {
   const navigate = useNavigate()
+  const full_name = localStorage.getItem('full_name')
+  const firstName = full_name ? full_name.split(' ')[0] : 'Student'
+
   const [keyword, setKeyword] = useState('')
   const [filters, setFilters] = useState({ category: '', methodology: '', year: '' })
+  const [sortOrder, setSortOrder] = useState('desc')
   const [allPapers, setAllPapers] = useState([])
   const [searchResults, setSearchResults] = useState([])
   const [mode, setMode] = useState('browse')
@@ -17,7 +21,15 @@ function SearchPapers() {
   const [error, setError] = useState('')
   const [selectedPaper, setSelectedPaper] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [copiedId, setCopiedId] = useState(null)
   const papersPerPage = 12
+
+  // Search history
+  const [searchHistory, setSearchHistory] = useState(() => {
+    const saved = localStorage.getItem('iris_search_history')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [showHistory, setShowHistory] = useState(false)
 
   // AI Checker states
   const [showModal, setShowModal] = useState(false)
@@ -36,6 +48,8 @@ function SearchPapers() {
 
   useEffect(() => { fetchAllPapers() }, [])
 
+  useEffect(() => { setCurrentPage(1) }, [keyword, filters, mode, sortOrder])
+
   const fetchAllPapers = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -50,56 +64,63 @@ function SearchPapers() {
   }
 
   const handleSearch = async () => {
-  if (!keyword.trim()) { setMode('browse'); return }
-  setSearching(true)
-  setError('')
+    if (!keyword.trim()) { setMode('browse'); return }
+    setSearching(true)
+    setError('')
+    setShowHistory(false)
 
-  // Save to history
-  const newHistory = [
-    keyword.trim(),
-    ...searchHistory.filter(h => h !== keyword.trim())
-  ].slice(0, 8)
-  setSearchHistory(newHistory)
-  localStorage.setItem('iris_search_history', JSON.stringify(newHistory))
+    const newHistory = [
+      keyword.trim(),
+      ...searchHistory.filter(h => h !== keyword.trim())
+    ].slice(0, 8)
+    setSearchHistory(newHistory)
+    localStorage.setItem('iris_search_history', JSON.stringify(newHistory))
 
-  try {
-    const token = localStorage.getItem('token')
-    const params = { keyword }
-    if (filters.category) params.category = filters.category
-    if (filters.methodology) params.methodology = filters.methodology
-    if (filters.year) params.year = filters.year
-    const response = await axios.get('https://iris-backend-7717.onrender.com/search/', {
-      params,
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    setSearchResults(response.data.results)
-    setMode('search')
-  } catch {
-    setError('Search failed. Please try again.')
+    try {
+      const token = localStorage.getItem('token')
+      const params = { keyword }
+      if (filters.category) params.category = filters.category
+      if (filters.methodology) params.methodology = filters.methodology
+      if (filters.year) params.year = filters.year
+      const response = await axios.get('https://iris-backend-7717.onrender.com/search/', {
+        params,
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setSearchResults(response.data.results)
+      setMode('search')
+    } catch {
+      setError('Search failed. Please try again.')
+    }
+    setSearching(false)
   }
-  setSearching(false)
-  setShowHistory(false)
-}
 
   const handleClear = () => {
-  setKeyword('')
-  setFilters({ category: '', methodology: '', year: '' })
-  setMode('browse')
-  setSearchResults([])
-  setError('')
-  setShowHistory(false)
-}
+    setKeyword('')
+    setFilters({ category: '', methodology: '', year: '' })
+    setMode('browse')
+    setSearchResults([])
+    setError('')
+    setShowHistory(false)
+  }
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSearch()
   }
 
-  const applyFilters = (papers) => papers.filter(p => {
-    if (filters.category && p.category !== filters.category) return false
-    if (filters.methodology && p.methodology !== filters.methodology) return false
-    if (filters.year && String(p.year) !== String(filters.year)) return false
-    return true
-  })
+  const applyFilters = (papers) => {
+    return papers
+      .filter(p => {
+        if (filters.category && p.category !== filters.category) return false
+        if (filters.methodology && p.methodology !== filters.methodology) return false
+        if (filters.year && String(p.year) !== String(filters.year)) return false
+        return true
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.created_at)
+        const dateB = new Date(b.created_at)
+        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB
+      })
+  }
 
   const handleSubmitPaper = async () => {
     if (!submitFile) { setSubmitError('Please select a PDF file'); return }
@@ -150,6 +171,19 @@ function SearchPapers() {
     setRagLoading(false)
   }
 
+  const handleCopyAPA = (e, paper) => {
+    e.stopPropagation()
+    const id = paper.paper_id || paper.id
+    const authors = paper.authors || 'Unknown Author'
+    const year = paper.year || 'n.d.'
+    const title = paper.title || 'Untitled'
+    const institution = 'St. Joseph College Olongapo'
+    const apa = `${authors} (${year}). ${title}. ${institution}.`
+    navigator.clipboard.writeText(apa)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
   const closeCheckerModal = () => {
     setShowModal(false)
     setSubmitError('')
@@ -175,107 +209,138 @@ function SearchPapers() {
     ? searchResults
     : applyFilters(allPapers)
 
+  const totalPages = Math.ceil(displayPapers.length / papersPerPage)
+  const paginatedPapers = displayPapers.slice(
+    (currentPage - 1) * papersPerPage,
+    currentPage * papersPerPage
+  )
 
-    const totalPages = Math.ceil(displayPapers.length / papersPerPage)
-const paginatedPapers = displayPapers.slice(
-  (currentPage - 1) * papersPerPage,
-  currentPage * papersPerPage
-)
-
-const [searchHistory, setSearchHistory] = useState(() => {
-  const saved = localStorage.getItem('iris_search_history')
-  return saved ? JSON.parse(saved) : []
-})
-const [showHistory, setShowHistory] = useState(false)
-
-// Reset to page 1 when search/filter changes
-useEffect(() => {
-  setCurrentPage(1)
-}, [keyword, filters, mode])
+  const renderCard = (paper, showCopy = true) => {
+    const id = paper.paper_id || paper.id
+    return (
+      <div key={id} className="sp-card" onClick={() => setSelectedPaper(paper)}>
+        <div className="sp-card-top">
+          <span className="sp-strand-badge">{paper.category || 'N/A'}</span>
+          <span className="sp-card-year">{paper.year}</span>
+        </div>
+        <h3 className="sp-card-title">{paper.title}</h3>
+        <div className="sp-card-authors-row">
+          <div className="sp-avatar">{initials(paper.authors)}</div>
+          <span className="sp-author-name">
+            {paper.authors?.split(',')[0]?.trim()}
+            {paper.authors?.split(',').length > 1 &&
+              ` +${paper.authors.split(',').length - 1}`}
+          </span>
+        </div>
+        <p className="sp-card-abstract">
+          {paper.abstract
+            ? paper.abstract.substring(0, 120) + '...'
+            : 'No abstract available.'}
+        </p>
+        <div className="sp-card-footer">
+          <span className="sp-method-badge">{paper.methodology}</span>
+          {mode === 'search' && paper.score && (
+            <span className="sp-relevance-score">Score: {paper.score}</span>
+          )}
+          {showCopy && (
+            <button
+              className={`sp-copy-btn ${copiedId === id ? 'sp-copy-done' : ''}`}
+              onClick={(e) => handleCopyAPA(e, paper)}
+              title="Copy APA Citation"
+            >
+              {copiedId === id ? '✓ Copied' : 'Cite'}
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="sp-container">
 
       {/* Header */}
       <div className="sp-header">
-        <img
-                    src={IRISlogo}
-                    alt="IRIS Logo"
-                    className="sp-login-logo-text"
-                  />
-        <button
-          className="sp-logout-btn"
-          onClick={() => { localStorage.clear(); navigate('/') }}
-        >
-          Logout
-        </button>
+        <img src={IRISlogo} alt="IRIS Logo" className="sp-login-logo-text" />
+        <div className="sp-header-right">
+          <span className="sp-greeting">Hi, {firstName}!</span>
+          <button
+            className="sp-logout-btn"
+            onClick={() => { localStorage.clear(); navigate('/') }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Body */}
       <div className="sp-body">
-        <div className="sp-search-wrapper">
-  <div className="sp-search-row">
-    <div className="sp-input-wrapper">
-      <input
-        className="sp-input"
-        type="text"
-        placeholder="Search by keyword..."
-        value={keyword}
-        onChange={(e) => {
-          setKeyword(e.target.value)
-          setShowHistory(e.target.value === '' && searchHistory.length > 0)
-        }}
-        onFocus={() => {
-          if (!keyword && searchHistory.length > 0) setShowHistory(true)
-        }}
-        onBlur={() => setTimeout(() => setShowHistory(false), 150)}
-        onKeyDown={handleKeyDown}
-      />
-      {showHistory && searchHistory.length > 0 && (
-        <div className="sp-history-dropdown">
-          <div className="sp-history-header">
-            <span>Recent Searches</span>
-            <button
-              className="sp-history-clear"
-              onMouseDown={() => {
-                setSearchHistory([])
-                localStorage.removeItem('iris_search_history')
-                setShowHistory(false)
-              }}
-            >
-              Clear all
-            </button>
-          </div>
-          {searchHistory.map((item, i) => (
-            <div
-              key={i}
-              className="sp-history-item"
-              onMouseDown={() => {
-                setKeyword(item)
-                setShowHistory(false)
-                setTimeout(() => handleSearch(), 0)
-              }}
-            >
-              <span className="sp-history-icon">🕐</span>
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-    <button
-      className="sp-search-btn"
-      onClick={handleSearch}
-      disabled={searching}
-    >
-      {searching ? '...' : 'Search'}
-    </button>
-    {mode === 'search' && (
-      <button className="sp-clear-btn" onClick={handleClear}>Clear</button>
-    )}
-  </div>
-</div>
 
+        {/* Search with history */}
+        <div className="sp-search-wrapper">
+          <div className="sp-search-row">
+            <div className="sp-input-wrapper">
+              <input
+                className="sp-input"
+                type="text"
+                placeholder="Search by keyword..."
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value)
+                  setShowHistory(e.target.value === '' && searchHistory.length > 0)
+                }}
+                onFocus={() => {
+                  if (!keyword && searchHistory.length > 0) setShowHistory(true)
+                }}
+                onBlur={() => setTimeout(() => setShowHistory(false), 150)}
+                onKeyDown={handleKeyDown}
+              />
+              {showHistory && searchHistory.length > 0 && (
+                <div className="sp-history-dropdown">
+                  <div className="sp-history-header">
+                    <span>Recent Searches</span>
+                    <button
+                      className="sp-history-clear"
+                      onMouseDown={() => {
+                        setSearchHistory([])
+                        localStorage.removeItem('iris_search_history')
+                        setShowHistory(false)
+                      }}
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  {searchHistory.map((item, i) => (
+                    <div
+                      key={i}
+                      className="sp-history-item"
+                      onMouseDown={() => {
+                        setKeyword(item)
+                        setShowHistory(false)
+                        setTimeout(() => handleSearch(), 0)
+                      }}
+                    >
+                      <span className="sp-history-icon">🕐</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              className="sp-search-btn"
+              onClick={handleSearch}
+              disabled={searching}
+            >
+              {searching ? '...' : 'Search'}
+            </button>
+            {mode === 'search' && (
+              <button className="sp-clear-btn" onClick={handleClear}>Clear</button>
+            )}
+          </div>
+        </div>
+
+        {/* Filters + Sort */}
         <div className="sp-filters">
           <select
             className="sp-select"
@@ -311,19 +376,31 @@ useEffect(() => {
             min="2000"
             max="2030"
           />
+
+          {mode === 'browse' && (
+            <select
+              className="sp-select"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="desc">Newest First</option>
+              <option value="asc">Oldest First</option>
+            </select>
+          )}
         </div>
 
         {error && <p className="sp-error">{error}</p>}
 
+        {/* Status bar */}
         <div className="sp-status-bar">
           {mode === 'browse' && !loading && (
             <p className="sp-results-label">
-              Showing all papers ({displayPapers.length})
+              All Papers ({displayPapers.length})
             </p>
           )}
           {mode === 'search' && !searching && (
             <p className="sp-results-label">
-              {displayPapers.length} result{displayPapers.length !== 1 ? 's' : ''} found for "{keyword}"
+              {displayPapers.length} result{displayPapers.length !== 1 ? 's' : ''} for "{keyword}"
               <span className="sp-relevance-note"> — sorted by relevance</span>
             </p>
           )}
@@ -332,9 +409,7 @@ useEffect(() => {
         {loading && <div className="sp-empty-state"><p>Loading papers...</p></div>}
 
         {!loading && displayPapers.length === 0 && mode === 'browse' && (
-          <div className="sp-empty-state">
-            <p>No papers in the repository yet.</p>
-          </div>
+          <div className="sp-empty-state"><p>No papers in the repository yet.</p></div>
         )}
 
         {!loading && displayPapers.length === 0 && mode === 'search' && (
@@ -343,112 +418,47 @@ useEffect(() => {
           </div>
         )}
 
+        {/* Main grid */}
         <div className="sp-grid">
-  {paginatedPapers.map((paper) => {
-    const id = paper.paper_id || paper.id
-    return (
-      <div key={id} className="sp-card" onClick={() => setSelectedPaper(paper)}>
-        <div className="sp-card-top">
-          <span className="sp-strand-badge">{paper.category || 'N/A'}</span>
-          <span className="sp-card-year">{paper.year}</span>
+          {paginatedPapers.map((paper) => renderCard(paper))}
         </div>
-        <h3 className="sp-card-title">{paper.title}</h3>
-        <div className="sp-card-authors-row">
-          <div className="sp-avatar">{initials(paper.authors)}</div>
-          <span className="sp-author-name">
-            {paper.authors?.split(',')[0]?.trim()}
-            {paper.authors?.split(',').length > 1 &&
-              ` +${paper.authors.split(',').length - 1}`}
-          </span>
-        </div>
-        <p className="sp-card-abstract">
-          {paper.abstract
-            ? paper.abstract.substring(0, 120) + '...'
-            : 'No abstract available.'}
-        </p>
-        <div className="sp-card-footer">
-          <span className="sp-method-badge">{paper.methodology}</span>
-          {mode === 'search' && paper.score && (
-            <span className="sp-relevance-score">Score: {paper.score}</span>
-          )}
-        </div>
-      </div>
-    )
-  })}
-</div>
 
-{/* Pagination */}
-{totalPages > 1 && (
-  <div className="sp-pagination">
-    <button
-      className="sp-page-btn"
-      onClick={() => setCurrentPage(1)}
-      disabled={currentPage === 1}
-    >
-      «
-    </button>
-    <button
-      className="sp-page-btn"
-      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-      disabled={currentPage === 1}
-    >
-      ‹
-    </button>
-
-    {Array.from({ length: totalPages }, (_, i) => i + 1)
-      .filter(page =>
-        page === 1 ||
-        page === totalPages ||
-        Math.abs(page - currentPage) <= 1
-      )
-      .reduce((acc, page, idx, arr) => {
-        if (idx > 0 && page - arr[idx - 1] > 1) {
-          acc.push('...')
-        }
-        acc.push(page)
-        return acc
-      }, [])
-      .map((item, idx) =>
-        item === '...' ? (
-          <span key={`dots-${idx}`} className="sp-page-dots">...</span>
-        ) : (
-          <button
-            key={item}
-            className={`sp-page-btn ${currentPage === item ? 'sp-page-active' : ''}`}
-            onClick={() => setCurrentPage(item)}
-          >
-            {item}
-          </button>
-        )
-      )}
-
-    <button
-      className="sp-page-btn"
-      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-      disabled={currentPage === totalPages}
-    >
-      ›
-    </button>
-    <button
-      className="sp-page-btn"
-      onClick={() => setCurrentPage(totalPages)}
-      disabled={currentPage === totalPages}
-    >
-      »
-    </button>
-  </div>
-)}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="sp-pagination">
+            <button className="sp-page-btn" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+            <button className="sp-page-btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>‹</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+              .reduce((acc, page, idx, arr) => {
+                if (idx > 0 && page - arr[idx - 1] > 1) acc.push('...')
+                acc.push(page)
+                return acc
+              }, [])
+              .map((item, idx) =>
+                item === '...' ? (
+                  <span key={`dots-${idx}`} className="sp-page-dots">...</span>
+                ) : (
+                  <button
+                    key={item}
+                    className={`sp-page-btn ${currentPage === item ? 'sp-page-active' : ''}`}
+                    onClick={() => setCurrentPage(item)}
+                  >
+                    {item}
+                  </button>
+                )
+              )}
+            <button className="sp-page-btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>›</button>
+            <button className="sp-page-btn" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+          </div>
+        )}
       </div>
 
       {/* Floating Action Buttons */}
       <div className="sp-fab-container">
         <div className="sp-fab-group">
           <span className="sp-fab-label">Ask AI</span>
-          <button
-            className="sp-fab sp-fab-rag"
-            onClick={() => setShowRagModal(true)}
-            title="Ask AI about research"
-          >
+          <button className="sp-fab sp-fab-rag" onClick={() => setShowRagModal(true)} title="Ask AI about research">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" fill="white" stroke="white" strokeWidth="0.5"/>
               <circle cx="8" cy="10" r="1.2" fill="#1a56db"/>
@@ -457,14 +467,9 @@ useEffect(() => {
             </svg>
           </button>
         </div>
-
         <div className="sp-fab-group">
           <span className="sp-fab-label">Check Paper</span>
-          <button
-            className="sp-fab sp-fab-checker"
-            onClick={() => setShowModal(true)}
-            title="Submit your research draft"
-          >
+          <button className="sp-fab sp-fab-checker" onClick={() => setShowModal(true)} title="Submit your research draft">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="white"/>
               <path d="M14 2V8H20" stroke="#7e3af2" strokeWidth="1.5" fill="none"/>
@@ -490,53 +495,25 @@ useEffect(() => {
                   </div>
                   <div>
                     <h2>Check My Research</h2>
-                    <p className="sp-modal-desc">
-                      Upload your draft and AI will compare it against the instructor's template.
-                    </p>
+                    <p className="sp-modal-desc">Upload your draft and AI will compare it against the instructor's template.</p>
                   </div>
                 </div>
-
                 {submitError && <p className="sp-modal-error">{submitError}</p>}
-
                 <div className="sp-modal-field">
                   <label>Title of your paper</label>
-                  <input
-                    type="text"
-                    placeholder="Enter your paper title"
-                    value={submitTitle}
-                    onChange={(e) => setSubmitTitle(e.target.value)}
-                  />
+                  <input type="text" placeholder="Enter your paper title" value={submitTitle} onChange={(e) => setSubmitTitle(e.target.value)} />
                 </div>
-
                 <div className="sp-modal-field">
                   <label>Upload your draft (PDF only)</label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setSubmitFile(e.target.files[0])}
-                  />
-                  {submitFile && (
-                    <p className="sp-modal-filename">📄 {submitFile.name}</p>
-                  )}
+                  <input type="file" accept=".pdf" onChange={(e) => setSubmitFile(e.target.files[0])} />
+                  {submitFile && <p className="sp-modal-filename">📄 {submitFile.name}</p>}
                 </div>
-
                 <div className="sp-modal-actions">
-                  <button
-                    className="sp-modal-cancel"
-                    onClick={closeCheckerModal}
-                    disabled={submitLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="sp-modal-submit sp-modal-submit-checker"
-                    onClick={handleSubmitPaper}
-                    disabled={submitLoading}
-                  >
+                  <button className="sp-modal-cancel" onClick={closeCheckerModal} disabled={submitLoading}>Cancel</button>
+                  <button className="sp-modal-submit sp-modal-submit-checker" onClick={handleSubmitPaper} disabled={submitLoading}>
                     {submitLoading ? 'Analyzing...' : 'Submit for AI Review'}
                   </button>
                 </div>
-
                 {submitLoading && (
                   <div className="sp-analyzing">
                     <div className="sp-spinner sp-spinner-checker"></div>
@@ -550,43 +527,22 @@ useEffect(() => {
                   <h2>AI Feedback Results</h2>
                   <p className="sp-result-title">{aiResult.title}</p>
                 </div>
-
-                <div className={`sp-score-circle ${
-                  aiResult.score >= 75 ? 'sp-score-high' :
-                  aiResult.score >= 50 ? 'sp-score-mid' : 'sp-score-low'
-                }`}>
+                <div className={`sp-score-circle ${aiResult.score >= 75 ? 'sp-score-high' : aiResult.score >= 50 ? 'sp-score-mid' : 'sp-score-low'}`}>
                   <span className="sp-score-num">{aiResult.score}%</span>
                   <span className="sp-score-label">Accuracy Score</span>
                 </div>
-
                 <div className="sp-feedback-box">
                   {aiResult.feedback.split('\n').map((line, i) => {
                     if (line.startsWith('SCORE:')) return null
-                    if (
-                      line.startsWith('STRENGTHS:') ||
-                      line.startsWith('TO IMPROVE:') ||
-                      line.startsWith('SUGGESTIONS:') ||
-                      line.startsWith('OVERALL FEEDBACK:') ||
-                      line.startsWith('DOCUMENT TYPE:')
-                    ) {
+                    if (['STRENGTHS:', 'TO IMPROVE:', 'SUGGESTIONS:', 'OVERALL FEEDBACK:', 'DOCUMENT TYPE:'].some(s => line.startsWith(s))) {
                       return <p key={i} className="sp-feedback-section">{line}</p>
                     }
-                    if (line.startsWith('- ')) {
-                      return <p key={i} className="sp-feedback-item">{line}</p>
-                    }
-                    if (line.trim()) {
-                      return <p key={i} className="sp-feedback-text">{line}</p>
-                    }
+                    if (line.startsWith('- ')) return <p key={i} className="sp-feedback-item">{line}</p>
+                    if (line.trim()) return <p key={i} className="sp-feedback-text">{line}</p>
                     return null
                   })}
                 </div>
-
-                <button
-                  className="sp-modal-submit sp-modal-submit-checker"
-                  onClick={closeCheckerModal}
-                >
-                  Done
-                </button>
+                <button className="sp-modal-submit sp-modal-submit-checker" onClick={closeCheckerModal}>Done</button>
               </>
             )}
           </div>
@@ -610,42 +566,20 @@ useEffect(() => {
                   </div>
                   <div>
                     <h2>Ask AI Guidance</h2>
-                    <p className="sp-modal-desc">
-                      Ask a research question and AI will answer based on papers in the repository.
-                    </p>
+                    <p className="sp-modal-desc">Ask a research question and AI will answer based on papers in the repository.</p>
                   </div>
                 </div>
-
                 {ragError && <p className="sp-modal-error">{ragError}</p>}
-
                 <div className="sp-modal-field">
                   <label>Your research question</label>
-                  <textarea
-                    className="sp-rag-textarea"
-                    placeholder="e.g. What methodologies are used in studies about social media?"
-                    value={ragQuestion}
-                    onChange={(e) => setRagQuestion(e.target.value)}
-                    rows={3}
-                  />
+                  <textarea className="sp-rag-textarea" placeholder="e.g. What methodologies are used in studies about social media?" value={ragQuestion} onChange={(e) => setRagQuestion(e.target.value)} rows={3} />
                 </div>
-
                 <div className="sp-modal-actions">
-                  <button
-                    className="sp-modal-cancel"
-                    onClick={closeRagModal}
-                    disabled={ragLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="sp-modal-submit sp-modal-submit-rag"
-                    onClick={handleAskRag}
-                    disabled={ragLoading}
-                  >
+                  <button className="sp-modal-cancel" onClick={closeRagModal} disabled={ragLoading}>Cancel</button>
+                  <button className="sp-modal-submit sp-modal-submit-rag" onClick={handleAskRag} disabled={ragLoading}>
                     {ragLoading ? 'Thinking...' : 'Ask AI'}
                   </button>
                 </div>
-
                 {ragLoading && (
                   <div className="sp-analyzing">
                     <div className="sp-spinner sp-spinner-rag"></div>
@@ -656,14 +590,8 @@ useEffect(() => {
             ) : (
               <>
                 <h2>AI Answer</h2>
-                <p className="sp-modal-desc" style={{ fontStyle: 'italic' }}>
-                  "{ragQuestion}"
-                </p>
-
-                <div className="sp-rag-answer">
-                  <p>{ragAnswer.answer}</p>
-                </div>
-
+                <p className="sp-modal-desc" style={{ fontStyle: 'italic' }}>"{ragQuestion}"</p>
+                <div className="sp-rag-answer"><p>{ragAnswer.answer}</p></div>
                 {ragAnswer.sources && ragAnswer.sources.length > 0 && (
                   <div className="sp-rag-sources">
                     <h4>Sources from repository</h4>
@@ -678,20 +606,9 @@ useEffect(() => {
                     ))}
                   </div>
                 )}
-
                 <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
-                  <button
-                    className="sp-modal-cancel"
-                    onClick={() => { setRagAnswer(null); setRagQuestion('') }}
-                  >
-                    Ask another
-                  </button>
-                  <button
-                    className="sp-modal-submit sp-modal-submit-rag"
-                    onClick={closeRagModal}
-                  >
-                    Done
-                  </button>
+                  <button className="sp-modal-cancel" onClick={() => { setRagAnswer(null); setRagQuestion('') }}>Ask another</button>
+                  <button className="sp-modal-submit sp-modal-submit-rag" onClick={closeRagModal}>Done</button>
                 </div>
               </>
             )}
@@ -700,44 +617,41 @@ useEffect(() => {
       )}
 
       {selectedPaper && (
-        <PaperView
-          paper={selectedPaper}
-          onClose={() => setSelectedPaper(null)}
-        />
+        <PaperView paper={selectedPaper} onClose={() => setSelectedPaper(null)} />
       )}
 
       {/* Footer */}
-<footer className="sp-footer">
-  <div className="sp-footer-content">
-    <div className="sp-footer-brand">
-      <h3>IRIS</h3>
-      <p>Institutional Research Repository System</p>
-    </div>
-    <div className="sp-footer-links">
-      <div className="sp-footer-col">
-        <h4>System</h4>
-        <p>Search Repository</p>
-        <p>AI Research Checker</p>
-        <p>AI Guidance (RAG)</p>
-      </div>
-      <div className="sp-footer-col">
-        <h4>Institution</h4>
-        <p>St. Joseph College</p>
-        <p>Olongapo City</p>
-        <p>Philippines</p>
-      </div>
-      <div className="sp-footer-col">
-        <h4>Developed by</h4>
-        <p>Team TECHRIFT</p>
-        <p>BSCS Thesis 2026</p>
-      </div>
-    </div>
-  </div>
-  <div className="sp-footer-bottom">
-    <p>© 2026 IRIS — Institutional Research Repository System. St. Joseph College Olongapo.</p>
-    <p>Built with ReactJS · FastAPI · PostgreSQL · Groq AI</p>
-  </div>
-</footer>
+      <footer className="sp-footer">
+        <div className="sp-footer-content">
+          <div className="sp-footer-brand">
+            <h3>IRIS</h3>
+            <p>Institutional Research Repository System</p>
+          </div>
+          <div className="sp-footer-links">
+            <div className="sp-footer-col">
+              <h4>System</h4>
+              <p>Search Repository</p>
+              <p>AI Research Checker</p>
+              <p>AI Guidance (RAG)</p>
+            </div>
+            <div className="sp-footer-col">
+              <h4>Institution</h4>
+              <p>St. Joseph College</p>
+              <p>Olongapo City</p>
+              <p>Philippines</p>
+            </div>
+            <div className="sp-footer-col">
+              <h4>Developed by</h4>
+              <p>Team TECHRIFT</p>
+              <p>BSCS Thesis 2026</p>
+            </div>
+          </div>
+        </div>
+        <div className="sp-footer-bottom">
+          <p>© 2026 IRIS — Institutional Research Repository System. St. Joseph College Olongapo.</p>
+          <p>Built with ReactJS · FastAPI · PostgreSQL · Groq AI</p>
+        </div>
+      </footer>
     </div>
   )
 }
