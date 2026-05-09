@@ -65,32 +65,30 @@ function BrowseRepository() {
   return (
     <div className="br-container">
 
-      {/* Filter bar */}
+      <div className="br-page-header">
+        <div>
+          <h2 className="br-page-title">Main Repository</h2>
+          <p className="br-page-sub">
+            Browse and explore all uploaded research papers
+          </p>
+        </div>
+      </div>
+
       <div className="br-filterbar">
         <input
           className="br-search"
-          placeholder="Search by title or author..."
+          placeholder="🔍  Search by title or author..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
-        <select
-          className="br-select"
-          value={strand}
-          onChange={(e) => setStrand(e.target.value)}
-        >
+        <select className="br-select" value={strand} onChange={(e) => setStrand(e.target.value)}>
           <option value="">All Strands</option>
           <option value="STEM">STEM</option>
           <option value="HUMSS">HUMSS</option>
           <option value="ABM">ABM</option>
           <option value="GAS">GAS</option>
         </select>
-
-        <select
-          className="br-select"
-          value={methodology}
-          onChange={(e) => setMethodology(e.target.value)}
-        >
+        <select className="br-select" value={methodology} onChange={(e) => setMethodology(e.target.value)}>
           <option value="">All Methodologies</option>
           <option value="Qualitative">Qualitative</option>
           <option value="Quantitative">Quantitative</option>
@@ -98,16 +96,10 @@ function BrowseRepository() {
           <option value="Experimental">Experimental</option>
           <option value="Descriptive">Descriptive</option>
         </select>
-
-        <select
-          className="br-select"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-        >
+        <select className="br-select" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
           <option value="desc">Newest First</option>
           <option value="asc">Oldest First</option>
         </select>
-
         {role === 'instructor' && (
           <button className="br-reindex" onClick={handleReindex}>
             Re-index All
@@ -115,35 +107,35 @@ function BrowseRepository() {
         )}
       </div>
 
-      <p className="br-count">
-        Showing {filtered.length} paper{filtered.length !== 1 ? 's' : ''}
-      </p>
+      {!loading && (
+        <p className="br-count">
+          Showing {filtered.length} of {papers.length} paper{papers.length !== 1 ? 's' : ''}
+        </p>
+      )}
 
       {loading && (
-        <div className="br-empty">Loading papers...</div>
+        <div className="br-empty">
+          <div className="br-empty-icon">⏳</div>
+          <p>Loading papers...</p>
+        </div>
       )}
 
       {!loading && filtered.length === 0 && (
         <div className="br-empty">
-          No papers found. Try adjusting your filters.
+          <div className="br-empty-icon">📭</div>
+          <p>No papers found. Try adjusting your filters.</p>
         </div>
       )}
 
       {!loading && filtered.length > 0 && (
         <div className="br-grid">
           {filtered.map((paper) => (
-            <div
-              key={paper.id}
-              className="br-card"
-              onClick={() => setSelectedPaper(paper)}
-            >
+            <div key={paper.id} className="br-card" onClick={() => setSelectedPaper(paper)}>
               <div className="br-card-top">
                 <span className="br-strand-badge">{paper.category || 'N/A'}</span>
                 <span className="br-year">{paper.year}</span>
               </div>
-
               <h3 className="br-card-title">{paper.title}</h3>
-
               <div className="br-card-authors">
                 <div className="br-avatar">{initials(paper.authors)}</div>
                 <span className="br-author-name">
@@ -151,13 +143,11 @@ function BrowseRepository() {
                   {paper.authors?.split(',').length > 1 && ` +${paper.authors.split(',').length - 1}`}
                 </span>
               </div>
-
               <p className="br-card-abstract">
                 {paper.abstract
                   ? paper.abstract.substring(0, 120) + '...'
                   : 'No abstract available.'}
               </p>
-
               <div className="br-card-footer">
                 <span className="br-method-badge">{paper.methodology}</span>
                 <span className="br-date">
@@ -170,10 +160,7 @@ function BrowseRepository() {
       )}
 
       {selectedPaper && (
-        <PaperView
-          paper={selectedPaper}
-          onClose={() => setSelectedPaper(null)}
-        />
+        <PaperView paper={selectedPaper} onClose={() => setSelectedPaper(null)} />
       )}
     </div>
   )

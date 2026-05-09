@@ -14,7 +14,6 @@ function ManagePapers() {
   const [sortOrder, setSortOrder] = useState('desc')
   const [selectedPaper, setSelectedPaper] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  
 
   useEffect(() => { fetchPapers() }, [])
 
@@ -71,29 +70,30 @@ function ManagePapers() {
   return (
     <div className="mp-container">
 
+      <div className="mp-page-header">
+        <div>
+          <h2 className="mp-page-title">Manage Papers</h2>
+          <p className="mp-page-sub">
+            {papers.length} paper{papers.length !== 1 ? 's' : ''} in the repository
+          </p>
+        </div>
+      </div>
+
       <div className="mp-filterbar">
         <input
           className="mp-search"
-          placeholder="Search by title or author..."
+          placeholder="🔍  Search by title or author..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select
-          className="mp-select"
-          value={strand}
-          onChange={(e) => setStrand(e.target.value)}
-        >
+        <select className="mp-select" value={strand} onChange={(e) => setStrand(e.target.value)}>
           <option value="">All Strands</option>
           <option value="STEM">STEM</option>
           <option value="HUMSS">HUMSS</option>
           <option value="ABM">ABM</option>
           <option value="GAS">GAS</option>
         </select>
-        <select
-          className="mp-select"
-          value={methodology}
-          onChange={(e) => setMethodology(e.target.value)}
-        >
+        <select className="mp-select" value={methodology} onChange={(e) => setMethodology(e.target.value)}>
           <option value="">All Methodologies</option>
           <option value="Qualitative">Qualitative</option>
           <option value="Quantitative">Quantitative</option>
@@ -101,41 +101,41 @@ function ManagePapers() {
           <option value="Experimental">Experimental</option>
           <option value="Descriptive">Descriptive</option>
         </select>
-        <select
-          className="mp-select"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-        >
+        <select className="mp-select" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
           <option value="desc">Newest First</option>
           <option value="asc">Oldest First</option>
         </select>
       </div>
 
-      <p className="mp-count">
-        Showing {filtered.length} paper{filtered.length !== 1 ? 's' : ''}
-      </p>
+      {!loading && (
+        <p className="mp-count">
+          Showing {filtered.length} of {papers.length} paper{papers.length !== 1 ? 's' : ''}
+        </p>
+      )}
 
-      {loading && <div className="mp-empty">Loading papers...</div>}
+      {loading && (
+        <div className="mp-empty">
+          <div className="mp-empty-icon">⏳</div>
+          <p>Loading papers...</p>
+        </div>
+      )}
 
       {!loading && filtered.length === 0 && (
-        <div className="mp-empty">No papers found. Try adjusting your filters.</div>
+        <div className="mp-empty">
+          <div className="mp-empty-icon">📭</div>
+          <p>No papers found. Try adjusting your filters.</p>
+        </div>
       )}
 
       {!loading && filtered.length > 0 && (
         <div className="mp-grid">
           {filtered.map((paper) => (
-            <div
-              key={paper.id}
-              className="mp-card"
-              onClick={() => setSelectedPaper(paper)}
-            >
+            <div key={paper.id} className="mp-card" onClick={() => setSelectedPaper(paper)}>
               <div className="mp-card-top">
                 <span className="mp-strand-badge">{paper.category || 'N/A'}</span>
                 <span className="mp-year">{paper.year}</span>
               </div>
-
               <h3 className="mp-card-title">{paper.title}</h3>
-
               <div className="mp-card-authors">
                 <div className="mp-avatar">{initials(paper.authors)}</div>
                 <span className="mp-author-name">
@@ -144,13 +144,11 @@ function ManagePapers() {
                     ` +${paper.authors.split(',').length - 1}`}
                 </span>
               </div>
-
               <p className="mp-card-abstract">
                 {paper.abstract
                   ? paper.abstract.substring(0, 120) + '...'
                   : 'No abstract available.'}
               </p>
-
               <div className="mp-card-footer">
                 <span className="mp-method-badge">{paper.methodology}</span>
                 <button
@@ -170,10 +168,7 @@ function ManagePapers() {
       )}
 
       {selectedPaper && (
-        <PaperView
-          paper={selectedPaper}
-          onClose={() => setSelectedPaper(null)}
-        />
+        <PaperView paper={selectedPaper} onClose={() => setSelectedPaper(null)} />
       )}
 
       {deleteTarget && (
@@ -186,17 +181,8 @@ function ManagePapers() {
               This cannot be undone.
             </p>
             <div className="confirm-actions">
-              <button
-                className="confirm-cancel"
-                onClick={() => setDeleteTarget(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="confirm-delete"
-                onClick={handleDelete}
-                disabled={deleting}
-              >
+              <button className="confirm-cancel" onClick={() => setDeleteTarget(null)}>Cancel</button>
+              <button className="confirm-delete" onClick={handleDelete} disabled={deleting}>
                 {deleting ? 'Deleting...' : 'Yes, Delete'}
               </button>
             </div>

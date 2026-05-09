@@ -2,12 +2,39 @@
   width: 100%;
 }
 
+/* ── Page header ── */
+.mp-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mp-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.mp-page-sub {
+  font-size: 13px;
+  color: #888;
+}
+
+/* ── Filter bar ── */
 .mp-filterbar {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .mp-search {
@@ -15,53 +42,68 @@
   min-width: 180px;
   padding: 9px 14px;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e7eb;
   font-size: 13px;
   outline: none;
-  background: white;
+  background: #f9fafb;
 }
 
 .mp-search:focus {
   border-color: #1a56db;
+  background: white;
 }
 
 .mp-select {
   padding: 9px 12px;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e7eb;
   font-size: 13px;
-  background: white;
+  background: #f9fafb;
   outline: none;
   color: #444;
   cursor: pointer;
 }
 
+.mp-select:focus {
+  border-color: #1a56db;
+  background: white;
+}
+
+/* ── Count bar ── */
 .mp-count {
   font-size: 13px;
   color: #888;
   margin-bottom: 16px;
+  font-weight: 500;
 }
 
+/* ── Empty state ── */
 .mp-empty {
   background: white;
-  border-radius: 12px;
-  padding: 60px 24px;
+  border-radius: 14px;
+  padding: 80px 24px;
   text-align: center;
   color: #aaa;
   font-size: 14px;
-  border: 1px solid #eee;
+  border: 1px dashed #e5e7eb;
 }
 
+.mp-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+/* ── Card grid ── */
 .mp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
 }
 
 .mp-card {
   background: white;
-  border-radius: 12px;
-  padding: 18px 16px;
+  border-radius: 14px;
+  padding: 20px 18px;
   border: 1px solid #eee;
   cursor: pointer;
   display: flex;
@@ -71,7 +113,7 @@
 }
 
 .mp-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.1);
   transform: translateY(-2px);
 }
 
@@ -101,10 +143,10 @@
   font-size: 14px;
   font-weight: 600;
   color: #1a1a2e;
-  line-height: 1.4;
+  line-height: 1.45;
   display: -webkit-box;
-  line-clamp: 3;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -116,8 +158,8 @@
 }
 
 .mp-avatar {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background-color: #1a56db;
   color: white;
@@ -142,8 +184,8 @@
   color: #777;
   line-height: 1.6;
   display: -webkit-box;
-  line-clamp: 3;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 1;
@@ -154,7 +196,7 @@
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid #f5f5f5;
 }
 
@@ -174,8 +216,9 @@
   border: none;
   border-radius: 6px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
 .mp-delete-btn:hover {
@@ -183,21 +226,17 @@
 }
 
 .mp-delete-btn:disabled {
-  background-color: #aaa;
-  color: white;
+  background-color: #e5e7eb;
+  color: #9ca3af;
   cursor: not-allowed;
 }
 
-@media (max-width: 600px) {
-  .mp-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-}
-
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .mp-filterbar {
     flex-direction: column;
     align-items: stretch;
+    padding: 14px;
   }
 
   .mp-search,
@@ -207,5 +246,6 @@
 
   .mp-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
   }
 }
