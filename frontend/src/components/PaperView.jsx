@@ -43,6 +43,203 @@ function PaperView({ paper, onClose }) {
   }
 }
 
+const handlePrint = () => {
+  const authorNames = authorList.join(', ')
+  const printContent = `
+    <html>
+      <head>
+        <title>${paper.title}</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: 'Georgia', serif;
+            padding: 48px;
+            color: #1a1a2e;
+            line-height: 1.6;
+          }
+          .header {
+            border-bottom: 2px solid #1a56db;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+          }
+          .institution {
+            font-size: 11px;
+            color: #888;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+          }
+          .iris-brand {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a56db;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+          }
+          .tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+          }
+          .tag {
+            background: #ede9fe;
+            color: #5b21b6;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+          }
+          .tag-year {
+            background: #f0f4f8;
+            color: #555;
+          }
+          h1 {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 16px;
+            color: #1a1a2e;
+          }
+          .authors {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 24px;
+          }
+          .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #1a56db;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            margin-top: 20px;
+          }
+          .abstract {
+            font-size: 13px;
+            color: #444;
+            line-height: 1.85;
+            text-align: justify;
+          }
+          .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+          }
+          .detail-item {
+            background: #f9fafb;
+            padding: 10px 14px;
+            border-radius: 8px;
+          }
+          .detail-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #aaa;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+          }
+          .detail-value {
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+          }
+          .apa-section {
+            margin-top: 28px;
+            padding: 16px;
+            background: #f0f4f8;
+            border-left: 3px solid #1a56db;
+            border-radius: 0 8px 8px 0;
+          }
+          .apa-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #1a56db;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+          }
+          .apa-text {
+            font-size: 12px;
+            color: #444;
+            font-style: italic;
+            line-height: 1.7;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+            font-size: 10px;
+            color: #aaa;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <p class="iris-brand">IRIS — Institutional Research Repository System</p>
+          <p class="institution">St. Joseph College Olongapo · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+
+        <div class="tags">
+          ${paper.category ? `<span class="tag">${paper.category.toUpperCase()}</span>` : ''}
+          ${paper.year ? `<span class="tag tag-year">${paper.year}</span>` : ''}
+          ${paper.methodology ? `<span class="tag">${paper.methodology}</span>` : ''}
+        </div>
+
+        <h1>${paper.title}</h1>
+
+        <p class="authors"><strong>Authors:</strong> ${authorNames || 'Unknown'}</p>
+
+        <p class="section-label">Abstract</p>
+        <p class="abstract">${paper.abstract || 'No abstract available.'}</p>
+
+        <p class="section-label">Document Details</p>
+        <div class="details-grid">
+          <div class="detail-item">
+            <p class="detail-label">Category / Strand</p>
+            <p class="detail-value">${paper.category || '—'}</p>
+          </div>
+          <div class="detail-item">
+            <p class="detail-label">Methodology</p>
+            <p class="detail-value">${paper.methodology || '—'}</p>
+          </div>
+          <div class="detail-item">
+            <p class="detail-label">Year Published</p>
+            <p class="detail-value">${paper.year || '—'}</p>
+          </div>
+          <div class="detail-item">
+            <p class="detail-label">Access Type</p>
+            <p class="detail-value">Open Access</p>
+          </div>
+        </div>
+
+        <div class="apa-section">
+          <p class="apa-label">APA Citation</p>
+          <p class="apa-text">
+            ${authorNames} (${paper.year || 'n.d.'}). ${paper.title}. St. Joseph College Olongapo.
+          </p>
+        </div>
+
+        <div class="footer">
+          <p>Generated from IRIS — Institutional Research Repository System · St. Joseph College Olongapo · ${new Date().getFullYear()}</p>
+        </div>
+      </body>
+    </html>
+  `
+
+  const printWindow = window.open('', '_blank')
+  printWindow.document.write(printContent)
+  printWindow.document.close()
+  printWindow.focus()
+  setTimeout(() => {
+    printWindow.print()
+    printWindow.close()
+  }, 500)
+}
+
   return (
     <div className="pv-overlay" onClick={onClose}>
       <div className="pv-modal" onClick={(e) => e.stopPropagation()}>
@@ -55,15 +252,25 @@ function PaperView({ paper, onClose }) {
             <span className="pv-breadcrumb-sep"> › </span>
             <span>View Paper</span>
           </div>
+          
           <div className="pv-topbar-actions">
-                      <button
-            className="pv-btn-outline"
-            onClick={() => handleDownload()}
-          >
-            Download PDF
-          </button>
-            <button className="pv-close-x" onClick={onClose}>✕</button>
-          </div>
+              <button
+                className="pv-btn-export"
+                onClick={handlePrint}
+                title="Export paper details as PDF"
+              >
+                Export Details
+              </button>
+              <button
+                className="pv-btn-outline"
+                onClick={() => handleDownload()}
+              >
+                Download PDF
+              </button>
+              <button className="pv-close-x" onClick={onClose}>✕</button>
+            </div>
+
+          
         </div>
 
         <div className="pv-body">

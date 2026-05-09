@@ -14,7 +14,7 @@
   background: linear-gradient(135deg, #1a1a2e 0%, #1a56db 60%, #7e3af2 100%);
   display: flex;
   justify-content: center;
-  padding: 10% 56px;
+  padding: 5% 56px;
   position: relative;
   overflow: hidden;
   width: 60vw;
@@ -45,26 +45,19 @@
   z-index: 1;
 }
 
-.login-logo {
-  margin-bottom: 32px;
-}
-
 .login-logo-text {
-  font-size: 36px;
-  font-weight: 800;
-  color: white;
-  letter-spacing: 4px;
-  padding: 6px 20px;
-  border-radius: 8px;
+  width: 25vw;
+  height: auto;
+  object-fit: contain;
 }
 
 .login-headline {
-  font-size: 36px;
+  font-size: 48px;
   font-weight: 700;
   color: white;
   line-height: 1.25;
-  margin-bottom: 20px;
   letter-spacing: -0.5px;
+  padding: 0px 10px;
 }
 
 .login-subtext {
@@ -72,6 +65,7 @@
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.75;
   margin-bottom: 36px;
+  padding-right: 20px;
 }
 
 /* ── Right side ── */

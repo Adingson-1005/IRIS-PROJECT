@@ -315,6 +315,23 @@
   letter-spacing: 0.5px;
 }
 
+.pv-btn-export {
+  padding: 8px 16px;
+  background-color: white;
+  color: #1a56db;
+  border: 1.5px solid #1a56db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pv-btn-export:hover {
+  background-color: #1a56db;
+  color: white;
+}
+
 @media (max-width: 680px) {
   .pv-body {
     flex-direction: column;

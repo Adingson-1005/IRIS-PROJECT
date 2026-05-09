@@ -60,10 +60,11 @@ function Login() {
             alt="IRIS Logo"
             className="login-logo-text"
           />
-        </div>
+          </div>
           <h1 className="login-headline">
             A Smarter Way to Search and Manage Research
           </h1>
+          <br />
           <p className="login-subtext">
             A powerful institutional research system designed to help students
             and researchers quickly find, analyze, and access academic papers
