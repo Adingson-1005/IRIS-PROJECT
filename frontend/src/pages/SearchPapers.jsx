@@ -50,34 +50,45 @@ function SearchPapers() {
   }
 
   const handleSearch = async () => {
-    if (!keyword.trim()) { setMode('browse'); return }
-    setSearching(true)
-    setError('')
-    try {
-      const token = localStorage.getItem('token')
-      const params = { keyword }
-      if (filters.category) params.category = filters.category
-      if (filters.methodology) params.methodology = filters.methodology
-      if (filters.year) params.year = filters.year
-      const response = await axios.get('https://iris-backend-7717.onrender.com/search/', {
-        params,
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setSearchResults(response.data.results)
-      setMode('search')
-    } catch {
-      setError('Search failed. Please try again.')
-    }
-    setSearching(false)
+  if (!keyword.trim()) { setMode('browse'); return }
+  setSearching(true)
+  setError('')
+
+  // Save to history
+  const newHistory = [
+    keyword.trim(),
+    ...searchHistory.filter(h => h !== keyword.trim())
+  ].slice(0, 8)
+  setSearchHistory(newHistory)
+  localStorage.setItem('iris_search_history', JSON.stringify(newHistory))
+
+  try {
+    const token = localStorage.getItem('token')
+    const params = { keyword }
+    if (filters.category) params.category = filters.category
+    if (filters.methodology) params.methodology = filters.methodology
+    if (filters.year) params.year = filters.year
+    const response = await axios.get('https://iris-backend-7717.onrender.com/search/', {
+      params,
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    setSearchResults(response.data.results)
+    setMode('search')
+  } catch {
+    setError('Search failed. Please try again.')
   }
+  setSearching(false)
+  setShowHistory(false)
+}
 
   const handleClear = () => {
-    setKeyword('')
-    setFilters({ category: '', methodology: '', year: '' })
-    setMode('browse')
-    setSearchResults([])
-    setError('')
-  }
+  setKeyword('')
+  setFilters({ category: '', methodology: '', year: '' })
+  setMode('browse')
+  setSearchResults([])
+  setError('')
+  setShowHistory(false)
+}
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSearch()
@@ -171,6 +182,12 @@ const paginatedPapers = displayPapers.slice(
   currentPage * papersPerPage
 )
 
+const [searchHistory, setSearchHistory] = useState(() => {
+  const saved = localStorage.getItem('iris_search_history')
+  return saved ? JSON.parse(saved) : []
+})
+const [showHistory, setShowHistory] = useState(false)
+
 // Reset to page 1 when search/filter changes
 useEffect(() => {
   setCurrentPage(1)
@@ -196,26 +213,68 @@ useEffect(() => {
 
       {/* Body */}
       <div className="sp-body">
-        <div className="sp-search-row">
-          <input
-            className="sp-input"
-            type="text"
-            placeholder="Search by keyword..."
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <button
-            className="sp-search-btn"
-            onClick={handleSearch}
-            disabled={searching}
-          >
-            {searching ? '...' : 'Search'}
-          </button>
-          {mode === 'search' && (
-            <button className="sp-clear-btn" onClick={handleClear}>Clear</button>
-          )}
+        <div className="sp-search-wrapper">
+  <div className="sp-search-row">
+    <div className="sp-input-wrapper">
+      <input
+        className="sp-input"
+        type="text"
+        placeholder="Search by keyword..."
+        value={keyword}
+        onChange={(e) => {
+          setKeyword(e.target.value)
+          setShowHistory(e.target.value === '' && searchHistory.length > 0)
+        }}
+        onFocus={() => {
+          if (!keyword && searchHistory.length > 0) setShowHistory(true)
+        }}
+        onBlur={() => setTimeout(() => setShowHistory(false), 150)}
+        onKeyDown={handleKeyDown}
+      />
+      {showHistory && searchHistory.length > 0 && (
+        <div className="sp-history-dropdown">
+          <div className="sp-history-header">
+            <span>Recent Searches</span>
+            <button
+              className="sp-history-clear"
+              onMouseDown={() => {
+                setSearchHistory([])
+                localStorage.removeItem('iris_search_history')
+                setShowHistory(false)
+              }}
+            >
+              Clear all
+            </button>
+          </div>
+          {searchHistory.map((item, i) => (
+            <div
+              key={i}
+              className="sp-history-item"
+              onMouseDown={() => {
+                setKeyword(item)
+                setShowHistory(false)
+                setTimeout(() => handleSearch(), 0)
+              }}
+            >
+              <span className="sp-history-icon">🕐</span>
+              <span>{item}</span>
+            </div>
+          ))}
         </div>
+      )}
+    </div>
+    <button
+      className="sp-search-btn"
+      onClick={handleSearch}
+      disabled={searching}
+    >
+      {searching ? '...' : 'Search'}
+    </button>
+    {mode === 'search' && (
+      <button className="sp-clear-btn" onClick={handleClear}>Clear</button>
+    )}
+  </div>
+</div>
 
         <div className="sp-filters">
           <select
