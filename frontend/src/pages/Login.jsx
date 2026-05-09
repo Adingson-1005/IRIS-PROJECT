@@ -125,9 +125,6 @@ function Login() {
             ) : 'Sign In'}
           </button>
 
-          <p className="login-footer-text">
-            St. Joseph College Olongapo
-          </p>
         </div>
       </div>
 
