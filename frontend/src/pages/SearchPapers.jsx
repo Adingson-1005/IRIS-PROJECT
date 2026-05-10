@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import '../css/SearchPapers.css'
 import PaperView from '../components/PaperView'
 import IRISlogo from '../assets/IRISlogo.png'
+import MyDrafts from './MyDrafts'
 
 function SearchPapers() {
   const navigate = useNavigate()
@@ -23,6 +24,7 @@ function SearchPapers() {
   const [currentPage, setCurrentPage] = useState(1)
   const [copiedId, setCopiedId] = useState(null)
   const papersPerPage = 12
+  const [showDrafts, setShowDrafts] = useState(false)
 
   // Search history
   const [searchHistory, setSearchHistory] = useState(() => {
@@ -263,14 +265,20 @@ function SearchPapers() {
       <div className="sp-header">
         <img src={IRISlogo} alt="IRIS Logo" className="sp-login-logo-text" />
         <div className="sp-header-right">
-          <span className="sp-greeting">Hi, {firstName}!</span>
-          <button
-            className="sp-logout-btn"
-            onClick={() => { localStorage.clear(); navigate('/') }}
-          >
-            Logout
-          </button>
-        </div>
+  <span className="sp-greeting">Hi, {firstName}!</span>
+  <button
+    className="sp-drafts-btn"
+    onClick={() => setShowDrafts(true)}
+  >
+    📂 My Drafts
+  </button>
+  <button
+    className="sp-logout-btn"
+    onClick={() => { localStorage.clear(); navigate('/') }}
+  >
+    Logout
+  </button>
+</div>
       </div>
 
       {/* Body */}
@@ -652,6 +660,10 @@ function SearchPapers() {
           <p>Built with ReactJS · FastAPI · PostgreSQL · Groq AI</p>
         </div>
       </footer>
+
+      {showDrafts && (
+  <MyDrafts onClose={() => setShowDrafts(false)} />
+)}
     </div>
   )
 }

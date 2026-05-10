@@ -5,6 +5,7 @@ import BrowseRepository from './BrowseRepository'
 import UploadTemplate from './UploadTemplate'
 import '../css/InstructorDashboard.css'
 import '../css/ConfirmModal.css'
+import StudentDrafts from './StudentDrafts'
 
 function InstructorDashboard() {
   const navigate = useNavigate()
@@ -22,6 +23,7 @@ function InstructorDashboard() {
     { key: 'uploads',  label: 'My Uploads' },
     { key: 'browse',   label: 'Main Repository' },
     { key: 'template', label: 'Research Template' },
+    { key: 'drafts', label: 'Student Drafts' },
   ]
 
   const handleNavClick = (key) => {
@@ -34,6 +36,7 @@ function InstructorDashboard() {
       case 'uploads':  return <MyUploads />
       case 'browse':   return <BrowseRepository />
       case 'template': return <UploadTemplate />
+      case 'drafts': return <StudentDrafts />
       default:         return <MyUploads />
     }
   }

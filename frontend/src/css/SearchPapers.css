@@ -1019,6 +1019,22 @@
   color: #065f46;
 }
 
+.sp-drafts-btn {
+  padding: 7px 14px;
+  background-color: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.sp-drafts-btn:hover {
+  background-color: rgba(255,255,255,0.25);
+}
+
 @media (max-width: 600px) {
   .sp-greeting { display: none; }
   .sp-recent-grid {

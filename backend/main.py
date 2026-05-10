@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from database import engine
 from sqlalchemy import text
 import os
-from routes import auth, papers, search, analytics, users, templates, ai, rag
+from routes import auth, papers, search, analytics, users, templates, ai, rag, drafts
 
 app = FastAPI()
 
@@ -29,6 +29,7 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(templates.router, prefix="/templates", tags=["templates"])
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
 app.include_router(rag.router, prefix="/rag", tags=["rag"])
+app.include_router(drafts.router, prefix="/drafts", tags=["drafts"])
 
 @app.get("/")
 def root():
