@@ -6,6 +6,7 @@ import ManageUsers from './ManageUsers'
 import '../css/AdminDashboard.css'
 import '../css/ConfirmModal.css'
 import StudentDrafts from './StudentDrafts'
+import ManageClasses from './ManageClasses'
 
 function AdminDashboard() {
   const navigate = useNavigate()
@@ -24,6 +25,7 @@ function AdminDashboard() {
     { key: 'analytics', label: 'Analytics' },
     { key: 'users',     label: 'Manage Users' },
     { key: 'drafts', label: 'Student Drafts' },
+    { key: 'classes', label: 'Manage Classes' },
   ]
 
   const handleNavClick = (key) => {
@@ -37,6 +39,7 @@ function AdminDashboard() {
       case 'analytics': return <Analytics />
       case 'users':     return <ManageUsers />
       case 'drafts': return <StudentDrafts />
+      case 'classes': return <ManageClasses />
       default:          return <ManageUsers />
     }
   }

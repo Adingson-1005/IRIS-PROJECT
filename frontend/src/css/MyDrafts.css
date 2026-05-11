@@ -469,6 +469,229 @@
   margin-bottom: 4px;
 }
 
+/* ── Class selection prompt ── */
+.md-class-prompt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: #f9fafb;
+}
+
+.md-class-prompt-inner {
+  background: white;
+  border-radius: 16px;
+  padding: 36px 32px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.md-class-icon {
+  width: 56px;
+  height: 56px;
+  background: #ede9fe;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #7e3af2;
+}
+
+.md-class-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.md-class-prompt-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.md-class-prompt-sub {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.md-class-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  font-size: 14px;
+  outline: none;
+  background: #f9fafb;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.md-class-select:focus {
+  border-color: #7e3af2;
+  background: white;
+}
+
+.md-class-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.md-class-cancel {
+  flex: 1;
+  padding: 10px;
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.md-class-cancel:hover {
+  background: #f5f5f5;
+}
+
+.md-class-confirm {
+  flex: 1;
+  padding: 10px;
+  background: #7e3af2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.md-class-confirm:hover {
+  background: #6d28d9;
+}
+
+.md-class-confirm:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+/* ── Header actions ── */
+.md-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.md-change-class-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f0f4f8;
+  color: #555;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.md-change-class-btn:hover {
+  background: #e5e7eb;
+}
+
+.md-change-class-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.md-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── File icon ── */
+.md-draft-file-icon {
+  flex-shrink: 0;
+  color: #1a56db;
+}
+
+.md-draft-file-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.md-draft-comments {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #1a56db;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.md-draft-comments svg {
+  width: 11px;
+  height: 11px;
+}
+
+.md-draft-delete svg {
+  width: 14px;
+  height: 14px;
+}
+
+.md-empty-svg {
+  width: 32px;
+  height: 32px;
+  color: #ddd;
+  margin-bottom: 4px;
+}
+
+.md-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.md-view-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.md-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.md-upload-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.md-confirm-icon {
+  width: 48px;
+  height: 48px;
+  background: #fee2e2;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: #e02424;
+}
+
+.md-confirm-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .md-body {
