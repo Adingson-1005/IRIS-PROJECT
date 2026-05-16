@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Header
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Header, BackgroundTasks
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.inverted_index import build_index
 from services.storage import upload_file
-from fastapi.responses import FileResponse
 import os
 import uuid
 import re
@@ -14,8 +13,21 @@ router = APIRouter()
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
+def run_build_index(paper_id: str, file_path: str):
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        build_index(paper_id, file_path, db)
+    except Exception as e:
+        print(f"Background index build failed for {paper_id}: {e}")
+    finally:
+        db.close()
+
+
 @router.post("/upload")
 async def upload_paper(
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     authors: str = Form(...),
     abstract: str = Form(...),
@@ -74,10 +86,8 @@ async def upload_paper(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Database save failed: {str(e)}")
 
-        try:
-            build_index(paper_id, file_path, db)
-        except Exception as e:
-            print(f"Index build failed for {paper_id}: {e}")
+        # Run indexing in background — does not block other requests
+        background_tasks.add_task(run_build_index, paper_id, file_path)
 
         return {"message": "Paper uploaded and indexed successfully"}
 
@@ -85,6 +95,7 @@ async def upload_paper(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/list")
 def list_papers(db: Session = Depends(get_db)):
@@ -99,6 +110,7 @@ def list_papers(db: Session = Depends(get_db)):
         return {"papers": [dict(row._mapping) for row in papers]}
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/my-papers")
 def my_papers(
@@ -125,21 +137,32 @@ def my_papers(
     except Exception as e:
         return {"error": str(e)}
 
+
 @router.post("/reindex-all")
-def reindex_all(db: Session = Depends(get_db)):
+def reindex_all(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
-        papers = db.execute(text("""
-            SELECT id, file_url FROM papers
-        """)).fetchall()
+        papers = db.execute(text("SELECT id, file_url FROM papers")).fetchall()
+        paper_list = [(str(p.id), p.file_url) for p in papers]
 
-        count = 0
-        for paper in papers:
-            build_index(str(paper.id), paper.file_url, db)
-            count += 1
+        def reindex_all_background():
+            from database import SessionLocal
+            bg_db = SessionLocal()
+            try:
+                count = 0
+                for paper_id, file_url in paper_list:
+                    build_index(paper_id, file_url, bg_db)
+                    count += 1
+                print(f"Reindexed {count} papers in background")
+            except Exception as e:
+                print(f"Reindex error: {e}")
+            finally:
+                bg_db.close()
 
-        return {"message": f"Successfully reindexed {count} papers"}
+        background_tasks.add_task(reindex_all_background)
+        return {"message": f"Reindexing {len(paper_list)} papers in background"}
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.delete("/delete/{paper_id}")
 def delete_paper(paper_id: str, db: Session = Depends(get_db)):
@@ -148,15 +171,12 @@ def delete_paper(paper_id: str, db: Session = Depends(get_db)):
             text("DELETE FROM inverted_index WHERE paper_id = :paper_id"),
             {"paper_id": paper_id}
         )
-
         db.execute(
             text("DELETE FROM papers WHERE id = :paper_id"),
             {"paper_id": paper_id}
         )
-
         db.commit()
         return {"message": "Paper deleted successfully"}
-
     except Exception as e:
         return {"error": str(e)}
 
