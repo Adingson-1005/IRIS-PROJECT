@@ -1,131 +1,107 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import '../css/MyDrafts.css'
-import PrivacyPolicy from './PrivacyPolicy'
+import '../css/MyUploads.css'
+import '../css/ConfirmModal.css'
 
-function MyDrafts({ onClose }) {
-  const [drafts, setDrafts] = useState([])
+const API_BASE = 'https://iris-backend-7717.onrender.com'
+
+function MyUploads() {
+  const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [myClass, setMyClass] = useState(null)
-  const [classes, setClasses] = useState([])
-  const [showClassSelect, setShowClassSelect] = useState(false)
-  const [selectedClass, setSelectedClass] = useState('')
-  const [savingClass, setSavingClass] = useState(false)
-  const [showUpload, setShowUpload] = useState(false)
-  const [file, setFile] = useState(null)
-  const [title, setTitle] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState('')
+  const [search, setSearch] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(null)
-  const [selectedDraft, setSelectedDraft] = useState(null)
-  const [showPrivacyNote, setShowPrivacyNote] = useState(false)
 
-  useEffect(() => {
-    fetchMyClass()
-    fetchClasses()
-    fetchDrafts()
-  }, [])
+  // Upload modal
+  const [showModal, setShowModal] = useState(false)
+  const [form, setForm] = useState({
+    title: '',
+    authors: '',
+    abstract: '',
+    category: '',
+    methodology: '',
+    year: ''
+  })
+  const [file, setFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSuccess, setUploadSuccess] = useState('')
 
-  const fetchMyClass = async () => {
+  useEffect(() => { fetchMyPapers() }, [])
+
+  const fetchMyPapers = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get(
-        'https://iris-backend-7717.onrender.com/classes/my-class',
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setMyClass(response.data)
-      if (!response.data.class_name) setShowClassSelect(true)
+      const response = await axios.get(`${API_BASE}/papers/my-papers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setPapers(response.data.papers || [])
     } catch {
-      console.error('Failed to fetch class')
-    }
-  }
-
-  const fetchClasses = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        'https://iris-backend-7717.onrender.com/classes/list',
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setClasses(response.data.classes || [])
-    } catch {
-      console.error('Failed to fetch classes')
-    }
-  }
-
-  const fetchDrafts = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        'https://iris-backend-7717.onrender.com/drafts/my-drafts',
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setDrafts(response.data.drafts || [])
-    } catch {
-      console.error('Failed to fetch drafts')
+      console.error('Failed to fetch my papers')
     }
     setLoading(false)
   }
 
-  const handleSaveClass = async () => {
-    if (!selectedClass) return
-    setSavingClass(true)
-    try {
-      const token = localStorage.getItem('token')
-      await axios.post(
-        'https://iris-backend-7717.onrender.com/classes/select',
-        { class_name: selectedClass },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setShowClassSelect(false)
-      fetchMyClass()
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to save class')
-    }
-    setSavingClass(false)
+  const resetForm = () => {
+    setForm({
+      title: '',
+      authors: '',
+      abstract: '',
+      category: '',
+      methodology: '',
+      year: ''
+    })
+    setFile(null)
+    setUploadError('')
+    setUploadSuccess('')
+  }
+
+  const handleFormChange = (key, value) => {
+    setForm({ ...form, [key]: value })
   }
 
   const handleUpload = async () => {
-    if (!file) {
-      setUploadError('Please select a file')
-      return
-    }
+    const { title, authors, abstract, category, methodology, year } = form
 
-    if (!title.trim()) {
-      setUploadError('Please enter a title')
-      return
-    }
+    if (!title.trim()) { setUploadError('Title is required'); return }
+    if (!authors.trim()) { setUploadError('Authors are required'); return }
+    if (!abstract.trim()) { setUploadError('Abstract is required'); return }
+    if (!category) { setUploadError('Please select a strand'); return }
+    if (!methodology) { setUploadError('Please select a methodology'); return }
+    if (!year || isNaN(year)) { setUploadError('Please enter a valid year'); return }
+    if (!file) { setUploadError('Please select a PDF file'); return }
 
     setUploading(true)
     setUploadError('')
+    setUploadSuccess('')
 
     try {
       const data = new FormData()
       data.append('title', title)
+      data.append('authors', authors)
+      data.append('abstract', abstract)
+      data.append('category', category)
+      data.append('methodology', methodology)
+      data.append('year', year)
       data.append('file', file)
 
       const token = localStorage.getItem('token')
-
-      await axios.post(
-        'https://iris-backend-7717.onrender.com/drafts/upload',
-        data,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
-          }
+      await axios.post(`${API_BASE}/papers/upload`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
         }
-      )
+      })
 
-      setTitle('')
-      setFile(null)
-      setShowUpload(false)
-      fetchDrafts()
+      setUploadSuccess('Paper uploaded successfully')
+      resetForm()
+      fetchMyPapers()
+      setTimeout(() => {
+        setShowModal(false)
+        setUploadSuccess('')
+      }, 1200)
     } catch (err) {
-      setUploadError(
-        err.response?.data?.detail || 'Upload failed. Please try again.'
-      )
+      setUploadError(err.response?.data?.detail || 'Upload failed. Please try again.')
     }
 
     setUploading(false)
@@ -133,555 +109,300 @@ function MyDrafts({ onClose }) {
 
   const handleDelete = async () => {
     if (!deleteTarget) return
-
     setDeleting(deleteTarget.id)
-
     try {
       const token = localStorage.getItem('token')
-
-      await axios.delete(
-        `https://iris-backend-7717.onrender.com/drafts/delete/${deleteTarget.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-
-      setDrafts(drafts.filter((d) => d.id !== deleteTarget.id))
+      await axios.delete(`${API_BASE}/papers/delete/${deleteTarget.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setPapers(papers.filter((p) => p.id !== deleteTarget.id))
       setDeleteTarget(null)
-
-      if (selectedDraft?.id === deleteTarget.id) {
-        setSelectedDraft(null)
-      }
     } catch {
-      alert('Failed to delete draft')
+      alert('Failed to delete paper')
     }
-
     setDeleting(null)
   }
 
+  const closeModal = () => {
+    if (uploading) return
+    setShowModal(false)
+    resetForm()
+  }
+
+  const filtered = papers.filter((p) => {
+    const q = search.toLowerCase()
+    return (
+      p.title?.toLowerCase().includes(q) ||
+      p.authors?.toLowerCase().includes(q)
+    )
+  })
+
   return (
-    <div className="md-overlay" onClick={onClose}>
-      <div className="md-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="myuploads-content">
+      <div className="myuploads-card">
 
-        <div className="md-header">
-          <div>
-            <h2 className="md-title">My Drafts</h2>
+        <div className="myuploads-page-header">
+          <h2 className="myuploads-page-title">My Uploads</h2>
+          <p className="myuploads-page-sub">
+            Papers you have contributed to the IRIS repository
+          </p>
+        </div>
 
-            <p className="md-subtitle">
-              {myClass?.class_name
-                ? `${myClass.class_name} · Instructor: ${myClass.instructor_name || 'Not yet assigned'}`
-                : 'Select your class to get started'}
-            </p>
-          </div>
+        <div className="myuploads-top">
+          <h3 className="myuploads-heading">
+            {papers.length} paper{papers.length !== 1 ? 's' : ''} uploaded
+          </h3>
 
-          <div className="md-header-actions">
-            {myClass?.class_name && (
-              <button
-                className="md-change-class-btn"
-                onClick={() => {
-                  setSelectedClass(myClass.class_name)
-                  setShowClassSelect(true)
-                }}
-                title="Change class"
-              >
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-
-                Change Class
-              </button>
-            )}
-
-            <button className="md-close" onClick={onClose}>
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M18 6L6 18M6 6l12 12"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
+          <div className="myuploads-top-right">
+            <input
+              className="myuploads-search"
+              placeholder="🔍  Search by title or author..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <button
+              className="myuploads-new-btn"
+              onClick={() => setShowModal(true)}
+            >
+              + Upload Paper
             </button>
           </div>
         </div>
 
-        {showClassSelect && (
-          <div className="md-class-prompt">
-            <div className="md-class-prompt-inner">
+        {loading && (
+          <div className="myuploads-empty">
+            <div className="myuploads-empty-icon">⏳</div>
+            <p>Loading your papers...</p>
+          </div>
+        )}
 
-              <div className="md-class-icon">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <circle
-                    cx="9"
-                    cy="7"
-                    r="4"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
+        {!loading && papers.length === 0 && (
+          <div className="myuploads-empty">
+            <div className="myuploads-empty-icon">📄</div>
+            <p>You haven't uploaded any papers yet. Click "Upload Paper" to add your first one.</p>
+          </div>
+        )}
 
-              <h3 className="md-class-prompt-title">
-                {myClass?.class_name
-                  ? 'Change Your Class'
-                  : 'Select Your Class'}
-              </h3>
+        {!loading && papers.length > 0 && filtered.length === 0 && (
+          <div className="myuploads-empty">
+            <div className="myuploads-empty-icon">🔍</div>
+            <p>No papers match your search.</p>
+          </div>
+        )}
 
-              <p className="md-class-prompt-sub">
-                {myClass?.class_name
-                  ? 'Changing your class will move your drafts to the new class instructor.'
-                  : 'Select the class you are enrolled in. Your research instructor will be able to view and comment on your drafts.'}
-              </p>
-
-              <select
-                className="md-class-select"
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-              >
-                <option value="">— Choose your class —</option>
-
-                {classes.map((cls) => (
-                  <option key={cls.id} value={cls.name}>
-                    {cls.name}
-                    {cls.instructor_name
-                      ? ` — ${cls.instructor_name}`
-                      : ' — No instructor yet'}
-                  </option>
+        {!loading && filtered.length > 0 && (
+          <div className="myuploads-table-wrapper">
+            <table className="myuploads-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Authors</th>
+                  <th>Strand</th>
+                  <th>Year</th>
+                  <th>Downloads</th>
+                  <th>Uploaded</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((paper) => (
+                  <tr key={paper.id}>
+                    <td>{paper.title}</td>
+                    <td>{paper.authors}</td>
+                    <td>
+                      <span className="myuploads-strand-badge">
+                        {paper.category || 'N/A'}
+                      </span>
+                    </td>
+                    <td>{paper.year}</td>
+                    <td>{paper.downloads || 0}</td>
+                    <td>
+                      {paper.created_at
+                        ? new Date(paper.created_at).toLocaleDateString()
+                        : '—'}
+                    </td>
+                    <td>
+                      <button
+                        className="myuploads-delete"
+                        onClick={() =>
+                          setDeleteTarget({ id: paper.id, title: paper.title })
+                        }
+                        disabled={deleting === paper.id}
+                      >
+                        {deleting === paper.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </select>
-
-              <div className="md-class-actions">
-                {myClass?.class_name && (
-                  <button
-                    className="md-class-cancel"
-                    onClick={() => setShowClassSelect(false)}
-                  >
-                    Cancel
-                  </button>
-                )}
-
-                <button
-                  className="md-class-confirm"
-                  onClick={handleSaveClass}
-                  disabled={!selectedClass || savingClass}
-                >
-                  {savingClass ? 'Saving...' : 'Confirm'}
-                </button>
-              </div>
-            </div>
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {!showClassSelect && (
-          <div className="md-body">
-
-            <div className="md-list-panel">
-              <div className="md-list-top">
-                <span className="md-list-count">
-                  {drafts.length} draft{drafts.length !== 1 ? 's' : ''}
-                </span>
-
-                <button
-                  className="md-upload-btn"
-                  onClick={() => setShowUpload(true)}
-                >
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-
-                  Upload Draft
-                </button>
-              </div>
-
-              {loading && (
-                <p className="md-loading">Loading drafts...</p>
-              )}
-
-              {!loading && drafts.length === 0 && (
-                <div className="md-empty">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="md-empty-svg"
-                  >
-                    <path
-                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-
-                  <p>No drafts yet. Upload your first draft!</p>
-                </div>
-              )}
-
-              {drafts.map((draft) => (
-                <div
-                  key={draft.id}
-                  className={`md-draft-item ${
-                    selectedDraft?.id === draft.id
-                      ? 'md-draft-active'
-                      : ''
-                  }`}
-                  onClick={() => setSelectedDraft(draft)}
-                >
-                  <div className="md-draft-file-icon">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M14 2v6h6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className="md-draft-info">
-                    <p className="md-draft-title">{draft.title}</p>
-
-                    <p className="md-draft-meta">
-                      {draft.file_type} ·{' '}
-                      {new Date(draft.created_at).toLocaleDateString()}
-                    </p>
-
-                    {draft.comments?.length > 0 && (
-                      <p className="md-draft-comments">
-                        <svg viewBox="0 0 24 24" fill="none">
-                          <path
-                            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-
-                        {draft.comments.length} comment
-                        {draft.comments.length !== 1 ? 's' : ''}
-                      </p>
-                    )}
-                  </div>
-
-                  <button
-                    className="md-draft-delete"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setDeleteTarget({
-                        id: draft.id,
-                        title: draft.title
-                      })
-                    }}
-                    disabled={deleting === draft.id}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <polyline
-                        points="3 6 5 6 21 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="md-detail-panel">
-              {!selectedDraft ? (
-                <div className="md-detail-empty">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="md-empty-svg"
-                  >
-                    <path
-                      d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-
-                  <p>Select a draft to view instructor comments</p>
-                </div>
-              ) : (
-                <>
-                  <div className="md-detail-header">
-                    <h3 className="md-detail-title">
-                      {selectedDraft.title}
-                    </h3>
-
-                    <p className="md-detail-meta">
-                      Submitted{' '}
-                      {new Date(
-                        selectedDraft.created_at
-                      ).toLocaleDateString()}
-                      {' · '}
-                      {selectedDraft.file_type}
-                    </p>
-
-                    <a
-                      href={selectedDraft.file_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="md-view-btn"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-
-                      View File
-                    </a>
-                  </div>
-
-                  <div className="md-comments">
-                    <h4 className="md-comments-title">
-                      Instructor Comments (
-                      {selectedDraft.comments?.length || 0})
-                    </h4>
-
-                    {selectedDraft.comments?.length === 0 && (
-                      <p className="md-no-comments">
-                        No comments yet. Your instructor will leave feedback
-                        here.
-                      </p>
-                    )}
-
-                    {selectedDraft.comments?.map((c) => (
-                      <div key={c.id} className="md-comment-item">
-                        <div className="md-comment-header">
-                          <div className="md-comment-avatar">
-                            {c.instructor_name
-                              ?.charAt(0)
-                              .toUpperCase()}
-                          </div>
-
-                          <div>
-                            <p className="md-comment-author">
-                              {c.instructor_name}
-                            </p>
-
-                            <p className="md-comment-date">
-                              {new Date(
-                                c.created_at
-                              ).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-
-                        <p className="md-comment-text">{c.comment}</p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {showUpload && (
-          <div
-            className="md-upload-overlay"
-            onClick={() => setShowUpload(false)}
-          >
-            <div
-              className="md-upload-modal"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="md-upload-header">
-                <h3>Upload Draft</h3>
-
-                <button
-                  className="md-close"
-                  onClick={() => setShowUpload(false)}
-                >
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M18 6L6 18M6 6l12 12"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {uploadError && (
-                <p className="md-upload-error">{uploadError}</p>
-              )}
-
-              <div className="md-upload-field">
-                <label>Title</label>
-
-                <input
-                  type="text"
-                  placeholder="Enter the title of your draft"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-
-              <div className="md-upload-field">
-                <label>File (PDF or DOCX)</label>
-
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.doc"
-                  onChange={(e) => setFile(e.target.files[0])}
-                />
-
-                {file && (
-                  <p className="md-upload-filename">{file.name}</p>
-                )}
-
-                <p className="md-upload-privacy-note">
-                  Your file will be stored securely and is only accessible to
-                  your assigned research instructor. See our{' '}
-                  <button
-                    className="legal-link"
-                    onClick={() => setShowPrivacyNote(true)}
-                  >
-                    Privacy Policy
-                  </button>
-                  .
-                </p>
-              </div>
-
-              <div className="md-upload-actions">
-                <button
-                  className="md-upload-cancel"
-                  onClick={() => setShowUpload(false)}
-                  disabled={uploading}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  className="md-upload-submit"
-                  onClick={handleUpload}
-                  disabled={uploading}
-                >
-                  {uploading ? 'Uploading...' : 'Upload'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {deleteTarget && (
-          <div
-            className="md-upload-overlay"
-            onClick={() => setDeleteTarget(null)}
-          >
-            <div
-              className="md-upload-modal md-confirm-modal"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="md-confirm-icon">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <polyline
-                    points="3 6 5 6 21 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-
-              <h3 className="md-confirm-title">Delete Draft?</h3>
-
-              <p className="md-confirm-desc">
-                Are you sure you want to delete{' '}
-                <strong>"{deleteTarget.title}"</strong>?
-                This cannot be undone.
-              </p>
-
-              <div className="md-upload-actions">
-                <button
-                  className="md-upload-cancel"
-                  onClick={() => setDeleteTarget(null)}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  className="md-upload-submit md-delete-btn"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
-                  {deleting ? 'Deleting...' : 'Yes, Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showPrivacyNote && (
-          <PrivacyPolicy
-            onClose={() => setShowPrivacyNote(false)}
-          />
         )}
 
       </div>
+
+      {/* Upload modal */}
+      {showModal && (
+        <div className="myuploads-modal-overlay" onClick={closeModal}>
+          <div
+            className="myuploads-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="myuploads-modal-header">
+              <h3 className="myuploads-modal-title">Upload Paper</h3>
+              <button
+                className="myuploads-modal-close-btn"
+                onClick={closeModal}
+                disabled={uploading}
+              >
+                ✕
+              </button>
+            </div>
+
+            {uploadError && (
+              <p className="myuploads-modal-error">{uploadError}</p>
+            )}
+            {uploadSuccess && (
+              <p className="myuploads-modal-success">{uploadSuccess}</p>
+            )}
+
+            <div className="myuploads-modal-field">
+              <label>Title</label>
+              <input
+                type="text"
+                placeholder="Enter the paper title"
+                value={form.title}
+                onChange={(e) => handleFormChange('title', e.target.value)}
+              />
+            </div>
+
+            <div className="myuploads-modal-field">
+              <label>Authors</label>
+              <input
+                type="text"
+                placeholder="e.g. Dela Cruz, J., Santos, M."
+                value={form.authors}
+                onChange={(e) => handleFormChange('authors', e.target.value)}
+              />
+            </div>
+
+            <div className="myuploads-modal-field">
+              <label>Abstract</label>
+              <textarea
+                rows={4}
+                placeholder="Paste the abstract"
+                value={form.abstract}
+                onChange={(e) => handleFormChange('abstract', e.target.value)}
+              />
+            </div>
+
+            <div className="myuploads-modal-row">
+              <div className="myuploads-modal-field">
+                <label>Strand</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => handleFormChange('category', e.target.value)}
+                >
+                  <option value="">— Select strand —</option>
+                  <option value="STEM">STEM</option>
+                  <option value="HUMSS">HUMSS</option>
+                  <option value="ABM">ABM</option>
+                  <option value="GAS">GAS</option>
+                </select>
+              </div>
+
+              <div className="myuploads-modal-field">
+                <label>Methodology</label>
+                <select
+                  value={form.methodology}
+                  onChange={(e) =>
+                    handleFormChange('methodology', e.target.value)
+                  }
+                >
+                  <option value="">— Select methodology —</option>
+                  <option value="Qualitative">Qualitative</option>
+                  <option value="Quantitative">Quantitative</option>
+                  <option value="Mixed Methods">Mixed Methods</option>
+                  <option value="Experimental">Experimental</option>
+                  <option value="Descriptive">Descriptive</option>
+                </select>
+              </div>
+
+              <div className="myuploads-modal-field">
+                <label>Year</label>
+                <input
+                  type="number"
+                  min="2000"
+                  max="2030"
+                  placeholder="2026"
+                  value={form.year}
+                  onChange={(e) => handleFormChange('year', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="myuploads-modal-field">
+              <label>PDF File</label>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+              {file && (
+                <p className="myuploads-modal-filename">📄 {file.name}</p>
+              )}
+            </div>
+
+            <div className="myuploads-modal-actions">
+              <button
+                className="myuploads-modal-cancel"
+                onClick={closeModal}
+                disabled={uploading}
+              >
+                Cancel
+              </button>
+              <button
+                className="myuploads-modal-submit"
+                onClick={handleUpload}
+                disabled={uploading}
+              >
+                {uploading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">🗑️</div>
+            <h3 className="confirm-title">Delete Paper?</h3>
+            <p className="confirm-desc">
+              Are you sure you want to delete{' '}
+              <strong>"{deleteTarget.title}"</strong>? This cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-delete"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-export default MyDrafts
+export default MyUploads

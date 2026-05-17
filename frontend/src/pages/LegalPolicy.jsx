@@ -1,6 +1,6 @@
 import '../css/LegalPages.css'
 
-function PrivacyPolicy({ onClose }) {
+function LegalPolicy({ onClose }) {
   return (
     <div className="legal-overlay" onClick={onClose}>
       <div className="legal-modal" onClick={(e) => e.stopPropagation()}>
@@ -193,4 +193,4 @@ function PrivacyPolicy({ onClose }) {
   )
 }
 
-export default PrivacyPolicy
+export default LegalPolicy

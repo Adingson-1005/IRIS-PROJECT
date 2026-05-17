@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import '../css/Login.css'
 import IRISlogo from '../assets/IRISlogo.png'
 import TermsAndConditions from './TermsAndConditions'
-import PrivacyPolicy from './PrivacyPolicy'
+import LegalPolicy from './LegalPolicy'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -146,7 +146,7 @@ function Login() {
       </div>
 
       {showTerms && <TermsAndConditions onClose={() => setShowTerms(false)} />}
-      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      {showPrivacy && <LegalPolicy onClose={() => setShowPrivacy(false)} />}
 
     </div>
   )

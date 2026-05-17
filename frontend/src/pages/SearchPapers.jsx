@@ -6,7 +6,7 @@ import PaperView from '../components/PaperView'
 import IRISlogo from '../assets/IRISlogo.png'
 import MyDrafts from './MyDrafts'
 import TermsAndConditions from './TermsAndConditions'
-import PrivacyPolicy from './PrivacyPolicy'
+import LegalPolicy from './LegalPolicy'
 
 function SearchPapers() {
   const navigate = useNavigate()
@@ -675,13 +675,11 @@ const [showPrivacy, setShowPrivacy] = useState(false)
       </footer>
 
       {showDrafts && (
-  <MyDrafts onClose={() => setShowDrafts(false)} />
-)}import { useState, useEffect } from 'react'
-import TermsAndConditions from './TermsAndConditions'
-import PrivacyPolicy from './PrivacyPolicy'
+        <MyDrafts onClose={() => setShowDrafts(false)} />
+      )}
 
       {showTerms && <TermsAndConditions onClose={() => setShowTerms(false)} />}
-{showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+      {showPrivacy && <LegalPolicy onClose={() => setShowPrivacy(false)} />}
     </div>
   )
 }
