@@ -3,6 +3,8 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import '../css/Login.css'
 import IRISlogo from '../assets/IRISlogo.png'
+import TermsAndConditions from './TermsAndConditions'
+import PrivacyPolicy from './PrivacyPolicy'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -10,6 +12,9 @@ function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  const [showTerms, setShowTerms] = useState(false)
+  const [showPrivacy, setShowPrivacy] = useState(false)
 
   const handleLogin = async () => {
     setLoading(true)
@@ -55,11 +60,11 @@ function Login() {
       <div className="login-left">
         <div className="login-left-content">
           <div className="login-logo">
-          <img
-            src={IRISlogo}
-            alt="IRIS Logo"
-            className="login-logo-text"
-          />
+            <img
+              src={IRISlogo}
+              alt="IRIS Logo"
+              className="login-logo-text"
+            />
           </div>
           <h1 className="login-headline">
             A Smarter Way to Search and Manage Research
@@ -125,8 +130,23 @@ function Login() {
             ) : 'Sign In'}
           </button>
 
+          <p className="login-legal-text">
+            By signing in, you agree to our{' '}
+            <button className="legal-link" onClick={() => setShowTerms(true)}>
+              Terms and Conditions
+            </button>
+            {' '}and acknowledge our{' '}
+            <button className="legal-link" onClick={() => setShowPrivacy(true)}>
+              Privacy Policy
+            </button>
+            .
+          </p>
+
         </div>
       </div>
+
+      {showTerms && <TermsAndConditions onClose={() => setShowTerms(false)} />}
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
 
     </div>
   )

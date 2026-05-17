@@ -5,6 +5,8 @@ import '../css/SearchPapers.css'
 import PaperView from '../components/PaperView'
 import IRISlogo from '../assets/IRISlogo.png'
 import MyDrafts from './MyDrafts'
+import TermsAndConditions from './TermsAndConditions'
+import PrivacyPolicy from './PrivacyPolicy'
 
 function SearchPapers() {
   const navigate = useNavigate()
@@ -257,6 +259,9 @@ function SearchPapers() {
       </div>
     )
   }
+
+  const [showTerms, setShowTerms] = useState(false)
+const [showPrivacy, setShowPrivacy] = useState(false)
 
   return (
     <div className="sp-container">
@@ -656,14 +661,27 @@ function SearchPapers() {
           </div>
         </div>
         <div className="sp-footer-bottom">
-          <p>© 2026 IRIS — Institutional Research Repository System. St. Joseph College Olongapo.</p>
-          <p>Built with ReactJS · FastAPI · PostgreSQL · Groq AI</p>
-        </div>
+  <p>© 2026 IRIS — Institutional Research Repository System. St. Joseph College Olongapo.</p>
+  <div className="sp-footer-legal">
+    <button className="legal-link" onClick={() => setShowTerms(true)}>
+      Terms and Conditions
+    </button>
+    <span className="sp-footer-dot">·</span>
+    <button className="legal-link" onClick={() => setShowPrivacy(true)}>
+      Privacy Policy
+    </button>
+  </div>
+</div>
       </footer>
 
       {showDrafts && (
   <MyDrafts onClose={() => setShowDrafts(false)} />
-)}
+)}import { useState, useEffect } from 'react'
+import TermsAndConditions from './TermsAndConditions'
+import PrivacyPolicy from './PrivacyPolicy'
+
+      {showTerms && <TermsAndConditions onClose={() => setShowTerms(false)} />}
+{showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
     </div>
   )
 }

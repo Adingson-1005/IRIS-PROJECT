@@ -691,6 +691,12 @@
   width: 24px;
   height: 24px;
 }
+.md-upload-privacy-note {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 6px;
+  line-height: 1.5;
+}
 
 /* ── Responsive ── */
 @media (max-width: 600px) {

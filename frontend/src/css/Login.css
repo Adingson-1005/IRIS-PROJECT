@@ -241,6 +241,13 @@
     box-shadow: 0 0px 10px rgba(0, 0, 0, 0.412);
   }
 }
+.login-legal-text {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.6;
+}
 
 @media (max-width: 480px) {
   .login-left {
