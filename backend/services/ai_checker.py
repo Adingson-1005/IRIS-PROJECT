@@ -104,6 +104,11 @@ IMPORTANT RULE FOR SCORING:
 - If you give a score above 80, the TO IMPROVE section should only list very minor suggestions
 - Never list major missing sections if the score is above 80
 
+IMPORTANT RULE FOR TO IMPROVE:
+- The TO IMPROVE section must list ALL chapters present in the paper
+- For each chapter, either list specific improvements needed OR state that it is already good
+- This way the student can clearly see which chapters need work and which are fine
+
 ---
 
 Respond ONLY in this exact format, no extra text:
@@ -118,9 +123,17 @@ STRENGTHS:
 - [strength 3]
 
 TO IMPROVE:
-- [area to improve 1 or "None - this paper fully follows the template" if score is 100]
-- [area to improve 2]
-- [area to improve 3]
+[If score is 100, write: "None - this paper fully follows the template"]
+[Otherwise, list ALL chapters like this:]
+
+Chapter 1 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
+Chapter 2 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
+Chapter 3 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
+Chapter 4 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
+Chapter 5 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
+
+[If a chapter is well-written and complete, just write "Already good enough!" for that chapter]
+[If a chapter needs work, specify exactly what needs to be improved]
 
 SUGGESTIONS:
 - [suggestion 1 or "Please submit an actual research paper or draft"]
@@ -142,7 +155,9 @@ OVERALL FEEDBACK:
                     "content": """You are a strict academic research evaluator for senior high school students 
 in the Philippines. You must first validate whether the submitted document is actually a research paper 
 before evaluating it. If it is not a research paper, give a score of 0 and explain clearly. 
-Never give a high score to a document that is not a research paper. Always respond in the exact format requested."""
+Never give a high score to a document that is not a research paper. Always respond in the exact format requested.
+When listing areas to improve, organize them by chapter. Only include chapters that actually need improvement.
+If a chapter is already well-written and complete, skip it entirely. Do not force improvements on perfect chapters."""
                 },
                 {
                     "role": "user",
@@ -150,7 +165,7 @@ Never give a high score to a document that is not a research paper. Always respo
                 }
             ],
             temperature=0.1,
-            max_tokens=1500
+            max_tokens=2000
         )
 
         raw = response.choices[0].message.content.strip()
