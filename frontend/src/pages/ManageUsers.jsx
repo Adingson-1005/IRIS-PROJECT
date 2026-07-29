@@ -17,6 +17,11 @@ function ManageUsers() {
   const [addMessage, setAddMessage] = useState('')
   const [addError, setAddError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkFile, setBulkFile] = useState(null)
+  const [bulkUploading, setBulkUploading] = useState(false)
+  const [bulkResult, setBulkResult] = useState(null)
+  const [bulkError, setBulkError] = useState('')
 
   useEffect(() => { fetchUsers() }, [])
 
@@ -34,25 +39,25 @@ function ManageUsers() {
   }
 
   const handleDelete = async () => {
-  if (!deleteTarget) return
-  if (deleteTarget.role === 'admin') {
-    alert('Admin accounts cannot be deleted.')
-    setDeleteTarget(null)
-    return
+    if (!deleteTarget) return
+    if (deleteTarget.role === 'admin') {
+      alert('Admin accounts cannot be deleted.')
+      setDeleteTarget(null)
+      return
+    }
+    setDeleting(deleteTarget.id)
+    try {
+      const token = localStorage.getItem('token')
+      await axios.delete(`https://iris-backend-7717.onrender.com/users/delete/${deleteTarget.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setUsers(users.filter(u => u.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to delete user')
+    }
+    setDeleting(null)
   }
-  setDeleting(deleteTarget.id)
-  try {
-    const token = localStorage.getItem('token')
-    await axios.delete(`https://iris-backend-7717.onrender.com/users/delete/${deleteTarget.id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    setUsers(users.filter(u => u.id !== deleteTarget.id))
-    setDeleteTarget(null)
-  } catch (err) {
-    alert(err.response?.data?.detail || 'Failed to delete user')
-  }
-  setDeleting(null)
-}
 
   const handleAddUser = async () => {
     if (!formData.full_name.trim()) { setAddError('Full name is required'); return }
@@ -86,21 +91,22 @@ function ManageUsers() {
     setFormData({ full_name: '', email: '', password: '', role: 'student' })
   }
 
-  const handleBulkUpload = async () => {
-    if (!bulkFile) {
-      setBulkError('Please select an Excel file')
-      return
-    }
+  const handleCloseBulkModal = () => {
+    setShowBulkModal(false)
+    setBulkFile(null)
+    setBulkResult(null)
+    setBulkError('')
+  }
 
+  const handleBulkUpload = async () => {
+    if (!bulkFile) { setBulkError('Please select an Excel file'); return }
     setBulkUploading(true)
     setBulkError('')
     setBulkResult(null)
-
     try {
       const data = new FormData()
       data.append('file', bulkFile)
       const token = localStorage.getItem('token')
-
       const response = await axios.post(
         'https://iris-backend-7717.onrender.com/users/bulk-upload',
         data,
@@ -111,14 +117,12 @@ function ManageUsers() {
           }
         }
       )
-
       setBulkResult(response.data)
       setBulkFile(null)
       fetchUsers()
     } catch (err) {
       setBulkError(err.response?.data?.detail || 'Bulk upload failed. Please try again.')
     }
-
     setBulkUploading(false)
   }
 
@@ -139,11 +143,6 @@ function ManageUsers() {
   const totalStudents = users.filter(u => u.role === 'student').length
   const totalInstructors = users.filter(u => u.role === 'instructor').length
   const totalAdmins = users.filter(u => u.role === 'admin').length
-  const [showBulkModal, setShowBulkModal] = useState(false)
-  const [bulkFile, setBulkFile] = useState(null)
-  const [bulkUploading, setBulkUploading] = useState(false)
-  const [bulkResult, setBulkResult] = useState(null)
-  const [bulkError, setBulkError] = useState('')
 
   return (
     <div className="mu-container">
@@ -172,16 +171,10 @@ function ManageUsers() {
         <div className="mu-top">
           <h3 className="mu-card-title">All Accounts ({filtered.length})</h3>
           <div className="mu-filters">
-            <button
-              className="mu-add-btn"
-              onClick={() => setShowModal(true)}
-            >
+            <button className="mu-add-btn" onClick={() => setShowModal(true)}>
               + Add User
             </button>
-            <button
-              className="mu-bulk-btn"
-              onClick={() => setShowBulkModal(true)}
-            >
+            <button className="mu-bulk-btn" onClick={() => setShowBulkModal(true)}>
               Upload Excel
             </button>
             <select
@@ -204,9 +197,11 @@ function ManageUsers() {
         </div>
 
         {loading && <p className="mu-loading">Loading users...</p>}
+
         {!loading && filtered.length === 0 && (
           <p className="mu-empty">No users found.</p>
         )}
+
         {!loading && filtered.length > 0 && (
           <div className="mu-table-wrapper">
             <table className="mu-table">
@@ -215,6 +210,7 @@ function ManageUsers() {
                   <th>Full Name</th>
                   <th>Email</th>
                   <th>Role</th>
+                  <th>Class</th>
                   <th>Date Joined</th>
                   <th>Action</th>
                 </tr>
@@ -222,25 +218,28 @@ function ManageUsers() {
               <tbody>
                 {filtered.map((user) => (
                   <tr key={user.id}>
-                    <td className="mu-name">{user.full_name}</td>
+                    <td>{user.full_name}</td>
                     <td className="mu-email">{user.email}</td>
                     <td>
                       <span className={roleBadgeClass(user.role)}>
                         {user.role}
                       </span>
                     </td>
+                    <td>{user.class_name || '—'}</td>
                     <td>{new Date(user.created_at).toLocaleDateString()}</td>
                     <td>
-                      {user.role === 'admin' ? (
-                        <span className="mu-protected">Protected</span>
-                      ) : (
+                      {user.role !== 'admin' && (
                         <button
-                        className="mu-delete"
-                        onClick={() => setDeleteTarget({ id: user.id, name: user.full_name, role: user.role })}
-                        disabled={deleting === user.id}
-                      >
-                        {deleting === user.id ? 'Deleting...' : 'Delete'}
-                      </button>
+                          className="mu-delete"
+                          onClick={() => setDeleteTarget({
+                            id: user.id,
+                            name: user.full_name,
+                            role: user.role
+                          })}
+                          disabled={!!deleting}
+                        >
+                          Delete
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -251,6 +250,7 @@ function ManageUsers() {
         )}
       </div>
 
+      {/* Add User Modal */}
       {showModal && (
         <div className="mu-modal-overlay" onClick={handleCloseModal}>
           <div className="mu-modal" onClick={(e) => e.stopPropagation()}>
@@ -319,34 +319,33 @@ function ManageUsers() {
         </div>
       )}
 
+      {/* Delete Confirm Modal */}
       {deleteTarget && (
-  <div className="confirm-overlay">
-    <div className="confirm-modal">
-      <div className="confirm-icon">🗑️</div>
-      <h3 className="confirm-title">Delete User?</h3>
-      <p className="confirm-desc">
-        Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>?
-        This cannot be undone.
-      </p>
-      <div className="confirm-actions">
-        <button
-          className="confirm-cancel"
-          onClick={() => setDeleteTarget(null)}
-        >
-          Cancel
-        </button>
-        <button
-          className="confirm-delete"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? 'Deleting...' : 'Yes, Delete'}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">🗑️</div>
+            <h3 className="confirm-title">Delete User?</h3>
+            <p className="confirm-desc">
+              Are you sure you want to delete <strong>"{deleteTarget.name}"</strong>?
+              This cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-cancel" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </button>
+              <button
+                className="confirm-delete"
+                onClick={handleDelete}
+                disabled={!!deleting}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* Bulk Upload Modal */}
       {showBulkModal && (
         <div className="mu-modal-overlay" onClick={handleCloseBulkModal}>
           <div className="mu-modal" onClick={(e) => e.stopPropagation()}>
@@ -431,12 +430,9 @@ function ManageUsers() {
                     onChange={(e) => setBulkFile(e.target.files[0])}
                   />
                   {bulkFile && (
-                    <p style={{ fontSize: 12, color: '#0e9f6e', marginTop: 4 }}>
-                      {bulkFile.name}
-                    </p>
+                    <p className="mu-bulk-filename">{bulkFile.name}</p>
                   )}
                 </div>
-
                 <div className="mu-modal-actions">
                   <button className="mu-modal-cancel" onClick={handleCloseBulkModal}>
                     Cancel
