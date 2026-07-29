@@ -86,6 +86,42 @@ function ManageUsers() {
     setFormData({ full_name: '', email: '', password: '', role: 'student' })
   }
 
+  const handleBulkUpload = async () => {
+    if (!bulkFile) {
+      setBulkError('Please select an Excel file')
+      return
+    }
+
+    setBulkUploading(true)
+    setBulkError('')
+    setBulkResult(null)
+
+    try {
+      const data = new FormData()
+      data.append('file', bulkFile)
+      const token = localStorage.getItem('token')
+
+      const response = await axios.post(
+        'https://iris-backend-7717.onrender.com/users/bulk-upload',
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+
+      setBulkResult(response.data)
+      setBulkFile(null)
+      fetchUsers()
+    } catch (err) {
+      setBulkError(err.response?.data?.detail || 'Bulk upload failed. Please try again.')
+    }
+
+    setBulkUploading(false)
+  }
+
   const roleBadgeClass = (role) => {
     if (role === 'admin') return 'mu-badge mu-badge-admin'
     if (role === 'instructor') return 'mu-badge mu-badge-instructor'
@@ -103,6 +139,11 @@ function ManageUsers() {
   const totalStudents = users.filter(u => u.role === 'student').length
   const totalInstructors = users.filter(u => u.role === 'instructor').length
   const totalAdmins = users.filter(u => u.role === 'admin').length
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkFile, setBulkFile] = useState(null)
+  const [bulkUploading, setBulkUploading] = useState(false)
+  const [bulkResult, setBulkResult] = useState(null)
+  const [bulkError, setBulkError] = useState('')
 
   return (
     <div className="mu-container">
@@ -136,6 +177,12 @@ function ManageUsers() {
               onClick={() => setShowModal(true)}
             >
               + Add User
+            </button>
+            <button
+              className="mu-bulk-btn"
+              onClick={() => setShowBulkModal(true)}
+            >
+              Upload Excel
             </button>
             <select
               className="mu-select"
@@ -299,6 +346,122 @@ function ManageUsers() {
     </div>
   </div>
 )}
+
+      {showBulkModal && (
+        <div className="mu-modal-overlay" onClick={handleCloseBulkModal}>
+          <div className="mu-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="mu-modal-header">
+              <h2 className="mu-modal-title">Bulk Upload Students</h2>
+              <button className="mu-modal-close" onClick={handleCloseBulkModal}>✕</button>
+            </div>
+
+            <div className="mu-bulk-format">
+              <p className="mu-bulk-format-title">Required Excel format:</p>
+              <table className="mu-bulk-table">
+                <thead>
+                  <tr>
+                    <th>Column A</th>
+                    <th>Column B</th>
+                    <th>Column C</th>
+                    <th>Column D</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Full Name</td>
+                    <td>Email</td>
+                    <td>Password</td>
+                    <td>Class (optional)</td>
+                  </tr>
+                  <tr className="mu-bulk-example">
+                    <td>Juan Dela Cruz</td>
+                    <td>juan@sjc.edu.ph</td>
+                    <td>password123</td>
+                    <td>Class A</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p className="mu-bulk-note">
+                Row 1 should be headers. Student accounts start from Row 2.
+                Class must match exactly: Class A, Class B, Class C, or Class D.
+              </p>
+            </div>
+
+            {bulkError && <p className="mu-modal-error">{bulkError}</p>}
+
+            {bulkResult && (
+              <div className="mu-bulk-result">
+                <p className="mu-bulk-result-title">Upload Complete</p>
+                <div className="mu-bulk-stats">
+                  <div className="mu-bulk-stat mu-bulk-created">
+                    <span className="mu-bulk-stat-num">{bulkResult.created}</span>
+                    <span className="mu-bulk-stat-label">Created</span>
+                  </div>
+                  <div className="mu-bulk-stat mu-bulk-skipped">
+                    <span className="mu-bulk-stat-num">{bulkResult.skipped}</span>
+                    <span className="mu-bulk-stat-label">Skipped</span>
+                  </div>
+                  <div className="mu-bulk-stat mu-bulk-errors">
+                    <span className="mu-bulk-stat-num">{bulkResult.errors}</span>
+                    <span className="mu-bulk-stat-label">Errors</span>
+                  </div>
+                </div>
+                {bulkResult.skipped_list?.length > 0 && (
+                  <p className="mu-bulk-detail">
+                    Skipped (already exist): {bulkResult.skipped_list.join(', ')}
+                  </p>
+                )}
+                {bulkResult.error_list?.length > 0 && (
+                  <div className="mu-bulk-detail mu-bulk-error-list">
+                    {bulkResult.error_list.map((e, i) => (
+                      <p key={i}>{e}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!bulkResult && (
+              <>
+                <div className="mu-modal-field">
+                  <label>Select Excel File (.xlsx)</label>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={(e) => setBulkFile(e.target.files[0])}
+                  />
+                  {bulkFile && (
+                    <p style={{ fontSize: 12, color: '#0e9f6e', marginTop: 4 }}>
+                      {bulkFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mu-modal-actions">
+                  <button className="mu-modal-cancel" onClick={handleCloseBulkModal}>
+                    Cancel
+                  </button>
+                  <button
+                    className="mu-modal-submit"
+                    onClick={handleBulkUpload}
+                    disabled={bulkUploading}
+                  >
+                    {bulkUploading ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {bulkResult && (
+              <div className="mu-modal-actions">
+                <button className="mu-modal-submit" onClick={handleCloseBulkModal}>
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
