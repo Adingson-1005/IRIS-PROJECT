@@ -54,8 +54,7 @@ def check_research(student_path: str, template_path: str) -> dict:
     student_preview = student_text[:4000]
     template_preview = template_text[:4000]
 
-    prompt = f"""
-You are a strict academic research evaluator for senior high school students in the Philippines.
+    prompt = f"""You are a strict academic research evaluator for senior high school students in the Philippines.
 
 You are given:
 1. A RESEARCH TEMPLATE — the standard format and structure that students must follow.
@@ -75,73 +74,69 @@ STUDENT SUBMISSION:
 
 STEP 1 — DOCUMENT VALIDATION:
 First, determine if the student submission is actually a research paper or research draft.
-A valid research paper or draft must contain at least some of these elements:
-- A title related to a research topic
-- An abstract or introduction
-- A research problem or objectives
-- Methodology or methods section
-- References or bibliography
-- Academic writing style
+If it is NOT a research paper, give SCORE: 0 and explain. Do not evaluate sections.
 
-If the submission is NOT a research paper (for example: a quiz, exam, questionnaire, list of questions,
-story, poem, personal letter, or any non-academic document), you must:
-- Give a SCORE of 0
-- Clearly state it is not a valid research paper submission
-- Do not provide strengths or suggestions as if it were a research paper
+STEP 2 — SECTION-BY-SECTION EVALUATION:
+If it IS a research paper, evaluate each of these sections individually:
+- Title Page
+- Abstract
+- Introduction / Background of the Study
+- Statement of the Problem
+- Objectives
+- Significance of the Study
+- Scope and Limitations
+- Review of Related Literature
+- Methodology
+- Results and Discussion
+- Conclusion and Recommendations
+- References / Bibliography
 
-STEP 2 — EVALUATION (only if it is a valid research paper):
-If it IS a research paper or draft, compare it against the template and evaluate:
-- Check if the required sections are present and properly written
-- Give an accuracy/completeness score from 0 to 100 based on how well it follows the template
-- A score of 0-30 means very incomplete or poor quality
-- A score of 31-60 means partial completion with major sections missing
-- A score of 61-80 means mostly complete with some sections needing improvement
-- A score of 81-99 means very complete with only minor improvements needed
-- A score of 100 means the paper perfectly follows the template with nothing missing
+For each section give:
+- STATUS: Present / Partial / Missing
+- COMMENT: One sentence about the quality or what is missing
 
-IMPORTANT RULE FOR SCORING:
-- If you give a score of 100, the TO IMPROVE section must say "None - this paper fully follows the template"
-- If you give a score above 80, the TO IMPROVE section should only list very minor suggestions
-- Never list major missing sections if the score is above 80
-
-IMPORTANT RULE FOR TO IMPROVE:
-- The TO IMPROVE section must list ALL chapters present in the paper
-- For each chapter, either list specific improvements needed OR state that it is already good
-- This way the student can clearly see which chapters need work and which are fine
+STEP 3 — OVERALL SCORE:
+Give an overall accuracy score from 0 to 100 based on how many sections are present and complete.
+- 0–30: Very incomplete or not a research paper
+- 31–60: Many sections missing
+- 61–80: Mostly complete with some gaps
+- 81–99: Very complete with minor issues
+- 100: Perfectly follows the template
 
 ---
 
-Respond ONLY in this exact format, no extra text:
+Respond ONLY in this exact format:
 
-SCORE: [number from 0 to 100]
+SCORE: [number 0-100]
 
 DOCUMENT TYPE: [Research Paper / Not a Research Paper]
 
+SECTION BREAKDOWN:
+- Title Page: [Present/Partial/Missing] — [one sentence comment]
+- Abstract: [Present/Partial/Missing] — [one sentence comment]
+- Introduction: [Present/Partial/Missing] — [one sentence comment]
+- Statement of the Problem: [Present/Partial/Missing] — [one sentence comment]
+- Objectives: [Present/Partial/Missing] — [one sentence comment]
+- Significance of the Study: [Present/Partial/Missing] — [one sentence comment]
+- Scope and Limitations: [Present/Partial/Missing] — [one sentence comment]
+- Review of Related Literature: [Present/Partial/Missing] — [one sentence comment]
+- Methodology: [Present/Partial/Missing] — [one sentence comment]
+- Results and Discussion: [Present/Partial/Missing] — [one sentence comment]
+- Conclusion and Recommendations: [Present/Partial/Missing] — [one sentence comment]
+- References: [Present/Partial/Missing] — [one sentence comment]
+
 STRENGTHS:
-- [strength 1 or "N/A - Not a valid research paper submission"]
+- [strength 1]
 - [strength 2]
 - [strength 3]
 
 TO IMPROVE:
-[If score is 100, write: "None - this paper fully follows the template"]
-[Otherwise, list ALL chapters like this:]
-
-Chapter 1 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
-Chapter 2 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
-Chapter 3 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
-Chapter 4 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
-Chapter 5 - [Chapter Title]: [specific improvements needed, or "Already good enough!"]
-
-[If a chapter is well-written and complete, just write "Already good enough!" for that chapter]
-[If a chapter needs work, specify exactly what needs to be improved]
-
-SUGGESTIONS:
-- [suggestion 1 or "Please submit an actual research paper or draft"]
-- [suggestion 2]
-- [suggestion 3]
+- [area 1 or "None - paper fully follows the template" if score is 100]
+- [area 2]
+- [area 3]
 
 OVERALL FEEDBACK:
-[2-3 sentence summary. If not a research paper, clearly state what was submitted and that the student must submit an actual research paper or draft.]
+[2-3 sentence summary of the paper's overall quality and main recommendation]
 """
 
     try:

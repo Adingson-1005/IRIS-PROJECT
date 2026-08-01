@@ -630,12 +630,46 @@ const fetchAiHistory = async () => {
                 <div className="sp-feedback-box">
                   {selectedHistory.feedback.split('\n').map((line, i) => {
                     if (line.startsWith('SCORE:')) return null
-                    if (['STRENGTHS:', 'TO IMPROVE:', 'SUGGESTIONS:',
-                         'OVERALL FEEDBACK:', 'DOCUMENT TYPE:'].some(s => line.startsWith(s))) {
+
+                    // Section headers
+                    if (['STRENGTHS:', 'TO IMPROVE:', 'OVERALL FEEDBACK:',
+                         'DOCUMENT TYPE:', 'SECTION BREAKDOWN:'].some(s => line.startsWith(s))) {
                       return <p key={i} className="sp-feedback-section">{line}</p>
                     }
-                    if (line.startsWith('- ')) return <p key={i} className="sp-feedback-item">{line}</p>
-                    if (line.trim()) return <p key={i} className="sp-feedback-text">{line}</p>
+
+                    // Section breakdown lines with color coding
+                    if (line.startsWith('- ') && line.includes('Present')) {
+                      return (
+                        <p key={i} className="sp-feedback-item sp-section-present">
+                          {line}
+                        </p>
+                      )
+                    }
+                    if (line.startsWith('- ') && line.includes('Partial')) {
+                      return (
+                        <p key={i} className="sp-feedback-item sp-section-partial">
+                          {line}
+                        </p>
+                      )
+                    }
+                    if (line.startsWith('- ') && line.includes('Missing')) {
+                      return (
+                        <p key={i} className="sp-feedback-item sp-section-missing">
+                          {line}
+                        </p>
+                      )
+                    }
+
+                    // Regular bullet
+                    if (line.startsWith('- ')) {
+                      return <p key={i} className="sp-feedback-item">{line}</p>
+                    }
+
+                    // Regular text
+                    if (line.trim()) {
+                      return <p key={i} className="sp-feedback-text">{line}</p>
+                    }
+
                     return null
                   })}
                 </div>
@@ -718,11 +752,46 @@ const fetchAiHistory = async () => {
                 <div className="sp-feedback-box">
                   {aiResult.feedback.split('\n').map((line, i) => {
                     if (line.startsWith('SCORE:')) return null
-                    if (['STRENGTHS:', 'TO IMPROVE:', 'SUGGESTIONS:', 'OVERALL FEEDBACK:', 'DOCUMENT TYPE:'].some(s => line.startsWith(s))) {
+
+                    // Section headers
+                    if (['STRENGTHS:', 'TO IMPROVE:', 'OVERALL FEEDBACK:',
+                         'DOCUMENT TYPE:', 'SECTION BREAKDOWN:'].some(s => line.startsWith(s))) {
                       return <p key={i} className="sp-feedback-section">{line}</p>
                     }
-                    if (line.startsWith('- ')) return <p key={i} className="sp-feedback-item">{line}</p>
-                    if (line.trim()) return <p key={i} className="sp-feedback-text">{line}</p>
+
+                    // Section breakdown lines with color coding
+                    if (line.startsWith('- ') && line.includes('Present')) {
+                      return (
+                        <p key={i} className="sp-feedback-item sp-section-present">
+                          {line}
+                        </p>
+                      )
+                    }
+                    if (line.startsWith('- ') && line.includes('Partial')) {
+                      return (
+                        <p key={i} className="sp-feedback-item sp-section-partial">
+                          {line}
+                        </p>
+                      )
+                    }
+                    if (line.startsWith('- ') && line.includes('Missing')) {
+                      return (
+                        <p key={i} className="sp-feedback-item sp-section-missing">
+                          {line}
+                        </p>
+                      )
+                    }
+
+                    // Regular bullet
+                    if (line.startsWith('- ')) {
+                      return <p key={i} className="sp-feedback-item">{line}</p>
+                    }
+
+                    // Regular text
+                    if (line.trim()) {
+                      return <p key={i} className="sp-feedback-text">{line}</p>
+                    }
+
                     return null
                   })}
                 </div>

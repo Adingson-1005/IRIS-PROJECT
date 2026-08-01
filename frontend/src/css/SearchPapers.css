@@ -1145,6 +1145,34 @@
   text-decoration: underline;
 }
 
+/* ── Section breakdown colors ── */
+.sp-section-present {
+  color: #065f46;
+  background: #d1fae5;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.sp-section-partial {
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.sp-section-missing {
+  color: #991b1b;
+  background: #fee2e2;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
 @media (max-width: 600px) {
   .sp-greeting { display: none; }
   .sp-recent-grid {
