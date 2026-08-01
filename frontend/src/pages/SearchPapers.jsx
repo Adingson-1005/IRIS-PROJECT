@@ -33,7 +33,7 @@ function SearchPapers() {
     const saved = localStorage.getItem('iris_search_history')
     return saved ? JSON.parse(saved) : []
   })
-  const [showHistory, setShowHistory] = useState(false)
+
 
   // AI Checker states
   const [showModal, setShowModal] = useState(false)
