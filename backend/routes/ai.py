@@ -75,3 +75,20 @@ async def submit_draft(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/history")
+def get_ai_history(
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_user_id)
+):
+    try:
+        submissions = db.execute(text("""
+            SELECT id, title, score, feedback, status, created_at
+            FROM student_submissions
+            WHERE student_id = :student_id
+            ORDER BY created_at DESC
+        """), {"student_id": user_id}).fetchall()
+
+        return {"history": [dict(row._mapping) for row in submissions]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

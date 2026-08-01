@@ -486,6 +486,11 @@
   margin-top: 4px;
 }
 
+.mu-bulk-filename {
+  font-size: 12px;
+  color: #0e9f6e;
+  margin-top: 4px;
+}
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .mu-heading {

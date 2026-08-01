@@ -1046,6 +1046,105 @@
   font-size: 11px;
 }
 
+/* ── History FAB ── */
+.sp-fab-history {
+  background: linear-gradient(135deg, #057a55, #0e9f6e);
+}
+
+/* ── History modal ── */
+.sp-history-modal {
+  max-width: 520px;
+}
+
+.sp-history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 0;
+  color: #aaa;
+  font-size: 13px;
+  text-align: center;
+}
+
+.sp-history-empty svg {
+  width: 40px;
+  height: 40px;
+}
+
+.sp-history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sp-history-item:hover {
+  background: #f9fafb;
+}
+
+.sp-history-score {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a2e;
+  flex-shrink: 0;
+  border-width: 3px;
+  border-style: solid;
+}
+
+.sp-history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-history-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.sp-history-date {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.sp-history-arrow {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sp-history-back {
+  background: none;
+  border: none;
+  color: #7e3af2;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.sp-history-back:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 600px) {
   .sp-greeting { display: none; }
   .sp-recent-grid {

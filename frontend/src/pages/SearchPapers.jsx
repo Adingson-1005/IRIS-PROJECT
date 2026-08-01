@@ -263,6 +263,26 @@ function SearchPapers() {
   const [showTerms, setShowTerms] = useState(false)
 const [showPrivacy, setShowPrivacy] = useState(false)
 
+const [showHistory, setShowHistory] = useState(false)
+const [aiHistory, setAiHistory] = useState([])
+const [loadingHistory, setLoadingHistory] = useState(false)
+const [selectedHistory, setSelectedHistory] = useState(null)
+
+const fetchAiHistory = async () => {
+  setLoadingHistory(true)
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.get(
+      'https://iris-backend-7717.onrender.com/ai/history',
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    setAiHistory(response.data.history || [])
+  } catch {
+    console.error('Failed to fetch AI history')
+  }
+  setLoadingHistory(false)
+}
+
   return (
     <div className="sp-container">
 
@@ -490,7 +510,158 @@ const [showPrivacy, setShowPrivacy] = useState(false)
             </svg>
           </button>
         </div>
+        <div className="sp-fab-group">
+          <span className="sp-fab-label">Check History</span>
+          <button
+            className="sp-fab sp-fab-history"
+            onClick={() => {
+              setShowHistory(true)
+              fetchAiHistory()
+            }}
+            title="View AI checker history"
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"
+                stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {showHistory && (
+        <div className="sp-modal-overlay" onClick={() => {
+          setShowHistory(false)
+          setSelectedHistory(null)
+        }}>
+          <div className="sp-modal sp-history-modal" onClick={(e) => e.stopPropagation()}>
+            {!selectedHistory ? (
+              <>
+                <div className="sp-modal-header">
+                  <div className="sp-modal-icon sp-modal-icon-checker">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"
+                        stroke="#7e3af2" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h2>AI Checker History</h2>
+                    <p className="sp-modal-desc">Your past research draft submissions</p>
+                  </div>
+                </div>
+
+                {loadingHistory && (
+                  <div className="sp-analyzing">
+                    <div className="sp-spinner sp-spinner-checker"></div>
+                    <p>Loading history...</p>
+                  </div>
+                )}
+
+                {!loadingHistory && aiHistory.length === 0 && (
+                  <div className="sp-history-empty">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"
+                        stroke="#ddd" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <p>No submissions yet. Submit a draft to see your history here.</p>
+                  </div>
+                )}
+
+                {!loadingHistory && aiHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    className="sp-history-item"
+                    onClick={() => setSelectedHistory(item)}
+                  >
+                    <div className={`sp-history-score ${
+                      item.score >= 75 ? 'sp-score-high' :
+                      item.score >= 50 ? 'sp-score-mid' : 'sp-score-low'
+                    }`}>
+                      {item.score}%
+                    </div>
+                    <div className="sp-history-info">
+                      <p className="sp-history-title">{item.title}</p>
+                      <p className="sp-history-date">
+                        {new Date(item.created_at).toLocaleDateString('en-PH', {
+                          year: 'numeric', month: 'long', day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="none" className="sp-history-arrow">
+                      <path d="M9 18l6-6-6-6" stroke="#aaa" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                ))}
+
+                <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
+                  <button
+                    className="sp-modal-submit sp-modal-submit-checker"
+                    onClick={() => setShowHistory(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="sp-result-header">
+                  <button
+                    className="sp-history-back"
+                    onClick={() => setSelectedHistory(null)}
+                  >
+                    ← Back to History
+                  </button>
+                  <h2>AI Feedback Results</h2>
+                  <p className="sp-result-title">{selectedHistory.title}</p>
+                  <p className="sp-history-date" style={{ marginTop: 4 }}>
+                    Submitted: {new Date(selectedHistory.created_at).toLocaleDateString('en-PH', {
+                      year: 'numeric', month: 'long', day: 'numeric'
+                    })}
+                  </p>
+                </div>
+
+                <div className={`sp-score-circle ${
+                  selectedHistory.score >= 75 ? 'sp-score-high' :
+                  selectedHistory.score >= 50 ? 'sp-score-mid' : 'sp-score-low'
+                }`}>
+                  <span className="sp-score-num">{selectedHistory.score}%</span>
+                  <span className="sp-score-label">Accuracy Score</span>
+                </div>
+
+                <div className="sp-feedback-box">
+                  {selectedHistory.feedback.split('\n').map((line, i) => {
+                    if (line.startsWith('SCORE:')) return null
+                    if (['STRENGTHS:', 'TO IMPROVE:', 'SUGGESTIONS:',
+                         'OVERALL FEEDBACK:', 'DOCUMENT TYPE:'].some(s => line.startsWith(s))) {
+                      return <p key={i} className="sp-feedback-section">{line}</p>
+                    }
+                    if (line.startsWith('- ')) return <p key={i} className="sp-feedback-item">{line}</p>
+                    if (line.trim()) return <p key={i} className="sp-feedback-text">{line}</p>
+                    return null
+                  })}
+                </div>
+
+                <div className="sp-modal-actions">
+                  <button
+                    className="sp-modal-cancel"
+                    onClick={() => setSelectedHistory(null)}
+                  >
+                    Back
+                  </button>
+                  <button
+                    className="sp-modal-submit sp-modal-submit-checker"
+                    onClick={() => {
+                      setSelectedHistory(null)
+                      setShowHistory(false)
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* AI Checker Modal */}
       {showModal && (
@@ -555,7 +726,19 @@ const [showPrivacy, setShowPrivacy] = useState(false)
                     return null
                   })}
                 </div>
-                <button className="sp-modal-submit sp-modal-submit-checker" onClick={closeCheckerModal}>Done</button>
+                <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
+                  <button
+                    className="sp-modal-cancel"
+                    onClick={() => {
+                      setShowModal(false)
+                      setShowHistory(true)
+                      fetchAiHistory()
+                    }}
+                  >
+                    View History
+                  </button>
+                  <button className="sp-modal-submit sp-modal-submit-checker" onClick={closeCheckerModal}>Done</button>
+                </div>
               </>
             )}
           </div>
