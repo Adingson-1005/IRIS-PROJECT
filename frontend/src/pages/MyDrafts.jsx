@@ -271,6 +271,9 @@ function MyDrafts({ onClose }) {
                     <p className="md-draft-meta">
                       {draft.file_type} · {new Date(draft.created_at).toLocaleDateString()}
                     </p>
+                    <span className={`md-status-badge md-status-${(draft.status || 'Submitted').toLowerCase().replace(/ /g, '-')}`}>
+                      {draft.status || 'Submitted'}
+                    </span>
                     {draft.comments?.length > 0 && (
                       <p className="md-draft-comments">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -325,6 +328,32 @@ function MyDrafts({ onClose }) {
                       </svg>
                       View File
                     </a>
+                  </div>
+
+                  <div className="md-status-track">
+                    {['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved'].map((step, i) => {
+                      const steps = ['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved']
+                      const currentIndex = steps.indexOf(selectedDraft.status || 'Submitted')
+                      const isCompleted = i < currentIndex
+                      const isActive = i === currentIndex
+                      return (
+                        <div key={step} className="md-status-step-wrapper">
+                          <div className={`md-status-step ${isActive ? 'md-step-active' : ''} ${isCompleted ? 'md-step-done' : ''}`}>
+                            <div className="md-step-circle">
+                              {isCompleted ? (
+                                <svg viewBox="0 0 24 24" fill="none">
+                                  <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              ) : (
+                                <span>{i + 1}</span>
+                              )}
+                            </div>
+                            <span className="md-step-label">{step}</span>
+                          </div>
+                          {i < 4 && <div className={`md-step-line ${isCompleted ? 'md-line-done' : ''}`}></div>}
+                        </div>
+                      )
+                    })}
                   </div>
 
                   <div className="md-comments">

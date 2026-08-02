@@ -334,3 +334,32 @@ def delete_comment(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+        # ── Instructor: update draft status ──
+@router.put("/status/{draft_id}")
+def update_draft_status(
+    draft_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        if user["role"] not in ["instructor", "admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        status = payload.get("status", "").strip()
+        valid_statuses = ["Submitted", "Under Review", "Returned for Revision", "Revised", "Approved"]
+        if status not in valid_statuses:
+            raise HTTPException(status_code=400, detail="Invalid status")
+
+        db.execute(text("""
+            UPDATE student_drafts SET status = :status WHERE id = :draft_id
+        """), {"status": status, "draft_id": draft_id})
+        db.commit()
+
+        return {"message": "Status updated successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

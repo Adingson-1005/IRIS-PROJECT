@@ -119,6 +119,24 @@ function StudentDrafts() {
     return acc
   }, {})
 
+  const [updatingStatus, setUpdatingStatus] = useState(null)
+
+  const handleUpdateStatus = async (draftId, newStatus) => {
+  setUpdatingStatus(draftId)
+  try {
+    const token = localStorage.getItem('token')
+    await axios.put(
+      `https://iris-backend-7717.onrender.com/drafts/status/${draftId}`,
+      { status: newStatus },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    await fetchStudentDrafts(selectedStudent)
+  } catch (err) {
+    alert(err.response?.data?.detail || 'Failed to update status')
+  }
+  setUpdatingStatus(null)
+}
+
   return (
     <div className="sd-container">
 
@@ -271,6 +289,56 @@ function StudentDrafts() {
                   </svg>
                   View File
                 </a>
+              </div>
+
+              <div className="sd-status-section">
+                <h4 className="sd-status-title">Draft Status</h4>
+                <div className="sd-status-track">
+                  {['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved'].map((step, i) => {
+                    const steps = ['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved']
+                    const currentIndex = steps.indexOf(selectedDraft.status || 'Submitted')
+                    const isCompleted = i < currentIndex
+                    const isActive = i === currentIndex
+                    return (
+                      <div key={step} className="sd-status-step-wrapper">
+                        <div className={`sd-status-step ${isActive ? 'sd-step-active' : ''} ${isCompleted ? 'sd-step-done' : ''}`}>
+                          <div className="sd-step-circle">
+                            {isCompleted ? (
+                              <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            ) : (
+                              <span>{i + 1}</span>
+                            )}
+                          </div>
+                          <span className="sd-step-label">{step}</span>
+                        </div>
+                        {i < 4 && <div className={`sd-step-line ${isCompleted ? 'sd-line-done' : ''}`}></div>}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {canComment && (
+                  <div className="sd-status-actions">
+                    <label className="sd-status-label">Update Status:</label>
+                    <select
+                      className="sd-status-select"
+                      value={selectedDraft.status || 'Submitted'}
+                      onChange={(e) => handleUpdateStatus(selectedDraft.id, e.target.value)}
+                      disabled={updatingStatus === selectedDraft.id}
+                    >
+                      <option value="Submitted">Submitted</option>
+                      <option value="Under Review">Under Review</option>
+                      <option value="Returned for Revision">Returned for Revision</option>
+                      <option value="Revised">Revised</option>
+                      <option value="Approved">Approved</option>
+                    </select>
+                    {updatingStatus === selectedDraft.id && (
+                      <span className="sd-status-saving">Saving...</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="sd-comments-section">

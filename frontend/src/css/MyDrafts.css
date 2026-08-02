@@ -172,6 +172,43 @@
   margin-top: 2px;
 }
 
+.md-status-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.md-status-submitted {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.md-status-under-review {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.md-status-returned-for-revision {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.md-status-revised {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.md-status-approved {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
 .md-draft-comments {
   font-size: 11px;
   color: #1a56db;
@@ -248,6 +285,85 @@
 
 .md-view-btn:hover {
   background: #6d28d9;
+}
+
+/* ── Status tracker ── */
+.md-status-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 24px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.md-status-step-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.md-status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.md-step-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  border: 2px solid #e5e7eb;
+}
+
+.md-step-active .md-step-circle {
+  background: #7e3af2;
+  color: white;
+  border-color: #7e3af2;
+  box-shadow: 0 0 0 4px rgba(126, 58, 242, 0.14);
+}
+
+.md-step-done .md-step-circle {
+  background: #0e9f6e;
+  border-color: #0e9f6e;
+}
+
+.md-step-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.md-step-active .md-step-label {
+  color: #7e3af2;
+  font-weight: 600;
+}
+
+.md-step-done .md-step-label {
+  color: #0e9f6e;
+  font-weight: 600;
+}
+
+.md-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin-top: 16px;
+}
+
+.md-line-done {
+  background: #0e9f6e;
 }
 
 /* ── Comments ── */
@@ -696,6 +812,107 @@
   color: #aaa;
   margin-top: 6px;
   line-height: 1.5;
+}
+
+/* ── Status badge on draft list ── */
+.md-status-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-top: 4px;
+}
+
+.md-status-submitted { background: #dbeafe; color: #1e40af; }
+.md-status-under-review { background: #fef3c7; color: #92400e; }
+.md-status-returned-for-revision { background: #fee2e2; color: #991b1b; }
+.md-status-revised { background: #ede9fe; color: #5b21b6; }
+.md-status-approved { background: #d1fae5; color: #065f46; }
+
+/* ── Status tracker in detail panel ── */
+.md-status-track {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  overflow-x: auto;
+  gap: 0;
+}
+
+.md-status-step-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.md-status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.md-step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
+}
+
+.md-step-circle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.md-step-active .md-step-circle {
+  background: #7e3af2;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(126,58,242,0.2);
+}
+
+.md-step-done .md-step-circle {
+  background: #0e9f6e;
+  color: white;
+}
+
+.md-step-label {
+  font-size: 9px;
+  color: #aaa;
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 500;
+  max-width: 55px;
+  line-height: 1.3;
+}
+
+.md-step-active .md-step-label {
+  color: #7e3af2;
+  font-weight: 700;
+}
+
+.md-step-done .md-step-label {
+  color: #0e9f6e;
+}
+
+.md-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 4px;
+  margin-bottom: 20px;
+}
+
+.md-line-done {
+  background: #0e9f6e;
 }
 
 /* ── Responsive ── */
