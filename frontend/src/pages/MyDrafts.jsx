@@ -136,6 +136,7 @@ function MyDrafts({ onClose }) {
     <div className="md-overlay" onClick={onClose}>
       <div className="md-modal" onClick={(e) => e.stopPropagation()}>
 
+        {/* Header */}
         <div className="md-header">
           <div>
             <h2 className="md-title">My Drafts</h2>
@@ -153,32 +154,31 @@ function MyDrafts({ onClose }) {
                   setSelectedClass(myClass.class_name)
                   setShowClassSelect(true)
                 }}
-                title="Change class"
               >
                 <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
                 Change Class
               </button>
             )}
             <button className="md-close" onClick={onClose}>
               <svg viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Class selection prompt */}
+        {/* Class selection */}
         {showClassSelect && (
           <div className="md-class-prompt">
             <div className="md-class-prompt-inner">
               <div className="md-class-icon">
                 <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
               <h3 className="md-class-prompt-title">
@@ -222,6 +222,7 @@ function MyDrafts({ onClose }) {
           </div>
         )}
 
+        {/* Main body */}
         {!showClassSelect && (
           <div className="md-body">
 
@@ -236,7 +237,7 @@ function MyDrafts({ onClose }) {
                   onClick={() => setShowUpload(true)}
                 >
                   <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Upload Draft
                 </button>
@@ -247,8 +248,8 @@ function MyDrafts({ onClose }) {
               {!loading && drafts.length === 0 && (
                 <div className="md-empty">
                   <svg viewBox="0 0 24 24" fill="none" className="md-empty-svg">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                   <p>No drafts yet. Upload your first draft!</p>
                 </div>
@@ -262,8 +263,8 @@ function MyDrafts({ onClose }) {
                 >
                   <div className="md-draft-file-icon">
                     <svg viewBox="0 0 24 24" fill="none">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
                   <div className="md-draft-info">
@@ -271,13 +272,10 @@ function MyDrafts({ onClose }) {
                     <p className="md-draft-meta">
                       {draft.file_type} · {new Date(draft.created_at).toLocaleDateString()}
                     </p>
-                    <span className={`md-status-badge md-status-${(draft.status || 'Submitted').toLowerCase().replace(/ /g, '-')}`}>
-                      {draft.status || 'Submitted'}
-                    </span>
                     {draft.comments?.length > 0 && (
                       <p className="md-draft-comments">
                         <svg viewBox="0 0 24 24" fill="none">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                         </svg>
                         {draft.comments.length} comment{draft.comments.length !== 1 ? 's' : ''}
                       </p>
@@ -292,20 +290,20 @@ function MyDrafts({ onClose }) {
                     disabled={deleting === draft.id}
                   >
                     <svg viewBox="0 0 24 24" fill="none">
-                      <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </button>
                 </div>
               ))}
             </div>
 
-            {/* Right — draft detail */}
+            {/* Right — detail panel */}
             <div className="md-detail-panel">
               {!selectedDraft ? (
                 <div className="md-detail-empty">
                   <svg viewBox="0 0 24 24" fill="none" className="md-empty-svg">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                   <p>Select a draft to view instructor comments</p>
                 </div>
@@ -324,36 +322,10 @@ function MyDrafts({ onClose }) {
                       className="md-view-btn"
                     >
                       <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       View File
                     </a>
-                  </div>
-
-                  <div className="md-status-track">
-                    {['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved'].map((step, i) => {
-                      const steps = ['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved']
-                      const currentIndex = steps.indexOf(selectedDraft.status || 'Submitted')
-                      const isCompleted = i < currentIndex
-                      const isActive = i === currentIndex
-                      return (
-                        <div key={step} className="md-status-step-wrapper">
-                          <div className={`md-status-step ${isActive ? 'md-step-active' : ''} ${isCompleted ? 'md-step-done' : ''}`}>
-                            <div className="md-step-circle">
-                              {isCompleted ? (
-                                <svg viewBox="0 0 24 24" fill="none">
-                                  <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              ) : (
-                                <span>{i + 1}</span>
-                              )}
-                            </div>
-                            <span className="md-step-label">{step}</span>
-                          </div>
-                          {i < 4 && <div className={`md-step-line ${isCompleted ? 'md-line-done' : ''}`}></div>}
-                        </div>
-                      )
-                    })}
                   </div>
 
                   <div className="md-comments">
@@ -398,7 +370,7 @@ function MyDrafts({ onClose }) {
                 <h3>Upload Draft</h3>
                 <button className="md-close" onClick={() => setShowUpload(false)}>
                   <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                 </button>
               </div>
@@ -426,10 +398,18 @@ function MyDrafts({ onClose }) {
               </div>
 
               <div className="md-upload-actions">
-                <button className="md-upload-cancel" onClick={() => setShowUpload(false)} disabled={uploading}>
+                <button
+                  className="md-upload-cancel"
+                  onClick={() => setShowUpload(false)}
+                  disabled={uploading}
+                >
                   Cancel
                 </button>
-                <button className="md-upload-submit" onClick={handleUpload} disabled={uploading}>
+                <button
+                  className="md-upload-submit"
+                  onClick={handleUpload}
+                  disabled={uploading}
+                >
                   {uploading ? 'Uploading...' : 'Upload'}
                 </button>
               </div>
@@ -443,24 +423,35 @@ function MyDrafts({ onClose }) {
             <div className="md-upload-modal md-confirm-modal" onClick={(e) => e.stopPropagation()}>
               <div className="md-confirm-icon">
                 <svg viewBox="0 0 24 24" fill="none">
-                  <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
               <h3 className="md-confirm-title">Delete Draft?</h3>
               <p className="md-confirm-desc">
-                Are you sure you want to delete <strong>"{deleteTarget.title}"</strong>?
+                Are you sure you want to delete{' '}
+                <strong>"{deleteTarget.title}"</strong>?
                 This cannot be undone.
               </p>
               <div className="md-upload-actions">
-                <button className="md-upload-cancel" onClick={() => setDeleteTarget(null)}>Cancel</button>
-                <button className="md-upload-submit md-delete-btn" onClick={handleDelete} disabled={deleting}>
+                <button
+                  className="md-upload-cancel"
+                  onClick={() => setDeleteTarget(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="md-upload-submit md-delete-btn"
+                  onClick={handleDelete}
+                  disabled={!!deleting}
+                >
                   {deleting ? 'Deleting...' : 'Yes, Delete'}
                 </button>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </div>
   )

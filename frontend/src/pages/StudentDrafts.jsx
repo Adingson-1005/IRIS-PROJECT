@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import '../css/StudentDrafts.css'
 
+const STATUS_STEPS = ['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved']
+
 function StudentDrafts() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -13,12 +15,21 @@ function StudentDrafts() {
   const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState('')
   const [assignedClass, setAssignedClass] = useState(null)
+  const [updatingStatus, setUpdatingStatus] = useState(null)
   const role = localStorage.getItem('role')
 
   useEffect(() => {
     fetchStudents()
     if (role === 'instructor') fetchMyClass()
   }, [])
+
+  // Sync selectedDraft when studentDrafts updates
+  useEffect(() => {
+    if (selectedDraft && studentDrafts.length > 0) {
+      const updated = studentDrafts.find(d => d.id === selectedDraft.id)
+      if (updated) setSelectedDraft(updated)
+    }
+  }, [studentDrafts])
 
   const fetchMyClass = async () => {
     try {
@@ -68,6 +79,27 @@ function StudentDrafts() {
 
   const canComment = role === 'instructor' && assignedClass !== null
 
+  const handleUpdateStatus = async (draftId, newStatus) => {
+    setUpdatingStatus(draftId)
+    try {
+      const token = localStorage.getItem('token')
+      await axios.put(
+        `https://iris-backend-7717.onrender.com/drafts/status/${draftId}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      // Immediately update selectedDraft so UI reflects change
+      setSelectedDraft(prev => ({ ...prev, status: newStatus }))
+      // Also update in the list
+      setStudentDrafts(prev =>
+        prev.map(d => d.id === draftId ? { ...d, status: newStatus } : d)
+      )
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to update status')
+    }
+    setUpdatingStatus(null)
+  }
+
   const handleAddComment = async () => {
     if (!comment.trim()) { setCommentError('Please enter a comment'); return }
     setSubmitting(true)
@@ -100,13 +132,6 @@ function StudentDrafts() {
     }
   }
 
-  useEffect(() => {
-    if (selectedDraft && studentDrafts.length > 0) {
-      const updated = studentDrafts.find(d => d.id === selectedDraft.id)
-      if (updated) setSelectedDraft(updated)
-    }
-  }, [studentDrafts])
-
   const initials = (name) => {
     if (!name) return '?'
     return name.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
@@ -119,23 +144,36 @@ function StudentDrafts() {
     return acc
   }, {})
 
-  const [updatingStatus, setUpdatingStatus] = useState(null)
-
-  const handleUpdateStatus = async (draftId, newStatus) => {
-  setUpdatingStatus(draftId)
-  try {
-    const token = localStorage.getItem('token')
-    await axios.put(
-      `https://iris-backend-7717.onrender.com/drafts/status/${draftId}`,
-      { status: newStatus },
-      { headers: { Authorization: `Bearer ${token}` } }
+  const StatusTracker = ({ currentStatus }) => {
+    const currentIndex = STATUS_STEPS.indexOf(currentStatus || 'Submitted')
+    return (
+      <div className="sd-status-track">
+        {STATUS_STEPS.map((step, i) => {
+          const isCompleted = i < currentIndex
+          const isActive = i === currentIndex
+          return (
+            <div key={step} className="sd-status-step-wrapper">
+              <div className={`sd-status-step ${isActive ? 'sd-step-active' : ''} ${isCompleted ? 'sd-step-done' : ''}`}>
+                <div className="sd-step-circle">
+                  {isCompleted ? (
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <span>{i + 1}</span>
+                  )}
+                </div>
+                <span className="sd-step-label">{step}</span>
+              </div>
+              {i < STATUS_STEPS.length - 1 && (
+                <div className={`sd-step-line ${isCompleted ? 'sd-line-done' : ''}`}></div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     )
-    await fetchStudentDrafts(selectedStudent)
-  } catch (err) {
-    alert(err.response?.data?.detail || 'Failed to update status')
   }
-  setUpdatingStatus(null)
-}
 
   return (
     <div className="sd-container">
@@ -249,8 +287,11 @@ function StudentDrafts() {
                   <div className="sd-draft-info">
                     <p className="sd-draft-title">{draft.title}</p>
                     <p className="sd-draft-meta">
-                      {draft.file_type} · {new Date(draft.created_at).toLocaleDateString()} · {draft.comments?.length || 0} comment{draft.comments?.length !== 1 ? 's' : ''}
+                      {draft.file_type} · {new Date(draft.created_at).toLocaleDateString()}
                     </p>
+                    <span className={`sd-status-badge sd-status-${(draft.status || 'Submitted').toLowerCase().replace(/ /g, '-')}`}>
+                      {draft.status || 'Submitted'}
+                    </span>
                   </div>
                   {draft.comments?.length > 0 && (
                     <div className="sd-comment-dot"></div>
@@ -291,33 +332,10 @@ function StudentDrafts() {
                 </a>
               </div>
 
+              {/* Status tracker */}
               <div className="sd-status-section">
                 <h4 className="sd-status-title">Draft Status</h4>
-                <div className="sd-status-track">
-                  {['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved'].map((step, i) => {
-                    const steps = ['Submitted', 'Under Review', 'Returned for Revision', 'Revised', 'Approved']
-                    const currentIndex = steps.indexOf(selectedDraft.status || 'Submitted')
-                    const isCompleted = i < currentIndex
-                    const isActive = i === currentIndex
-                    return (
-                      <div key={step} className="sd-status-step-wrapper">
-                        <div className={`sd-status-step ${isActive ? 'sd-step-active' : ''} ${isCompleted ? 'sd-step-done' : ''}`}>
-                          <div className="sd-step-circle">
-                            {isCompleted ? (
-                              <svg viewBox="0 0 24 24" fill="none">
-                                <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            ) : (
-                              <span>{i + 1}</span>
-                            )}
-                          </div>
-                          <span className="sd-step-label">{step}</span>
-                        </div>
-                        {i < 4 && <div className={`sd-step-line ${isCompleted ? 'sd-line-done' : ''}`}></div>}
-                      </div>
-                    )
-                  })}
-                </div>
+                <StatusTracker currentStatus={selectedDraft.status} />
 
                 {canComment && (
                   <div className="sd-status-actions">
@@ -328,11 +346,9 @@ function StudentDrafts() {
                       onChange={(e) => handleUpdateStatus(selectedDraft.id, e.target.value)}
                       disabled={updatingStatus === selectedDraft.id}
                     >
-                      <option value="Submitted">Submitted</option>
-                      <option value="Under Review">Under Review</option>
-                      <option value="Returned for Revision">Returned for Revision</option>
-                      <option value="Revised">Revised</option>
-                      <option value="Approved">Approved</option>
+                      {STATUS_STEPS.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
                     </select>
                     {updatingStatus === selectedDraft.id && (
                       <span className="sd-status-saving">Saving...</span>
@@ -341,6 +357,7 @@ function StudentDrafts() {
                 )}
               </div>
 
+              {/* Comments */}
               <div className="sd-comments-section">
                 <h4 className="sd-comments-title">
                   Comments ({selectedDraft.comments?.length || 0})
