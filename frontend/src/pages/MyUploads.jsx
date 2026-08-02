@@ -107,6 +107,25 @@ function MyUploads() {
     setUploading(false)
   }
 
+  const checkSimilar = async (title, abstract) => {
+  if (!title.trim() && !abstract.trim()) return
+  setCheckingSimilar(true)
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.post(
+      'https://iris-backend-7717.onrender.com/papers/check-similar',
+      { title, abstract },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    const results = response.data.similar_papers || []
+    setSimilarPapers(results)
+    if (results.length > 0) setShowSimilarWarning(true)
+  } catch {
+    console.error('Similarity check failed')
+  }
+  setCheckingSimilar(false)
+}
+
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(deleteTarget.id)
@@ -136,6 +155,10 @@ function MyUploads() {
       p.authors?.toLowerCase().includes(q)
     )
   })
+
+  const [similarPapers, setSimilarPapers] = useState([])
+const [checkingSimlar, setCheckingSimilar] = useState(false)
+const [showSimilarWarning, setShowSimilarWarning] = useState(false)
 
   return (
     <div className="myuploads-content">
@@ -290,11 +313,48 @@ function MyUploads() {
               <label>Abstract</label>
               <textarea
                 rows={4}
-                placeholder="Paste the abstract"
+                placeholder="Enter abstract"
                 value={form.abstract}
                 onChange={(e) => handleFormChange('abstract', e.target.value)}
               />
             </div>
+
+            <button
+              className="myuploads-check-similar-btn"
+              type="button"
+              onClick={() => checkSimilar(form.title, form.abstract)}
+              disabled={checkingSimlar || (!form.title && !form.abstract)}
+            >
+              {checkingSimlar ? 'Checking...' : '🔍 Check for Similar Studies'}
+            </button>
+
+            {showSimilarWarning && similarPapers.length > 0 && (
+              <div className="myuploads-similar-warning">
+                <p className="myuploads-similar-title">
+                  ⚠️ Similar papers found in the repository:
+                </p>
+                {similarPapers.map((p) => (
+                  <div key={p.paper_id} className="myuploads-similar-item">
+                    <div className="myuploads-similar-pct">{p.similarity}%</div>
+                    <div>
+                      <p className="myuploads-similar-paper-title">{p.title}</p>
+                      <p className="myuploads-similar-paper-meta">
+                        {p.authors} · {p.category} · {p.year}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <p className="myuploads-similar-note">
+                  You can still upload this paper if it is sufficiently different.
+                </p>
+              </div>
+            )}
+
+            {showSimilarWarning && similarPapers.length === 0 && (
+              <div className="myuploads-no-similar">
+                ✅ No similar papers found in the repository.
+              </div>
+            )}
 
             <div className="myuploads-modal-row">
               <div className="myuploads-modal-field">

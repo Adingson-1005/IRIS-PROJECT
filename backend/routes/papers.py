@@ -211,3 +211,70 @@ def download_paper(paper_id: str, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         return {"error": str(e)}
+
+        @router.post("/check-similar")
+async def check_similar(payload: dict, db: Session = Depends(get_db)):
+    try:
+        title = payload.get("title", "").strip()
+        abstract = payload.get("abstract", "").strip()
+
+        if not title and not abstract:
+            return {"similar_papers": []}
+
+        stop_words = {
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to',
+            'for', 'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were',
+            'be', 'been', 'have', 'has', 'do', 'does', 'did', 'this', 'that',
+            'it', 'as', 'using', 'based', 'study', 'research', 'system'
+        }
+
+        text = f"{title} {abstract}".lower()
+        words = re.sub(r'[^a-zA-Z0-9\s]', '', text).split()
+        keywords = [w for w in words if w not in stop_words and len(w) > 3]
+        keywords = list(set(keywords))[:15]
+
+        if not keywords:
+            return {"similar_papers": []}
+
+        paper_scores = {}
+        paper_info = {}
+
+        for keyword in keywords:
+            results = db.execute(text("""
+                SELECT ii.paper_id, ii.frequency, p.title, p.authors, p.category, p.year
+                FROM inverted_index ii
+                JOIN papers p ON ii.paper_id = p.id
+                WHERE ii.term = :term
+            """), {"term": keyword}).fetchall()
+
+            for row in results:
+                pid = str(row.paper_id)
+                paper_scores[pid] = paper_scores.get(pid, 0) + row.frequency
+                paper_info[pid] = {
+                    "title": row.title,
+                    "authors": row.authors,
+                    "category": row.category,
+                    "year": row.year
+                }
+
+        if not paper_scores:
+            return {"similar_papers": []}
+
+        max_score = max(paper_scores.values()) if paper_scores else 1
+        sorted_papers = sorted(paper_scores.items(), key=lambda x: x[1], reverse=True)
+        top_papers = sorted_papers[:3]
+
+        similar = []
+        for pid, score in top_papers:
+            similarity_pct = min(round((score / max_score) * 100), 99)
+            if similarity_pct >= 30:
+                similar.append({
+                    "paper_id": pid,
+                    "similarity": similarity_pct,
+                    **paper_info[pid]
+                })
+
+        return {"similar_papers": similar}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

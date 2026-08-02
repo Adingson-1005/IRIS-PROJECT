@@ -266,6 +266,89 @@
   margin-top: 4px;
 }
 
+.myuploads-check-similar-btn {
+  margin-top: 6px;
+  margin-bottom: 12px;
+  padding: 9px 14px;
+  background-color: #eef6eb;
+  color: #3F6838;
+  border: 1px solid #cfe2cf;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.myuploads-check-similar-btn:hover:not(:disabled) {
+  background-color: #e1efd9;
+}
+
+.myuploads-check-similar-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.myuploads-similar-warning,
+.myuploads-no-similar {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.myuploads-similar-warning {
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a2c00;
+}
+
+.myuploads-no-similar {
+  background-color: #ecfdf3;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.myuploads-similar-title {
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.myuploads-similar-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.myuploads-similar-item:first-of-type {
+  border-top: none;
+}
+
+.myuploads-similar-pct {
+  min-width: 44px;
+  font-weight: 700;
+  color: #3F6838;
+}
+
+.myuploads-similar-paper-title {
+  margin: 0 0 2px;
+  font-weight: 600;
+  color: #222;
+}
+
+.myuploads-similar-paper-meta {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+}
+
+.myuploads-similar-note {
+  margin: 8px 0 0;
+  color: #944214;
+}
+
 .myuploads-modal-actions {
   display: flex;
   gap: 10px;
@@ -326,6 +409,95 @@
   border-radius: 8px;
   font-size: 14px;
   margin-bottom: 16px;
+}
+
+/* ── Similar study checker ── */
+.myuploads-check-similar-btn {
+  width: 100%;
+  padding: 9px;
+  background: white;
+  border: 1.5px solid #1a56db;
+  color: #1a56db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: all 0.15s;
+}
+
+.myuploads-check-similar-btn:hover {
+  background: #eff6ff;
+}
+
+.myuploads-check-similar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.myuploads-similar-warning {
+  background: #fef3c7;
+  border: 1px solid #d97706;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.myuploads-similar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 10px;
+}
+
+.myuploads-similar-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.myuploads-similar-pct {
+  background: #d97706;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.myuploads-similar-paper-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 2px;
+}
+
+.myuploads-similar-paper-meta {
+  font-size: 11px;
+  color: #888;
+}
+
+.myuploads-similar-note {
+  font-size: 11px;
+  color: #92400e;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.myuploads-no-similar {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
 }
 
 /* ── Responsive ── */
