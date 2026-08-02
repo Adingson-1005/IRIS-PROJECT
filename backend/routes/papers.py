@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Header, BackgroundTasks
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Header, BackgroundTasks, Body
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
@@ -212,11 +212,12 @@ def download_paper(paper_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         return {"error": str(e)}
 
-        @router.post("/check-similar")
-async def check_similar(payload: dict, db: Session = Depends(get_db)):
+
+@router.post("/check-similar")
+async def check_similar(payload: dict = Body(...), db: Session = Depends(get_db)):
     try:
-        title = payload.get("title", "").strip()
-        abstract = payload.get("abstract", "").strip()
+        title = (payload or {}).get("title", "").strip()
+        abstract = (payload or {}).get("abstract", "").strip()
 
         if not title and not abstract:
             return {"similar_papers": []}
