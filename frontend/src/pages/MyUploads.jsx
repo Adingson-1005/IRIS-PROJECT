@@ -26,6 +26,10 @@ function MyUploads() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [uploadSuccess, setUploadSuccess] = useState('')
+  const [uploadMessage, setUploadMessage] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [showUploadingModal, setShowUploadingModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   useEffect(() => { fetchMyPapers() }, [])
 
@@ -52,8 +56,13 @@ function MyUploads() {
       year: ''
     })
     setFile(null)
+  }
+
+  const clearUploadState = () => {
     setUploadError('')
     setUploadSuccess('')
+    setUploadMessage('')
+    setUploadProgress(0)
   }
 
   const handleFormChange = (key, value) => {
@@ -74,6 +83,9 @@ function MyUploads() {
     setUploading(true)
     setUploadError('')
     setUploadSuccess('')
+    setUploadMessage('')
+    setUploadProgress(0)
+    setShowUploadingModal(true)
 
     try {
       const data = new FormData()
@@ -90,17 +102,26 @@ function MyUploads() {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
+        },
+        onUploadProgress: (progressEvent) => {
+          const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          setUploadProgress(pct)
+          setUploadMessage(pct < 100 ? 'Uploading your paper...' : 'Finishing up...')
         }
       })
 
+      setShowUploadingModal(false)
+      setShowModal(false)
+      setShowSuccessModal(true)
       setUploadSuccess('Paper uploaded successfully')
+      setUploadMessage('Your paper has been uploaded successfully.')
+      setUploadProgress(100)
       resetForm()
+      setSimilarPapers([])
+      setShowSimilarWarning(false)
       fetchMyPapers()
-      setTimeout(() => {
-        setShowModal(false)
-        setUploadSuccess('')
-      }, 1200)
     } catch (err) {
+      setShowUploadingModal(false)
       setUploadError(err.response?.data?.detail || 'Upload failed. Please try again.')
     }
 
@@ -146,6 +167,9 @@ function MyUploads() {
     if (uploading) return
     setShowModal(false)
     resetForm()
+    clearUploadState()
+    setShowSuccessModal(false)
+    setShowUploadingModal(false)
   }
 
   const filtered = papers.filter((p) => {
@@ -263,6 +287,41 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
         )}
 
       </div>
+
+      {showUploadingModal && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="upload-spinner"></div>
+            <h3 className="confirm-title">Uploading Paper...</h3>
+            <p className="confirm-desc">
+              Please wait while your paper is being uploaded and indexed.
+            </p>
+            <div className="myuploads-progress-bar-wrapper">
+              <div
+                className="myuploads-progress-bar-fill"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+            <p className="myuploads-progress-pct">{uploadProgress}%</p>
+          </div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="myuploads-modal-overlay" onClick={() => setShowSuccessModal(false)}>
+          <div className="myuploads-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="myuploads-modal-header">
+              <h3 className="myuploads-modal-title">Upload Complete</h3>
+            </div>
+            <p className="myuploads-modal-success">{uploadSuccess || uploadMessage}</p>
+            <div className="myuploads-modal-actions">
+              <button className="myuploads-modal-submit" onClick={() => setShowSuccessModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Upload modal */}
       {showModal && (

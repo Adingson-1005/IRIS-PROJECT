@@ -1173,6 +1173,88 @@
   font-size: 12px;
 }
 
+/* ── AI evaluation progress ── */
+.sp-ai-progress {
+  padding: 12px 0 8px;
+}
+
+.sp-ai-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sp-ai-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sp-ai-step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.sp-ai-step-dot svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sp-ai-step-active .sp-ai-step-dot {
+  background: #7e3af2;
+}
+
+.sp-ai-step-done .sp-ai-step-dot {
+  background: #0e9f6e;
+}
+
+.sp-ai-step-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.sp-ai-step-label {
+  font-size: 13px;
+  color: #aaa;
+  transition: color 0.3s;
+}
+
+.sp-ai-step-active .sp-ai-step-label {
+  color: #7e3af2;
+  font-weight: 600;
+}
+
+.sp-ai-step-done .sp-ai-step-label {
+  color: #0e9f6e;
+}
+
+.sp-ai-progress-bar-wrapper {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.sp-ai-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7e3af2, #9061f9);
+  border-radius: 20px;
+  transition: width 0.5s ease;
+}
+
 @media (max-width: 600px) {
   .sp-greeting { display: none; }
   .sp-recent-grid {

@@ -42,6 +42,8 @@ function SearchPapers() {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [aiResult, setAiResult] = useState(null)
+  const [aiStep, setAiStep] = useState(0)
+  const [aiStep, setAiStep] = useState(0)
 
   // RAG states
   const [showRagModal, setShowRagModal] = useState(false)
@@ -132,6 +134,24 @@ function SearchPapers() {
     setSubmitLoading(true)
     setSubmitError('')
     setAiResult(null)
+    setAiStep(0)
+
+    const steps = [
+      'Uploading your draft...',
+      'Extracting text from PDF...',
+      'Comparing against template...',
+      'Generating feedback...',
+      'Almost done...'
+    ]
+
+    const stepInterval = setInterval(() => {
+      setAiStep(prev => {
+        if (prev < steps.length - 1) return prev + 1
+        clearInterval(stepInterval)
+        return prev
+      })
+    }, 3500)
+
     try {
       const data = new FormData()
       data.append('title', submitTitle)
@@ -143,14 +163,17 @@ function SearchPapers() {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
         }
       )
+      clearInterval(stepInterval)
+      setAiStep(steps.length - 1)
       setAiResult(response.data)
       setSubmitFile(null)
       setSubmitTitle('')
     } catch (err) {
+      clearInterval(stepInterval)
       setSubmitError(err.response?.data?.detail || 'Submission failed. Please try again.')
     }
     setSubmitLoading(false)
@@ -733,9 +756,38 @@ const fetchAiHistory = async () => {
                   </button>
                 </div>
                 {submitLoading && (
-                  <div className="sp-analyzing">
-                    <div className="sp-spinner sp-spinner-checker"></div>
-                    <p>AI is analyzing your paper. This may take 15–30 seconds...</p>
+                  <div className="sp-ai-progress">
+                    <div className="sp-ai-steps">
+                      {[
+                        'Uploading your draft',
+                        'Extracting text from PDF',
+                        'Comparing against template',
+                        'Generating feedback',
+                        'Almost done'
+                      ].map((step, i) => (
+                        <div
+                          key={i}
+                          className={`sp-ai-step ${i < aiStep ? 'sp-ai-step-done' : ''} ${i === aiStep ? 'sp-ai-step-active' : ''}`}
+                        >
+                          <div className="sp-ai-step-dot">
+                            {i < aiStep ? (
+                              <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            ) : i === aiStep ? (
+                              <div className="sp-ai-step-spinner"></div>
+                            ) : null}
+                          </div>
+                          <span className="sp-ai-step-label">{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="sp-ai-progress-bar-wrapper">
+                      <div
+                        className="sp-ai-progress-bar-fill"
+                        style={{ width: `${Math.round((aiStep / 4) * 100)}%` }}
+                      ></div>
+                    </div>
                   </div>
                 )}
               </>
