@@ -363,3 +363,225 @@ def update_draft_status(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    # ── Student: request publication ──
+@router.post("/publish-request")
+def request_publication(
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        if user["role"] != "student":
+            raise HTTPException(status_code=403, detail="Students only")
+
+        draft_id = payload.get("draft_id")
+        title = payload.get("title", "").strip()
+        authors = payload.get("authors", "").strip()
+        abstract = payload.get("abstract", "").strip()
+        category = payload.get("category", "").strip()
+        methodology = payload.get("methodology", "").strip()
+        year = payload.get("year")
+
+        if not draft_id or not title or not authors:
+            raise HTTPException(status_code=400, detail="Draft ID, title and authors are required")
+
+        # Check draft is approved
+        draft = db.execute(text("""
+            SELECT id, status, student_id FROM student_drafts WHERE id = :id
+        """), {"id": draft_id}).fetchone()
+
+        if not draft:
+            raise HTTPException(status_code=404, detail="Draft not found")
+
+        if str(draft.student_id) != str(user["id"]):
+            raise HTTPException(status_code=403, detail="Not your draft")
+
+        if draft.status != "Approved":
+            raise HTTPException(
+                status_code=400,
+                detail="Only approved drafts can be requested for publication"
+            )
+
+        # Check if already requested
+        existing = db.execute(text("""
+            SELECT id, status FROM publication_requests
+            WHERE draft_id = :draft_id
+        """), {"draft_id": draft_id}).fetchone()
+
+        if existing:
+            if existing.status == "Pending":
+                raise HTTPException(status_code=400, detail="Publication request already pending")
+            if existing.status == "Approved":
+                raise HTTPException(status_code=400, detail="This draft is already published")
+
+        db.execute(text("""
+            INSERT INTO publication_requests
+            (draft_id, student_id, title, authors, abstract, category, methodology, year)
+            VALUES (:draft_id, :student_id, :title, :authors, :abstract, :category, :methodology, :year)
+        """), {
+            "draft_id": draft_id,
+            "student_id": user["id"],
+            "title": title,
+            "authors": authors,
+            "abstract": abstract,
+            "category": category,
+            "methodology": methodology,
+            "year": year
+        })
+        db.commit()
+
+        return {"message": "Publication request submitted successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Student: get my publication requests ──
+@router.get("/my-publish-requests")
+def get_my_publish_requests(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        requests = db.execute(text("""
+            SELECT pr.id, pr.draft_id, pr.title, pr.status,
+                   pr.rejection_reason, pr.created_at
+            FROM publication_requests pr
+            WHERE pr.student_id = :student_id
+            ORDER BY pr.created_at DESC
+        """), {"student_id": user["id"]}).fetchall()
+
+        return {"requests": [dict(r._mapping) for r in requests]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Instructor/Admin: get all pending publication requests ──
+@router.get("/publish-requests")
+def get_publish_requests(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        if user["role"] not in ["instructor", "admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        requests = db.execute(text("""
+            SELECT pr.id, pr.draft_id, pr.title, pr.authors,
+                   pr.abstract, pr.category, pr.methodology, pr.year,
+                   pr.status, pr.rejection_reason, pr.created_at,
+                   u.full_name as student_name, u.class_name
+            FROM publication_requests pr
+            JOIN users u ON pr.student_id = u.id
+            ORDER BY pr.created_at DESC
+        """)).fetchall()
+
+        return {"requests": [dict(r._mapping) for r in requests]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Instructor: approve publication request ──
+@router.post("/publish-approve/{request_id}")
+def approve_publication(
+    request_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        if user["role"] not in ["instructor", "admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        req = db.execute(text("""
+            SELECT * FROM publication_requests WHERE id = :id
+        """), {"id": request_id}).fetchone()
+
+        if not req:
+            raise HTTPException(status_code=404, detail="Request not found")
+
+        if req.status != "Pending":
+            raise HTTPException(status_code=400, detail="Request already processed")
+
+        # Get the draft file_url
+        draft = db.execute(text("""
+            SELECT file_url FROM student_drafts WHERE id = :id
+        """), {"id": str(req.draft_id)}).fetchone()
+
+        file_url = draft.file_url if draft else ""
+
+        # Add to papers table
+        db.execute(text("""
+            INSERT INTO papers (title, authors, abstract, category, methodology, year, file_url, uploaded_by)
+            VALUES (:title, :authors, :abstract, :category, :methodology, :year, :file_url, :uploaded_by)
+        """), {
+            "title": req.title,
+            "authors": req.authors,
+            "abstract": req.abstract or "",
+            "category": req.category or "",
+            "methodology": req.methodology or "",
+            "year": req.year or 2024,
+            "file_url": file_url,
+            "uploaded_by": user["id"]
+        })
+
+        # Update request status
+        db.execute(text("""
+            UPDATE publication_requests SET status = 'Approved' WHERE id = :id
+        """), {"id": request_id})
+
+        db.commit()
+
+        return {"message": "Publication approved and paper added to repository"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Instructor: reject publication request ──
+@router.post("/publish-reject/{request_id}")
+def reject_publication(
+    request_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        if user["role"] not in ["instructor", "admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        reason = payload.get("reason", "").strip()
+        if not reason:
+            raise HTTPException(status_code=400, detail="Rejection reason is required")
+
+        req = db.execute(text("""
+            SELECT id, status FROM publication_requests WHERE id = :id
+        """), {"id": request_id}).fetchone()
+
+        if not req:
+            raise HTTPException(status_code=404, detail="Request not found")
+
+        if req.status != "Pending":
+            raise HTTPException(status_code=400, detail="Request already processed")
+
+        db.execute(text("""
+            UPDATE publication_requests
+            SET status = 'Rejected', rejection_reason = :reason
+            WHERE id = :id
+        """), {"reason": reason, "id": request_id})
+
+        db.commit()
+
+        return {"message": "Publication request rejected"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

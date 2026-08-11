@@ -19,10 +19,20 @@ function MyDrafts({ onClose }) {
   const [deleting, setDeleting] = useState(null)
   const [selectedDraft, setSelectedDraft] = useState(null)
 
+  const [publishRequests, setPublishRequests] = useState([])
+  const [showPublishModal, setShowPublishModal] = useState(false)
+  const [publishForm, setPublishForm] = useState({
+    authors: '', abstract: '', category: '', methodology: '', year: new Date().getFullYear()
+  })
+  const [publishTarget, setPublishTarget] = useState(null)
+  const [submittingPublish, setSubmittingPublish] = useState(false)
+  const [publishError, setPublishError] = useState('')
+
   useEffect(() => {
     fetchMyClass()
     fetchClasses()
     fetchDrafts()
+    fetchPublishRequests()
   }, [])
 
   const fetchMyClass = async () => {
@@ -64,6 +74,19 @@ function MyDrafts({ onClose }) {
       console.error('Failed to fetch drafts')
     }
     setLoading(false)
+  }
+
+  const fetchPublishRequests = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(
+        'https://iris-backend-7717.onrender.com/drafts/my-publish-requests',
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setPublishRequests(response.data.requests || [])
+    } catch {
+      console.error('Failed to fetch publish requests')
+    }
   }
 
   const handleSaveClass = async () => {
@@ -130,6 +153,36 @@ function MyDrafts({ onClose }) {
       alert('Failed to delete draft')
     }
     setDeleting(null)
+  }
+
+  const handleRequestPublish = async () => {
+    if (!publishForm.authors.trim()) { setPublishError('Authors is required'); return }
+    if (!publishForm.abstract.trim()) { setPublishError('Abstract is required'); return }
+    if (!publishForm.category) { setPublishError('Please select a strand'); return }
+    if (!publishForm.methodology) { setPublishError('Please select a methodology'); return }
+
+    setSubmittingPublish(true)
+    setPublishError('')
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post(
+        'https://iris-backend-7717.onrender.com/drafts/publish-request',
+        {
+          draft_id: publishTarget.id,
+          title: publishTarget.title,
+          ...publishForm
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setShowPublishModal(false)
+      setPublishTarget(null)
+      setPublishForm({ authors: '', abstract: '', category: '', methodology: '', year: new Date().getFullYear() })
+      fetchPublishRequests()
+      alert('Publication request submitted successfully!')
+    } catch (err) {
+      setPublishError(err.response?.data?.detail || 'Failed to submit request')
+    }
+    setSubmittingPublish(false)
   }
 
   return (
@@ -326,6 +379,42 @@ function MyDrafts({ onClose }) {
                       </svg>
                       View File
                     </a>
+                    {selectedDraft.status === 'Approved' && (() => {
+                      const req = publishRequests.find(r => r.draft_id === selectedDraft.id)
+                      if (req?.status === 'Approved') {
+                        return <span className="md-published-badge">✅ Published</span>
+                      }
+                      if (req?.status === 'Pending') {
+                        return <span className="md-pending-badge">⏳ Publication Pending</span>
+                      }
+                      if (req?.status === 'Rejected') {
+                        return (
+                          <div className="md-rejected-note">
+                            <p>❌ Publication Rejected: {req.rejection_reason}</p>
+                            <button
+                              className="md-publish-btn"
+                              onClick={() => {
+                                setPublishTarget(selectedDraft)
+                                setShowPublishModal(true)
+                              }}
+                            >
+                              Request Again
+                            </button>
+                          </div>
+                        )
+                      }
+                      return (
+                        <button
+                          className="md-publish-btn"
+                          onClick={() => {
+                            setPublishTarget(selectedDraft)
+                            setShowPublishModal(true)
+                          }}
+                        >
+                          📤 Request Publication
+                        </button>
+                      )
+                    })()}
                   </div>
 
                   <div className="md-comments">
@@ -446,6 +535,102 @@ function MyDrafts({ onClose }) {
                   disabled={!!deleting}
                 >
                   {deleting ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showPublishModal && publishTarget && (
+          <div className="md-upload-overlay" onClick={() => setShowPublishModal(false)}>
+            <div className="md-upload-modal md-publish-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="md-upload-header">
+                <h3>Request Publication</h3>
+                <button className="md-close" onClick={() => setShowPublishModal(false)}>
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <p className="md-publish-desc">
+                Fill in the details below to request publication of
+                <strong> "{publishTarget.title}"</strong> to the main research repository.
+                Your instructor will review and approve or reject the request.
+              </p>
+
+              {publishError && <p className="md-upload-error">{publishError}</p>}
+
+              <div className="md-upload-field">
+                <label>Authors (comma separated)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Juan Dela Cruz, Maria Santos"
+                  value={publishForm.authors}
+                  onChange={(e) => setPublishForm({ ...publishForm, authors: e.target.value })}
+                />
+              </div>
+
+              <div className="md-upload-field">
+                <label>Abstract</label>
+                <textarea
+                  rows={4}
+                  placeholder="Enter your research abstract"
+                  value={publishForm.abstract}
+                  onChange={(e) => setPublishForm({ ...publishForm, abstract: e.target.value })}
+                />
+              </div>
+
+              <div className="md-upload-field">
+                <label>Strand / Category</label>
+                <select
+                  value={publishForm.category}
+                  onChange={(e) => setPublishForm({ ...publishForm, category: e.target.value })}
+                >
+                  <option value="">Select strand</option>
+                  <option value="STEM">STEM</option>
+                  <option value="HUMSS">HUMSS</option>
+                  <option value="ABM">ABM</option>
+                  <option value="GAS">GAS</option>
+                </select>
+              </div>
+
+              <div className="md-upload-field">
+                <label>Methodology</label>
+                <select
+                  value={publishForm.methodology}
+                  onChange={(e) => setPublishForm({ ...publishForm, methodology: e.target.value })}
+                >
+                  <option value="">Select methodology</option>
+                  <option value="Qualitative">Qualitative</option>
+                  <option value="Quantitative">Quantitative</option>
+                  <option value="Mixed Methods">Mixed Methods</option>
+                  <option value="Experimental">Experimental</option>
+                  <option value="Descriptive">Descriptive</option>
+                </select>
+              </div>
+
+              <div className="md-upload-field">
+                <label>Year</label>
+                <input
+                  type="number"
+                  min="2000"
+                  max="2030"
+                  value={publishForm.year}
+                  onChange={(e) => setPublishForm({ ...publishForm, year: parseInt(e.target.value) })}
+                />
+              </div>
+
+              <div className="md-upload-actions">
+                <button className="md-upload-cancel" onClick={() => setShowPublishModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  className="md-upload-submit"
+                  onClick={handleRequestPublish}
+                  disabled={submittingPublish}
+                >
+                  {submittingPublish ? 'Submitting...' : 'Submit Request'}
                 </button>
               </div>
             </div>
