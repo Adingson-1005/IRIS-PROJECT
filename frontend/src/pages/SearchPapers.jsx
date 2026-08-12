@@ -43,7 +43,7 @@ function SearchPapers() {
   const [submitError, setSubmitError] = useState('')
   const [aiResult, setAiResult] = useState(null)
   const [aiStep, setAiStep] = useState(0)
-  const [aiStep, setAiStep] = useState(0)
+
 
   // RAG states
   const [showRagModal, setShowRagModal] = useState(false)
