@@ -491,6 +491,8 @@
   color: #0e9f6e;
   margin-top: 4px;
 }
+
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .mu-heading {
@@ -553,5 +555,28 @@
   .mu-add-btn {
     width: 100%;
     text-align: center;
+  }
+}
+
+@media (max-width: 380px) {
+  .mu-modal {
+    padding: 20px 14px;
+  }
+ 
+  .mu-modal-actions {
+    flex-direction: column;
+  }
+ 
+  .mu-modal-cancel,
+  .mu-modal-submit {
+    width: 100%;
+  }
+ 
+  .mu-bulk-stats {
+    gap: 6px;
+  }
+ 
+  .mu-bulk-stat-num {
+    font-size: 18px;
   }
 }

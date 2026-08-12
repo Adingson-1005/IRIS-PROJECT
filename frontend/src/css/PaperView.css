@@ -332,6 +332,29 @@
   color: white;
 }
 
+@media (max-width: 768px) {
+  .pv-topbar {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+ 
+  .pv-topbar-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+ 
+  .pv-btn-outline,
+  .pv-btn-export {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+ 
+  .pv-breadcrumb {
+    font-size: 11px;
+  }
+}
+
 @media (max-width: 680px) {
   .pv-body {
     flex-direction: column;
@@ -342,5 +365,20 @@
   }
   .pv-title {
     font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pv-topbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+ 
+  .pv-title {
+    font-size: 17px;
+  }
+ 
+  .pv-abstract-text {
+    font-size: 13px;
   }
 }

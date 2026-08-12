@@ -249,3 +249,17 @@
     gap: 12px;
   }
 }
+
+@media (max-width: 480px) {
+  .mp-grid {
+    grid-template-columns: 1fr;
+  }
+ 
+  .mp-page-title {
+    font-size: 18px;
+  }
+ 
+  .mp-filterbar {
+    padding: 12px;
+  }
+}

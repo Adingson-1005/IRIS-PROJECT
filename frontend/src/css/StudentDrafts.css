@@ -1051,10 +1051,85 @@
   .sd-layout {
     grid-template-columns: 1fr;
     height: auto;
+    gap: 12px;
   }
-
-  .sd-student-panel,
+ 
+  .sd-student-panel {
+    max-height: 260px;
+    overflow-y: auto;
+  }
+ 
   .sd-drafts-panel {
-    max-height: 300px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+ 
+  .sd-detail-panel {
+    min-height: 400px;
+  }
+ 
+  .sd-page-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+ 
+  .sd-class-badge {
+    align-self: flex-start;
+  }
+ 
+  .sd-status-track {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+ 
+  .sd-step-label {
+    font-size: 8px;
+    max-width: 50px;
+  }
+ 
+  .sd-pub-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+ 
+  .sd-tabs {
+    width: 100%;
+  }
+ 
+  .sd-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12px;
   }
 }
+ 
+@media (max-width: 600px) {
+  .sd-page-title { font-size: 18px; }
+ 
+  .sd-status-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+ 
+  .sd-status-select {
+    width: 100%;
+  }
+ 
+  .sd-pub-actions {
+    flex-direction: column;
+  }
+ 
+  .sd-pub-approve,
+  .sd-pub-reject {
+    width: 100%;
+    text-align: center;
+  }
+ 
+  .sd-reject-modal {
+    padding: 16px;
+  }
+}
+ 

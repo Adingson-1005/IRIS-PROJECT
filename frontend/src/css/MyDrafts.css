@@ -927,3 +927,79 @@
     max-height: 250px;
   }
 }
+
+@media (max-width: 700px) {
+  .md-modal {
+    max-height: 98vh;
+    border-radius: 12px;
+  }
+ 
+  .md-body {
+    grid-template-columns: 1fr;
+  }
+ 
+  .md-list-panel {
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+    max-height: 220px;
+  }
+ 
+  .md-detail-panel {
+    min-height: 300px;
+  }
+ 
+  .md-header {
+    padding: 14px 16px 12px;
+  }
+ 
+  .md-title { font-size: 17px; }
+ 
+  .md-header-actions {
+    gap: 6px;
+  }
+ 
+  .md-change-class-btn {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+ 
+  .md-status-track {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+ 
+  .md-step-label {
+    font-size: 8px;
+    max-width: 48px;
+  }
+ 
+  .md-upload-modal {
+    padding: 16px;
+  }
+ 
+  .md-publish-modal {
+    max-width: 100%;
+  }
+}
+ 
+@media (max-width: 480px) {
+  .md-list-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+ 
+  .md-upload-btn {
+    width: 100%;
+    justify-content: center;
+  }
+ 
+  .md-upload-actions {
+    flex-direction: column;
+  }
+ 
+  .md-upload-cancel,
+  .md-upload-submit {
+    width: 100%;
+  }
+}

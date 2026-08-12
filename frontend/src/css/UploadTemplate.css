@@ -195,3 +195,27 @@
   max-width: 400px;
   margin: 0 auto;
 }
+
+@media (max-width: 768px) {
+  .ut-container {
+    max-width: 100%;
+  }
+ 
+  .ut-current-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+ 
+  .ut-heading {
+    font-size: 18px;
+  }
+ 
+  .ut-upload-card {
+    padding: 16px;
+  }
+ 
+  .ut-locked-card {
+    padding: 24px 16px;
+  }
+}

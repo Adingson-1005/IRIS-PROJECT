@@ -238,14 +238,31 @@
     align-items: stretch;
     padding: 14px;
   }
-
+ 
   .br-search,
   .br-select {
     width: 100%;
+    box-sizing: border-box;
   }
-
+ 
+  .br-reindex {
+    width: 100%;
+    text-align: center;
+  }
+ 
   .br-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 12px;
   }
+ 
+  .br-page-title {
+    font-size: 18px;
+  }
 }
+ 
+@media (max-width: 480px) {
+  .br-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+ 

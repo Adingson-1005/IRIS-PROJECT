@@ -532,43 +532,59 @@
   .myuploads-card {
     padding: 16px;
   }
-
+ 
   .myuploads-top {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
   }
-
+ 
   .myuploads-top-right {
     flex-direction: column;
     align-items: stretch;
   }
-
+ 
   .myuploads-new-btn {
     width: 100%;
     text-align: center;
   }
-
+ 
   .myuploads-search {
     width: 100%;
     box-sizing: border-box;
   }
-
+ 
   .myuploads-table {
     font-size: 12px;
   }
-
+ 
   .myuploads-table th,
   .myuploads-table td {
     padding: 8px 10px;
   }
-
+ 
   .myuploads-modal {
     padding: 20px 16px;
   }
-
+ 
   .myuploads-modal-row {
     flex-direction: column;
     gap: 0;
   }
+ 
+  .myuploads-page-title {
+    font-size: 18px;
+  }
 }
+ 
+@media (max-width: 480px) {
+  .myuploads-modal-actions {
+    flex-direction: column;
+  }
+ 
+  .myuploads-modal-cancel,
+  .myuploads-modal-submit {
+    width: 100%;
+  }
+}
+ 

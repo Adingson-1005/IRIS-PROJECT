@@ -201,4 +201,13 @@
   .mc-grid {
     grid-template-columns: 1fr;
   }
+ 
+  .mc-page-title {
+    font-size: 18px;
+  }
+ 
+  .mc-info-card {
+    padding: 16px;
+  }
 }
+ 
