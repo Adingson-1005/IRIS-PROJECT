@@ -585,3 +585,51 @@ def reject_publication(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+        # ── Instructor: upload commented DOCX back to student ──
+@router.post("/upload-commented/{draft_id}")
+async def upload_commented_file(
+    draft_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        if user["role"] not in ["instructor", "admin"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        allowed = ['.docx', '.doc']
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in allowed:
+            raise HTTPException(status_code=400, detail="Only DOCX files allowed for commented uploads")
+
+        draft = db.execute(text("""
+            SELECT id FROM student_drafts WHERE id = :id
+        """), {"id": draft_id}).fetchone()
+
+        if not draft:
+            raise HTTPException(status_code=404, detail="Draft not found")
+
+        file_bytes = await file.read()
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="File is empty")
+
+        file_id = str(uuid.uuid4())
+        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename)
+        safe_name = re.sub(r"_+", "_", safe_name)
+        filename = f"commented_{file_id}_{safe_name}"
+        file_url = upload_file(file_bytes, filename, "commented_drafts")
+
+        db.execute(text("""
+            UPDATE student_drafts
+            SET commented_file_url = :file_url
+            WHERE id = :draft_id
+        """), {"file_url": file_url, "draft_id": draft_id})
+        db.commit()
+
+        return {"message": "Commented file uploaded successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

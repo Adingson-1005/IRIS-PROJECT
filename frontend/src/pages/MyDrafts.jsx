@@ -110,6 +110,11 @@ function MyDrafts({ onClose }) {
   const handleUpload = async () => {
     if (!file) { setUploadError('Please select a file'); return }
     if (!title.trim()) { setUploadError('Please enter a title'); return }
+    const ext = file.name.split('.').pop().toLowerCase()
+    if (ext !== 'docx') {
+      setUploadError('Please upload a DOCX file only.')
+      return
+    }
     setUploading(true)
     setUploadError('')
     try {
@@ -379,6 +384,36 @@ function MyDrafts({ onClose }) {
                       </svg>
                       View File
                     </a>
+                    {selectedDraft.commented_file_url && (
+                      <div className="md-commented-available">
+                        <div className="md-commented-icon">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+                              stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
+                              stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                        <div className="md-commented-info">
+                          <p className="md-commented-title">Instructor commented file available</p>
+                          <p className="md-commented-sub">
+                            Download and open in Microsoft Word to see your instructor's inline comments.
+                          </p>
+                        </div>
+                        <a
+                          href={selectedDraft.commented_file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="md-commented-download"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
+                              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Download
+                        </a>
+                      </div>
+                    )}
                     {selectedDraft.status === 'Approved' && (() => {
                       const req = publishRequests.find(r => r.draft_id === selectedDraft.id)
                       if (req?.status === 'Approved') {
@@ -477,13 +512,17 @@ function MyDrafts({ onClose }) {
               </div>
 
               <div className="md-upload-field">
-                <label>File (PDF or DOCX)</label>
+                <label>File (DOCX only)</label>
                 <input
                   type="file"
-                  accept=".pdf,.docx,.doc"
+                  accept=".docx"
                   onChange={(e) => setFile(e.target.files[0])}
                 />
                 {file && <p className="md-upload-filename">{file.name}</p>}
+                <p className="md-upload-privacy-note">
+                  Please upload your research draft in DOCX format only.
+                  Your instructor will add comments directly on the file.
+                </p>
               </div>
 
               <div className="md-upload-actions">
