@@ -69,12 +69,17 @@ function ManageUsers() {
     setAddError('')
     setAddMessage('')
     try {
-      await axios.post('https://iris-backend-7717.onrender.com/auth/register', {
-        full_name: formData.full_name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
-      })
+      const token = localStorage.getItem('token')
+      await axios.post(
+        'https://iris-backend-7717.onrender.com/auth/register',
+        {
+          full_name: formData.full_name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       setAddMessage(`Account for ${formData.full_name} created successfully!`)
       setFormData({ full_name: '', email: '', password: '', role: 'student' })
       fetchUsers()

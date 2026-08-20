@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from pydantic import BaseModel
@@ -11,6 +11,8 @@ router = APIRouter()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
 ALGORITHM = "HS256"
+
+ALLOWED_REGISTER_ROLES = ["student", "instructor"]
 
 class RegisterRequest(BaseModel):
     email: str
@@ -33,16 +35,43 @@ def create_token(data: dict):
     data.update({"exp": expire})
     return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
+def require_admin(authorization: str = Header(...)):
+    """Only a logged-in admin may create new accounts."""
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    return payload
+
 @router.post("/register")
-def register(req: RegisterRequest, db: Session = Depends(get_db)):
+def register(
+    req: RegisterRequest,
+    db: Session = Depends(get_db),
+    admin=Depends(require_admin)
+):
     from sqlalchemy import text
     try:
+        if req.role not in ALLOWED_REGISTER_ROLES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Role must be one of: {', '.join(ALLOWED_REGISTER_ROLES)}"
+            )
+
+        if len(req.password) < 6:
+            raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
         existing = db.execute(
             text("SELECT id FROM users WHERE email = :email"),
             {"email": req.email}
         ).fetchone()
         if existing:
             raise HTTPException(status_code=400, detail="Email already registered")
+
         hashed = hash_password(req.password)
         db.execute(
             text("""
@@ -57,7 +86,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/login")
 def login(req: LoginRequest, db: Session = Depends(get_db)):
