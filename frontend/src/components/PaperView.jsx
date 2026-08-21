@@ -6,6 +6,16 @@ function PaperView({ paper, onClose }) {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
   }
 
+  const escapeHtml = (value) => {
+    if (value === null || value === undefined) return ''
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+  }
+
   const authorList = paper.authors
     ? paper.authors.split(',').map(a => a.trim()).filter(Boolean)
     : []
@@ -44,11 +54,17 @@ function PaperView({ paper, onClose }) {
 }
 
 const handlePrint = () => {
-  const authorNames = authorList.join(', ')
+  const safeTitle = escapeHtml(paper.title)
+  const safeAbstract = escapeHtml(paper.abstract || 'No abstract available.')
+  const safeCategory = escapeHtml(paper.category || '')
+  const safeYear = escapeHtml(paper.year || '')
+  const safeMethodology = escapeHtml(paper.methodology || '')
+  const safeAuthorNames = escapeHtml(authorList.join(', ') || 'Unknown')
+
   const printContent = `
     <html>
       <head>
-        <title>${paper.title}</title>
+        <title>${safeTitle}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
@@ -184,31 +200,31 @@ const handlePrint = () => {
         </div>
 
         <div class="tags">
-          ${paper.category ? `<span class="tag">${paper.category.toUpperCase()}</span>` : ''}
-          ${paper.year ? `<span class="tag tag-year">${paper.year}</span>` : ''}
-          ${paper.methodology ? `<span class="tag">${paper.methodology}</span>` : ''}
+          ${safeCategory ? `<span class="tag">${safeCategory.toUpperCase()}</span>` : ''}
+          ${safeYear ? `<span class="tag tag-year">${safeYear}</span>` : ''}
+          ${safeMethodology ? `<span class="tag">${safeMethodology}</span>` : ''}
         </div>
 
-        <h1>${paper.title}</h1>
+        <h1>${safeTitle}</h1>
 
-        <p class="authors"><strong>Authors:</strong> ${authorNames || 'Unknown'}</p>
+        <p class="authors"><strong>Authors:</strong> ${safeAuthorNames}</p>
 
         <p class="section-label">Abstract</p>
-        <p class="abstract">${paper.abstract || 'No abstract available.'}</p>
+        <p class="abstract">${safeAbstract}</p>
 
         <p class="section-label">Document Details</p>
         <div class="details-grid">
           <div class="detail-item">
             <p class="detail-label">Category / Strand</p>
-            <p class="detail-value">${paper.category || '—'}</p>
+            <p class="detail-value">${safeCategory || '—'}</p>
           </div>
           <div class="detail-item">
             <p class="detail-label">Methodology</p>
-            <p class="detail-value">${paper.methodology || '—'}</p>
+            <p class="detail-value">${safeMethodology || '—'}</p>
           </div>
           <div class="detail-item">
             <p class="detail-label">Year Published</p>
-            <p class="detail-value">${paper.year || '—'}</p>
+            <p class="detail-value">${safeYear || '—'}</p>
           </div>
           <div class="detail-item">
             <p class="detail-label">Access Type</p>
@@ -219,7 +235,7 @@ const handlePrint = () => {
         <div class="apa-section">
           <p class="apa-label">APA Citation</p>
           <p class="apa-text">
-            ${authorNames} (${paper.year || 'n.d.'}). ${paper.title}. St. Joseph College Olongapo.
+            ${safeAuthorNames} (${safeYear || 'n.d.'}). ${safeTitle}. St. Joseph College Olongapo.
           </p>
         </div>
 
@@ -230,7 +246,12 @@ const handlePrint = () => {
     </html>
   `
 
-  const printWindow = window.open('', '_blank')
+  const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+  if (!printWindow) {
+    alert('Please allow pop-ups to export paper details.')
+    return
+  }
+  printWindow.opener = null
   printWindow.document.write(printContent)
   printWindow.document.close()
   printWindow.focus()

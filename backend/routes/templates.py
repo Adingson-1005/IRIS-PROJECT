@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
-from services.storage import upload_file
+from services.storage import upload_file, delete_file
 from jose import jwt
 import os
 import uuid
@@ -20,18 +20,30 @@ def get_current_user_id(authorization: str = Header(...)):
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+def require_instructor(authorization: str = Header(...)):
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    if payload.get("role") != "instructor":
+        raise HTTPException(status_code=403, detail="Instructor only")
+
+    return payload.get("sub")
+
 @router.post("/upload")
 async def upload_template(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Depends(require_instructor)
 ):
     try:
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
         existing = db.execute(text("""
-            SELECT id, uploaded_by FROM templates
+            SELECT id, uploaded_by, file_url FROM templates
             ORDER BY created_at DESC LIMIT 1
         """)).fetchone()
 
@@ -44,6 +56,7 @@ async def upload_template(
         if existing:
             db.execute(text("DELETE FROM templates"))
             db.commit()
+            delete_file(existing.file_url)
 
         file_bytes = await file.read()
         file_id = str(uuid.uuid4())

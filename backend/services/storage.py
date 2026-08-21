@@ -24,3 +24,22 @@ def download_file(file_url: str) -> bytes:
     import httpx
     response = httpx.get(file_url)
     return response.content
+
+def delete_file(file_url: str) -> bool:
+    """Delete a file from Supabase Storage given its public URL.
+    Best-effort: returns False and logs instead of raising, so a storage
+    hiccup never blocks a database delete from completing."""
+    if not file_url:
+        return False
+    try:
+        marker = "/iris-files/"
+        idx = file_url.find(marker)
+        if idx == -1:
+            return False
+        path = file_url[idx + len(marker):]
+        supabase = get_supabase()
+        supabase.storage.from_("iris-files").remove([path])
+        return True
+    except Exception as e:
+        print(f"Storage delete failed for {file_url}: {e}")
+        return False

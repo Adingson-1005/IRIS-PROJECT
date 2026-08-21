@@ -2,15 +2,33 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
+from jose import jwt
 import bcrypt
 import openpyxl
 import io
+import os
 
 router = APIRouter()
 
+SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
+ALGORITHM = "HS256"
+
+
+def require_admin(authorization: str = Header(...)):
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    return payload
+
 
 @router.get("/list")
-def list_users(db: Session = Depends(get_db)):
+def list_users(db: Session = Depends(get_db), admin=Depends(require_admin)):
     try:
         users = db.execute(text("""
             SELECT id, email, full_name, role, class_name, created_at
@@ -23,7 +41,7 @@ def list_users(db: Session = Depends(get_db)):
 
 
 @router.delete("/delete/{user_id}")
-def delete_user(user_id: str, db: Session = Depends(get_db)):
+def delete_user(user_id: str, db: Session = Depends(get_db), admin=Depends(require_admin)):
     try:
         user = db.execute(
             text("SELECT id, role FROM users WHERE id = :id"),
@@ -50,19 +68,9 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
 async def bulk_upload_students(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    authorization: str = Header(...)
+    admin=Depends(require_admin)
 ):
     try:
-        from jose import jwt
-        import os
-        SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
-        token = authorization.replace("Bearer ", "")
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        role = payload.get("role")
-
-        if role != "admin":
-            raise HTTPException(status_code=403, detail="Admin only")
-
         if not file.filename.endswith(('.xlsx', '.xls')):
             raise HTTPException(status_code=400, detail="Only Excel files (.xlsx or .xls) are allowed")
 

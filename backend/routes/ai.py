@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.ai_checker import check_research
-from services.storage import upload_file
+from services.storage import upload_file, delete_file
 from jose import jwt
 import os
 import shutil
@@ -51,19 +51,23 @@ async def submit_draft(
 
         result = check_research(draft_path, template.file_url)
 
-        db.execute(text("""
-            INSERT INTO student_submissions
-            (student_id, template_id, file_url, title, score, feedback, status)
-            VALUES (:student_id, :template_id, :file_url, :title, :score, :feedback, 'completed')
-        """), {
-            "student_id": user_id,
-            "template_id": str(template.id),
-            "file_url": draft_path,
-            "title": title,
-            "score": result["score"],
-            "feedback": result["feedback"]
-        })
-        db.commit()
+        try:
+            db.execute(text("""
+                INSERT INTO student_submissions
+                (student_id, template_id, file_url, title, score, feedback, status)
+                VALUES (:student_id, :template_id, :file_url, :title, :score, :feedback, 'completed')
+            """), {
+                "student_id": user_id,
+                "template_id": str(template.id),
+                "file_url": draft_path,
+                "title": title,
+                "score": result["score"],
+                "feedback": result["feedback"]
+            })
+            db.commit()
+        except Exception as e:
+            delete_file(draft_path)
+            raise HTTPException(status_code=500, detail=f"Failed to save submission: {str(e)}")
 
         return {
             "title": title,

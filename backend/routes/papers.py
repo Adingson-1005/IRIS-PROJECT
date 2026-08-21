@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.inverted_index import build_index
-from services.storage import upload_file
+from services.storage import upload_file, delete_file
+from jose import jwt
 import os
 import uuid
 import re
@@ -12,6 +13,18 @@ router = APIRouter()
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
+ALGORITHM = "HS256"
+
+
+def get_current_user(authorization: str = Header(...)):
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return {"id": payload.get("sub"), "role": payload.get("role")}
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
 def run_build_index(paper_id: str, file_path: str):
@@ -36,14 +49,12 @@ async def upload_paper(
     year: int = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    authorization: str = Header(...)
+    user: dict = Depends(get_current_user)
 ):
     try:
-        from jose import jwt
-        SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
-        token = authorization.replace("Bearer ", "")
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        user_id = payload.get("sub")
+        if user["role"] != "instructor":
+            raise HTTPException(status_code=403, detail="Instructor only")
+        user_id = user["id"]
 
         if not file.filename.endswith('.pdf'):
             raise HTTPException(status_code=400, detail="Only PDF files allowed")
@@ -115,15 +126,9 @@ def list_papers(db: Session = Depends(get_db)):
 @router.get("/my-papers")
 def my_papers(
     db: Session = Depends(get_db),
-    authorization: str = Header(...)
+    user: dict = Depends(get_current_user)
 ):
     try:
-        from jose import jwt
-        SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
-        token = authorization.replace("Bearer ", "")
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        user_id = payload.get("sub")
-
         papers = db.execute(text("""
             SELECT id, title, authors, abstract, category, methodology,
                    year, file_url, created_at,
@@ -131,7 +136,7 @@ def my_papers(
             FROM papers
             WHERE uploaded_by = :user_id
             ORDER BY created_at DESC
-        """), {"user_id": user_id}).fetchall()
+        """), {"user_id": user["id"]}).fetchall()
 
         return {"papers": [dict(row._mapping) for row in papers]}
     except Exception as e:
@@ -139,8 +144,15 @@ def my_papers(
 
 
 @router.post("/reindex-all")
-def reindex_all(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def reindex_all(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
     try:
+        if user["role"] not in ["instructor", "admin"]:
+            raise HTTPException(status_code=403, detail="Instructor or admin only")
+
         papers = db.execute(text("SELECT id, file_url FROM papers")).fetchall()
         paper_list = [(str(p.id), p.file_url) for p in papers]
 
@@ -160,13 +172,31 @@ def reindex_all(background_tasks: BackgroundTasks, db: Session = Depends(get_db)
 
         background_tasks.add_task(reindex_all_background)
         return {"message": f"Reindexing {len(paper_list)} papers in background"}
+    except HTTPException:
+        raise
     except Exception as e:
         return {"error": str(e)}
 
 
 @router.delete("/delete/{paper_id}")
-def delete_paper(paper_id: str, db: Session = Depends(get_db)):
+def delete_paper(
+    paper_id: str,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
     try:
+        paper = db.execute(
+            text("SELECT id, uploaded_by, file_url FROM papers WHERE id = :paper_id"),
+            {"paper_id": paper_id}
+        ).fetchone()
+
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
+
+        is_owner = str(paper.uploaded_by) == str(user["id"])
+        if user["role"] != "admin" and not (user["role"] == "instructor" and is_owner):
+            raise HTTPException(status_code=403, detail="You do not have permission to delete this paper")
+
         db.execute(
             text("DELETE FROM inverted_index WHERE paper_id = :paper_id"),
             {"paper_id": paper_id}
@@ -176,7 +206,12 @@ def delete_paper(paper_id: str, db: Session = Depends(get_db)):
             {"paper_id": paper_id}
         )
         db.commit()
+
+        delete_file(paper.file_url)
+
         return {"message": "Paper deleted successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         return {"error": str(e)}
 
@@ -229,8 +264,8 @@ async def check_similar(payload: dict = Body(...), db: Session = Depends(get_db)
             'it', 'as', 'using', 'based', 'study', 'research', 'system'
         }
 
-        text = f"{title} {abstract}".lower()
-        words = re.sub(r'[^a-zA-Z0-9\s]', '', text).split()
+        combined_text = f"{title} {abstract}".lower()
+        words = re.sub(r'[^a-zA-Z0-9\s]', '', combined_text).split()
         keywords = [w for w in words if w not in stop_words and len(w) > 3]
         keywords = list(set(keywords))[:15]
 

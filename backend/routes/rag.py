@@ -1,14 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from groq import Groq
 from dotenv import load_dotenv
+from jose import jwt
 import os
 
 load_dotenv()
 
 router = APIRouter()
+
+SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
+ALGORITHM = "HS256"
+
+def require_login(authorization: str = Header(...)):
+    try:
+        token = authorization.replace("Bearer ", "")
+        jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 REJECTED_KEYWORDS = [
     "make me", "write me", "draft me", "create me", "generate me",
@@ -108,7 +119,7 @@ INSTRUCTIONS:
 
 
 @router.post("/ask")
-def ask_rag(payload: dict, db: Session = Depends(get_db)):
+def ask_rag(payload: dict, db: Session = Depends(get_db), _=Depends(require_login)):
     question = payload.get("question", "").strip()
 
     if not question:

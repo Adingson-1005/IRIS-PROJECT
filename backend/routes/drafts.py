@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, H
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
-from services.storage import upload_file
+from services.storage import upload_file, delete_file
 from jose import jwt
 import os
 import uuid
@@ -20,6 +20,23 @@ def get_current_user(authorization: str = Header(...)):
         return {"id": payload.get("sub"), "role": payload.get("role")}
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def require_assigned_instructor(db: Session, user: dict, class_name: str):
+    """Only the instructor assigned to this specific class may act on its drafts.
+    Admins are read-only for drafts/publications and are never allowed here."""
+    if user["role"] != "instructor":
+        raise HTTPException(status_code=403, detail="Only the assigned instructor can perform this action")
+
+    assigned_class = db.execute(text("""
+        SELECT name FROM classes WHERE instructor_id = :instructor_id
+    """), {"instructor_id": user["id"]}).fetchone()
+
+    if not assigned_class:
+        raise HTTPException(status_code=403, detail="You are not assigned to any class")
+
+    if assigned_class.name != class_name:
+        raise HTTPException(status_code=403, detail="You can only manage drafts from your assigned class")
 
 
 # ── Student: upload a draft ──
@@ -120,7 +137,7 @@ def delete_draft(
 ):
     try:
         draft = db.execute(text("""
-            SELECT id, student_id FROM student_drafts WHERE id = :id
+            SELECT id, student_id, file_url, commented_file_url FROM student_drafts WHERE id = :id
         """), {"id": draft_id}).fetchone()
 
         if not draft:
@@ -132,6 +149,10 @@ def delete_draft(
         db.execute(text("DELETE FROM draft_comments WHERE draft_id = :id"), {"id": draft_id})
         db.execute(text("DELETE FROM student_drafts WHERE id = :id"), {"id": draft_id})
         db.commit()
+
+        delete_file(draft.file_url)
+        if draft.commented_file_url:
+            delete_file(draft.commented_file_url)
 
         return {"message": "Draft deleted successfully"}
 
@@ -202,6 +223,9 @@ def get_student_drafts(
     user: dict = Depends(get_current_user)
 ):
     try:
+        if user["role"] not in ["instructor", "admin"]:
+            raise HTTPException(status_code=403, detail="Instructor or admin only")
+
         student = db.execute(text("""
             SELECT id, full_name, email, class_name FROM users WHERE id = :id
         """), {"id": student_id}).fetchone()
@@ -344,8 +368,17 @@ def update_draft_status(
     user: dict = Depends(get_current_user)
 ):
     try:
-        if user["role"] not in ["instructor", "admin"]:
-            raise HTTPException(status_code=403, detail="Not authorized")
+        draft = db.execute(text("""
+            SELECT sd.id, u.class_name
+            FROM student_drafts sd
+            JOIN users u ON sd.student_id = u.id
+            WHERE sd.id = :draft_id
+        """), {"draft_id": draft_id}).fetchone()
+
+        if not draft:
+            raise HTTPException(status_code=404, detail="Draft not found")
+
+        require_assigned_instructor(db, user, draft.class_name)
 
         status = payload.get("status", "").strip()
         valid_statuses = ["Submitted", "Under Review", "Returned for Revision", "Revised", "Approved"]
@@ -495,15 +528,17 @@ def approve_publication(
     user: dict = Depends(get_current_user)
 ):
     try:
-        if user["role"] not in ["instructor", "admin"]:
-            raise HTTPException(status_code=403, detail="Not authorized")
-
         req = db.execute(text("""
-            SELECT * FROM publication_requests WHERE id = :id
+            SELECT pr.*, u.class_name
+            FROM publication_requests pr
+            JOIN users u ON pr.student_id = u.id
+            WHERE pr.id = :id
         """), {"id": request_id}).fetchone()
 
         if not req:
             raise HTTPException(status_code=404, detail="Request not found")
+
+        require_assigned_instructor(db, user, req.class_name)
 
         if req.status != "Pending":
             raise HTTPException(status_code=400, detail="Request already processed")
@@ -554,19 +589,21 @@ def reject_publication(
     user: dict = Depends(get_current_user)
 ):
     try:
-        if user["role"] not in ["instructor", "admin"]:
-            raise HTTPException(status_code=403, detail="Not authorized")
-
         reason = payload.get("reason", "").strip()
         if not reason:
             raise HTTPException(status_code=400, detail="Rejection reason is required")
 
         req = db.execute(text("""
-            SELECT id, status FROM publication_requests WHERE id = :id
+            SELECT pr.id, pr.status, u.class_name
+            FROM publication_requests pr
+            JOIN users u ON pr.student_id = u.id
+            WHERE pr.id = :id
         """), {"id": request_id}).fetchone()
 
         if not req:
             raise HTTPException(status_code=404, detail="Request not found")
+
+        require_assigned_instructor(db, user, req.class_name)
 
         if req.status != "Pending":
             raise HTTPException(status_code=400, detail="Request already processed")
@@ -595,20 +632,22 @@ async def upload_commented_file(
     user: dict = Depends(get_current_user)
 ):
     try:
-        if user["role"] not in ["instructor", "admin"]:
-            raise HTTPException(status_code=403, detail="Not authorized")
+        draft = db.execute(text("""
+            SELECT sd.id, u.class_name
+            FROM student_drafts sd
+            JOIN users u ON sd.student_id = u.id
+            WHERE sd.id = :draft_id
+        """), {"draft_id": draft_id}).fetchone()
+
+        if not draft:
+            raise HTTPException(status_code=404, detail="Draft not found")
+
+        require_assigned_instructor(db, user, draft.class_name)
 
         allowed = ['.docx', '.doc']
         ext = os.path.splitext(file.filename)[1].lower()
         if ext not in allowed:
             raise HTTPException(status_code=400, detail="Only DOCX files allowed for commented uploads")
-
-        draft = db.execute(text("""
-            SELECT id FROM student_drafts WHERE id = :id
-        """), {"id": draft_id}).fetchone()
-
-        if not draft:
-            raise HTTPException(status_code=404, detail="Draft not found")
 
         file_bytes = await file.read()
         if len(file_bytes) == 0:

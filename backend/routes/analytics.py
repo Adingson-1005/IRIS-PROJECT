@@ -1,12 +1,30 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
+from jose import jwt
+import os
 
 router = APIRouter()
 
+SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
+ALGORITHM = "HS256"
+
+
+def require_admin(authorization: str = Header(...)):
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    return payload
+
 @router.get("/summary")
-def get_summary(db: Session = Depends(get_db)):
+def get_summary(db: Session = Depends(get_db), admin=Depends(require_admin)):
     try:
         users = db.execute(text("""
             SELECT
@@ -45,7 +63,7 @@ def get_summary(db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 @router.get("/top-searches")
-def get_top_searches(db: Session = Depends(get_db)):
+def get_top_searches(db: Session = Depends(get_db), admin=Depends(require_admin)):
     try:
         results = db.execute(text("""
             SELECT keyword, COUNT(*) as count
@@ -60,7 +78,7 @@ def get_top_searches(db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 @router.get("/top-downloads")
-def get_top_downloads(db: Session = Depends(get_db)):
+def get_top_downloads(db: Session = Depends(get_db), admin=Depends(require_admin)):
     try:
         results = db.execute(text("""
             SELECT title, authors, category,
@@ -74,7 +92,7 @@ def get_top_downloads(db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 @router.get("/category-breakdown")
-def get_category_breakdown(db: Session = Depends(get_db)):
+def get_category_breakdown(db: Session = Depends(get_db), admin=Depends(require_admin)):
     try:
         results = db.execute(text("""
             SELECT category, COUNT(*) as count
