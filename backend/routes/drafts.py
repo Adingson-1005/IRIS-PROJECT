@@ -100,7 +100,7 @@ def get_my_drafts(
 ):
     try:
         drafts = db.execute(text("""
-            SELECT id, title, file_url, file_type, created_at
+            SELECT id, title, file_url, file_type, status, commented_file_url, created_at
             FROM student_drafts
             WHERE student_id = :student_id
             ORDER BY created_at DESC
@@ -234,7 +234,7 @@ def get_student_drafts(
             raise HTTPException(status_code=404, detail="Student not found")
 
         drafts = db.execute(text("""
-            SELECT id, title, file_url, file_type, created_at
+            SELECT id, title, file_url, file_type, status, commented_file_url, created_at
             FROM student_drafts
             WHERE student_id = :student_id
             ORDER BY created_at DESC
