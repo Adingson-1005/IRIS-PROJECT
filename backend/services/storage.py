@@ -1,4 +1,5 @@
 import os
+import mimetypes
 from supabase import create_client
 from dotenv import load_dotenv
 
@@ -12,10 +13,15 @@ def get_supabase():
 def upload_file(file_bytes: bytes, filename: str, folder: str) -> str:
     supabase = get_supabase()
     path = f"{folder}/{filename}"
+
+    content_type, _ = mimetypes.guess_type(filename)
+    if not content_type:
+        content_type = "application/octet-stream"
+
     supabase.storage.from_("iris-files").upload(
         path,
         file_bytes,
-        {"content-type": "application/pdf", "x-upsert": "true"}
+        {"content-type": content_type, "x-upsert": "true"}
     )
     result = supabase.storage.from_("iris-files").get_public_url(path)
     return result
