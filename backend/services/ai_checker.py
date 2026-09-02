@@ -1,5 +1,6 @@
 import fitz
 import os
+import re
 import httpx
 from groq import Groq
 from dotenv import load_dotenv
@@ -168,13 +169,9 @@ If a chapter is already well-written and complete, skip it entirely. Do not forc
         score = 0
         feedback = raw
 
-        for line in raw.split('\n'):
-            if line.startswith("SCORE:"):
-                try:
-                    score = int(line.replace("SCORE:", "").strip())
-                except:
-                    score = 0
-                break
+        score_match = re.search(r'(?i)score\s*:?\s*\**\s*(\d{1,3})', raw)
+        if score_match:
+            score = max(0, min(100, int(score_match.group(1))))
 
         return {
             "score": score,
