@@ -36,6 +36,17 @@ def extract_text(source: str) -> str:
         return extract_text_from_url(source)
     return extract_text_from_path(source)
 
+def extract_relevant_content(text: str, max_chars: int = 20000) -> str:
+    """Skip front matter (title page, approval sheet, abstract, acknowledgement,
+    dedication, table of contents, etc.) by starting from 'Chapter 1' if found,
+    since front matter alone can easily exceed a naive character limit and
+    cause the AI to only see the front matter instead of the actual paper."""
+    match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
+    if match:
+        text = text[match.start():]
+    return text[:max_chars]
+
+
 def check_research(student_path: str, template_path: str) -> dict:
     student_text = extract_text(student_path)
     template_text = extract_text(template_path)
@@ -52,8 +63,8 @@ def check_research(student_path: str, template_path: str) -> dict:
             "feedback": "Could not extract text from the research template. Please contact your instructor."
         }
 
-    student_preview = student_text[:4000]
-    template_preview = template_text[:4000]
+    student_preview = extract_relevant_content(student_text)
+    template_preview = extract_relevant_content(template_text)
 
     prompt = f"""You are a strict academic research evaluator for senior high school students in the Philippines.
 
