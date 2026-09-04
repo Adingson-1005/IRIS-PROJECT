@@ -36,11 +36,47 @@ def extract_text(source: str) -> str:
         return extract_text_from_url(source)
     return extract_text_from_path(source)
 
-def extract_relevant_content(text: str, max_chars: int = 4000) -> str:
-    """Skip front matter (title page, approval sheet, abstract, acknowledgement,
-    dedication, table of contents, etc.) by starting from 'Chapter 1' if found,
-    since front matter alone can easily exceed a naive character limit and
-    cause the AI to only see the front matter instead of the actual paper."""
+SECTION_KEYWORDS = [
+    "abstract",
+    "background of the study",
+    "objectives of the study",
+    "statement of the problem",
+    "significance of the study",
+    "scope and limitation",
+    "review of related literature",
+    "theoretical and conceptual framework",
+    "research design",
+    "research methodology",
+    "data collection",
+    "statistical treatment",
+    "presentation, analysis and interpretation",
+    "summary of findings",
+    "conclusion",
+    "recommendation",
+    "references",
+]
+
+
+def extract_relevant_content(text: str, max_chars: int = 6000, snippet_len: int = 350) -> str:
+    """Instead of one continuous block (which only captures the first section
+    of a long chapter), pull a short snippet from around each key section
+    heading. This gives the AI visibility into whether each section has real
+    content, using far fewer tokens than dumping the raw text."""
+    lower = text.lower()
+    snippets = []
+
+    for keyword in SECTION_KEYWORDS:
+        idx = lower.find(keyword)
+        if idx == -1:
+            continue
+        end = min(len(text), idx + snippet_len)
+        snippets.append(f"[{keyword.upper()}]\n{text[idx:end]}")
+
+    if snippets:
+        return "\n\n".join(snippets)[:max_chars]
+
+    # Fallback for documents that don't match any expected section keywords:
+    # skip front matter by starting from "Chapter 1" if present.
     match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
     if match:
         text = text[match.start():]
