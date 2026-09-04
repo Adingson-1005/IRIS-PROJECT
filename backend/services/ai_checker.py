@@ -1,4 +1,4 @@
-    import os
+import os
 import re
 import httpx
 import fitz
@@ -7,11 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Keep the model request comfortably below Groq's 8,000 TPM allowance.
-MODEL = "openai/gpt-oss-120b"
+MODEL = "llama-3.3-70b-versatile"
 MAX_COMPLETION_TOKENS = 700
-MAX_STUDENT_CHARS = 3300
-MAX_TEMPLATE_CHARS = 1400
+MAX_STUDENT_CHARS = 3000
+MAX_TEMPLATE_CHARS = 1200
 
 SECTION_KEYWORDS = [
     "abstract", "background of the study", "introduction",
@@ -27,7 +26,6 @@ SECTION_KEYWORDS = [
 
 
 def extract_text(source: str) -> str:
-    """Extract selectable text and expose a useful error instead of hiding it."""
     try:
         if source.startswith(("http://", "https://")):
             response = httpx.get(source, timeout=30, follow_redirects=True)
@@ -53,16 +51,10 @@ def _is_heading(line: str) -> bool:
     return any(keyword in normalised for keyword in SECTION_KEYWORDS)
 
 
-def _best_section_snippet(lines: list[str], keyword: str, snippet_len: int) -> str | None:
-    """Choose a real section occurrence rather than its table-of-contents entry.
-
-    A table of contents is normally followed immediately by more headings/page
-    numbers. A real section is followed by prose, so candidates are ranked by
-    the amount of prose immediately after them.
-    """
+def _best_section_snippet(lines: list, keyword: str, snippet_len: int):
     candidates = []
-    for index, line in enumerate(lines):    
-if keyword not in _normalise(line):
+    for index, line in enumerate(lines):
+        if keyword not in _normalise(line):
             continue
 
         following = []
@@ -73,7 +65,6 @@ if keyword not in _normalise(line):
         body = " ".join(following).strip()
         words = re.findall(r"[A-Za-z]{3,}", body)
         sentence_marks = len(re.findall(r"[.!?]", body))
-        # Prefer prose and strongly penalise table-of-contents style entries.
         score = len(words) + sentence_marks * 8 - sum(_is_heading(x) for x in following) * 20
         candidates.append((score, index, body))
 
@@ -83,15 +74,13 @@ if keyword not in _normalise(line):
     return body[:snippet_len]
 
 
-def extract_relevant_content(text: str, max_chars: int, snippet_len: int = 190) -> str:
-    """Build a compact, section-aware preview for the model."""
+def extract_relevant_content(text: str, max_chars: int, snippet_len: int = 180) -> str:
     lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines()]
     lines = [line for line in lines if line]
     snippets = []
     seen = set()
 
-    # Preserve enough front matter for the evaluator to see title/author data.
-    front_matter = " ".join(lines[:12])[:300]
+    front_matter = " ".join(lines[:10])[:250]
     if front_matter:
         snippets.append(f"[FRONT MATTER] {front_matter}")
 
@@ -115,24 +104,41 @@ def check_research(student_path: str, template_path: str) -> dict:
         return {"score": 0, "feedback": str(exc)}
 
     if not student_text:
-        return {"score": 0, "feedback": "No selectable text was found in the submitted PDF. If it is scanned, run OCR first."}
+        return {
+            "score": 0,
+            "feedback": "No selectable text was found in the submitted PDF. If it is scanned, run OCR first."
+        }
     if not template_text:
-        return {"score": 0, "feedback": "No selectable text was found in the template PDF. Ask the instructor for a text-based template."}
+        return {
+            "score": 0,
+            "feedback": "Could not extract text from the research template. Please contact your instructor."
+        }
 
     student_preview = extract_relevant_content(student_text, MAX_STUDENT_CHARS)
     template_preview = extract_relevant_content(template_text, MAX_TEMPLATE_CHARS, 100)
 
     prompt = f"""You evaluate senior-high-school research papers in the Philippines.
 
-The TEMPLATE shows required structure. The SUBMISSION is a compact extraction of
-the student's PDF. Table-of-contents entries are not evidence that a section has
-content. Judge only the prose shown. A document that follows the template but is
-incomplete is a Research Paper Draft, not "Not a Research Paper". Use "Not a
-Research Paper" only if it has no recognizable research structure at all.
+The TEMPLATE shows the required structure. The SUBMISSION is a compact extraction of
+the student's PDF. Table-of-contents entries are NOT evidence that a section has content.
+Judge only the prose shown under each section heading.
 
-TEMPLATE:\n{template_preview}\n
-SUBMISSION:\n{student_preview}\n
+IMPORTANT RULES:
+- A document that follows the template structure but has incomplete content is a "Research Paper Draft"
+- Only use "Not a Research Paper" if it has absolutely no recognizable research structure
+- If a section heading is present but has no content below it, mark it as Missing
+- If a section has some content but is incomplete, mark it as Partial
+- If a section is fully written, mark it as Present
+- A score of 100 means all sections are Present and complete
+
+TEMPLATE:
+{template_preview}
+
+SUBMISSION:
+{student_preview}
+
 Respond exactly in this format:
+
 SCORE: [0-100]
 
 DOCUMENT TYPE: [Research Paper / Research Paper Draft / Not a Research Paper]
@@ -152,13 +158,13 @@ SECTION BREAKDOWN:
 - References: [Present/Partial/Missing] — [one sentence]
 
 STRENGTHS:
-- [up to three evidence-based strengths]
+- [up to three evidence-based strengths, or "None identified" if score is very low]
 
 TO IMPROVE:
-- [up to three highest-priority improvements]
+- [up to three highest-priority improvements, or "None - paper fully follows the template" if score is 100]
 
 OVERALL FEEDBACK:
-[Two concise sentences.]"""
+[Two concise sentences summarizing the paper quality and main recommendation.]"""
 
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
