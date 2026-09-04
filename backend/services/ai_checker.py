@@ -36,7 +36,7 @@ def extract_text(source: str) -> str:
         return extract_text_from_url(source)
     return extract_text_from_path(source)
 
-def extract_relevant_content(text: str, max_chars: int = 20000) -> str:
+def extract_relevant_content(text: str, max_chars: int = 4000) -> str:
     """Skip front matter (title page, approval sheet, abstract, acknowledgement,
     dedication, table of contents, etc.) by starting from 'Chapter 1' if found,
     since front matter alone can easily exceed a naive character limit and
@@ -172,7 +172,7 @@ If a chapter is already well-written and complete, skip it entirely. Do not forc
                 }
             ],
             temperature=0.1,
-            max_tokens=2000
+            max_tokens=1500
         )
 
         raw = response.choices[0].message.content.strip()
