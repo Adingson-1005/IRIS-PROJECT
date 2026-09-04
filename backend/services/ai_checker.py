@@ -1,232 +1,176 @@
-import fitz
-import os
+    import os
 import re
 import httpx
+import fitz
 from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
-def extract_text_from_url(file_url: str) -> str:
-    try:
-        response = httpx.get(file_url, timeout=30)
-        pdf_bytes = response.content
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        text = ""
-        for page in doc:
-            text += page.get_text()
-        doc.close()
-        return text.strip()
-    except Exception as e:
-        return ""
-
-def extract_text_from_path(file_path: str) -> str:
-    try:
-        doc = fitz.open(file_path)
-        text = ""
-        for page in doc:
-            text += page.get_text()
-        doc.close()
-        return text.strip()
-    except Exception as e:
-        return ""
-
-def extract_text(source: str) -> str:
-    if source.startswith("http"):
-        return extract_text_from_url(source)
-    return extract_text_from_path(source)
+# Keep the model request comfortably below Groq's 8,000 TPM allowance.
+MODEL = "openai/gpt-oss-120b"
+MAX_COMPLETION_TOKENS = 700
+MAX_STUDENT_CHARS = 3300
+MAX_TEMPLATE_CHARS = 1400
 
 SECTION_KEYWORDS = [
-    "abstract",
-    "background of the study",
-    "objectives of the study",
-    "statement of the problem",
-    "significance of the study",
-    "scope and limitation",
-    "review of related literature",
-    "theoretical and conceptual framework",
-    "research design",
-    "research methodology",
-    "data collection",
-    "statistical treatment",
-    "presentation, analysis and interpretation",
-    "summary of findings",
-    "conclusion",
-    "recommendation",
-    "references",
+    "abstract", "background of the study", "introduction",
+    "objectives of the study", "statement of the problem",
+    "significance of the study", "scope and limitation",
+    "scope and limitations", "review of related literature",
+    "theoretical and conceptual framework", "research design",
+    "research methodology", "methodology", "data collection",
+    "statistical treatment", "presentation, analysis and interpretation",
+    "results and discussion", "summary of findings", "conclusion",
+    "recommendation", "references",
 ]
 
 
-def extract_relevant_content(text: str, max_chars: int = 6000, snippet_len: int = 350) -> str:
-    """Instead of one continuous block (which only captures the first section
-    of a long chapter), pull a short snippet from around each key section
-    heading. This gives the AI visibility into whether each section has real
-    content, using far fewer tokens than dumping the raw text."""
-    lower = text.lower()
+def extract_text(source: str) -> str:
+    """Extract selectable text and expose a useful error instead of hiding it."""
+    try:
+        if source.startswith(("http://", "https://")):
+            response = httpx.get(source, timeout=30, follow_redirects=True)
+            response.raise_for_status()
+            document = fitz.open(stream=response.content, filetype="pdf")
+        else:
+            document = fitz.open(source)
+
+        try:
+            return "\n".join(page.get_text("text") for page in document).strip()
+        finally:
+            document.close()
+    except Exception as exc:
+        raise RuntimeError(f"PDF text extraction failed: {exc}") from exc
+
+
+def _normalise(line: str) -> str:
+    return re.sub(r"\s+", " ", line.lower()).strip(" .:-\t")
+
+
+def _is_heading(line: str) -> bool:
+    normalised = _normalise(line)
+    return any(keyword in normalised for keyword in SECTION_KEYWORDS)
+
+
+def _best_section_snippet(lines: list[str], keyword: str, snippet_len: int) -> str | None:
+    """Choose a real section occurrence rather than its table-of-contents entry.
+
+    A table of contents is normally followed immediately by more headings/page
+    numbers. A real section is followed by prose, so candidates are ranked by
+    the amount of prose immediately after them.
+    """
+    candidates = []
+    for index, line in enumerate(lines):    
+if keyword not in _normalise(line):
+            continue
+
+        following = []
+        for next_line in lines[index + 1:index + 28]:
+            if _is_heading(next_line) and following:
+                break
+            following.append(next_line)
+        body = " ".join(following).strip()
+        words = re.findall(r"[A-Za-z]{3,}", body)
+        sentence_marks = len(re.findall(r"[.!?]", body))
+        # Prefer prose and strongly penalise table-of-contents style entries.
+        score = len(words) + sentence_marks * 8 - sum(_is_heading(x) for x in following) * 20
+        candidates.append((score, index, body))
+
+    if not candidates:
+        return None
+    _, _, body = max(candidates, key=lambda candidate: candidate[0])
+    return body[:snippet_len]
+
+
+def extract_relevant_content(text: str, max_chars: int, snippet_len: int = 190) -> str:
+    """Build a compact, section-aware preview for the model."""
+    lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines()]
+    lines = [line for line in lines if line]
     snippets = []
+    seen = set()
+
+    # Preserve enough front matter for the evaluator to see title/author data.
+    front_matter = " ".join(lines[:12])[:300]
+    if front_matter:
+        snippets.append(f"[FRONT MATTER] {front_matter}")
 
     for keyword in SECTION_KEYWORDS:
-        idx = lower.find(keyword)
-        if idx == -1:
+        canonical = keyword.replace("limitations", "limitation")
+        if canonical in seen:
             continue
-        end = min(len(text), idx + snippet_len)
-        snippets.append(f"[{keyword.upper()}]\n{text[idx:end]}")
+        seen.add(canonical)
+        body = _best_section_snippet(lines, keyword, snippet_len)
+        if body:
+            snippets.append(f"[{keyword.upper()}] {body}")
 
-    if snippets:
-        return "\n\n".join(snippets)[:max_chars]
-
-    # Fallback for documents that don't match any expected section keywords:
-    # skip front matter by starting from "Chapter 1" if present.
-    match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
-    if match:
-        text = text[match.start():]
-    return text[:max_chars]
+    return "\n".join(snippets)[:max_chars]
 
 
 def check_research(student_path: str, template_path: str) -> dict:
-    student_text = extract_text(student_path)
-    template_text = extract_text(template_path)
+    try:
+        student_text = extract_text(student_path)
+        template_text = extract_text(template_path)
+    except RuntimeError as exc:
+        return {"score": 0, "feedback": str(exc)}
 
     if not student_text:
-        return {
-            "score": 0,
-            "feedback": "Could not extract text from your submitted PDF. Make sure it is not a scanned image."
-        }
-
+        return {"score": 0, "feedback": "No selectable text was found in the submitted PDF. If it is scanned, run OCR first."}
     if not template_text:
-        return {
-            "score": 0,
-            "feedback": "Could not extract text from the research template. Please contact your instructor."
-        }
+        return {"score": 0, "feedback": "No selectable text was found in the template PDF. Ask the instructor for a text-based template."}
 
-    student_preview = extract_relevant_content(student_text)
-    template_preview = extract_relevant_content(template_text)
+    student_preview = extract_relevant_content(student_text, MAX_STUDENT_CHARS)
+    template_preview = extract_relevant_content(template_text, MAX_TEMPLATE_CHARS, 100)
 
-    prompt = f"""You are a strict academic research evaluator for senior high school students in the Philippines.
+    prompt = f"""You evaluate senior-high-school research papers in the Philippines.
 
-You are given:
-1. A RESEARCH TEMPLATE — the standard format and structure that students must follow.
-2. A STUDENT SUBMISSION — a document submitted by a student.
+The TEMPLATE shows required structure. The SUBMISSION is a compact extraction of
+the student's PDF. Table-of-contents entries are not evidence that a section has
+content. Judge only the prose shown. A document that follows the template but is
+incomplete is a Research Paper Draft, not "Not a Research Paper". Use "Not a
+Research Paper" only if it has no recognizable research structure at all.
 
----
+TEMPLATE:\n{template_preview}\n
+SUBMISSION:\n{student_preview}\n
+Respond exactly in this format:
+SCORE: [0-100]
 
-RESEARCH TEMPLATE:
-{template_preview}
-
----
-
-STUDENT SUBMISSION:
-{student_preview}
-
----
-
-STEP 1 — DOCUMENT VALIDATION:
-First, determine if the student submission is actually a research paper or research draft.
-If it is NOT a research paper, give SCORE: 0 and explain. Do not evaluate sections.
-
-STEP 2 — SECTION-BY-SECTION EVALUATION:
-If it IS a research paper, evaluate each of these sections individually:
-- Title Page
-- Abstract
-- Introduction / Background of the Study
-- Statement of the Problem
-- Objectives
-- Significance of the Study
-- Scope and Limitations
-- Review of Related Literature
-- Methodology
-- Results and Discussion
-- Conclusion and Recommendations
-- References / Bibliography
-
-For each section give:
-- STATUS: Present / Partial / Missing
-- COMMENT: One sentence about the quality or what is missing
-
-STEP 3 — OVERALL SCORE:
-Give an overall accuracy score from 0 to 100 based on how many sections are present and complete.
-- 0–30: Very incomplete or not a research paper
-- 31–60: Many sections missing
-- 61–80: Mostly complete with some gaps
-- 81–99: Very complete with minor issues
-- 100: Perfectly follows the template
-
----
-
-Respond ONLY in this exact format:
-
-SCORE: [number 0-100]
-
-DOCUMENT TYPE: [Research Paper / Not a Research Paper]
+DOCUMENT TYPE: [Research Paper / Research Paper Draft / Not a Research Paper]
 
 SECTION BREAKDOWN:
-- Title Page: [Present/Partial/Missing] — [one sentence comment]
-- Abstract: [Present/Partial/Missing] — [one sentence comment]
-- Introduction: [Present/Partial/Missing] — [one sentence comment]
-- Statement of the Problem: [Present/Partial/Missing] — [one sentence comment]
-- Objectives: [Present/Partial/Missing] — [one sentence comment]
-- Significance of the Study: [Present/Partial/Missing] — [one sentence comment]
-- Scope and Limitations: [Present/Partial/Missing] — [one sentence comment]
-- Review of Related Literature: [Present/Partial/Missing] — [one sentence comment]
-- Methodology: [Present/Partial/Missing] — [one sentence comment]
-- Results and Discussion: [Present/Partial/Missing] — [one sentence comment]
-- Conclusion and Recommendations: [Present/Partial/Missing] — [one sentence comment]
-- References: [Present/Partial/Missing] — [one sentence comment]
+- Title Page: [Present/Partial/Missing] — [one sentence]
+- Abstract: [Present/Partial/Missing] — [one sentence]
+- Introduction: [Present/Partial/Missing] — [one sentence]
+- Statement of the Problem: [Present/Partial/Missing] — [one sentence]
+- Objectives: [Present/Partial/Missing] — [one sentence]
+- Significance of the Study: [Present/Partial/Missing] — [one sentence]
+- Scope and Limitations: [Present/Partial/Missing] — [one sentence]
+- Review of Related Literature: [Present/Partial/Missing] — [one sentence]
+- Methodology: [Present/Partial/Missing] — [one sentence]
+- Results and Discussion: [Present/Partial/Missing] — [one sentence]
+- Conclusion and Recommendations: [Present/Partial/Missing] — [one sentence]
+- References: [Present/Partial/Missing] — [one sentence]
 
 STRENGTHS:
-- [strength 1]
-- [strength 2]
-- [strength 3]
+- [up to three evidence-based strengths]
 
 TO IMPROVE:
-- [area 1 or "None - paper fully follows the template" if score is 100]
-- [area 2]
-- [area 3]
+- [up to three highest-priority improvements]
 
 OVERALL FEEDBACK:
-[2-3 sentence summary of the paper's overall quality and main recommendation]
-"""
+[Two concise sentences.]"""
 
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
         response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are a strict academic research evaluator for senior high school students 
-in the Philippines. You must first validate whether the submitted document is actually a research paper 
-before evaluating it. If it is not a research paper, give a score of 0 and explain clearly. 
-Never give a high score to a document that is not a research paper. Always respond in the exact format requested.
-When listing areas to improve, organize them by chapter. Only include chapters that actually need improvement.
-If a chapter is already well-written and complete, skip it entirely. Do not force improvements on perfect chapters."""
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
-            max_tokens=1500
+            max_tokens=MAX_COMPLETION_TOKENS,
         )
-
-        raw = response.choices[0].message.content.strip()
-
-        score = 0
-        feedback = raw
-
-        score_match = re.search(r'(?i)score\s*:?\s*\**\s*(\d{1,3})', raw)
-        if score_match:
-            score = max(0, min(100, int(score_match.group(1))))
-
-        return {
-            "score": score,
-            "feedback": feedback
-        }
-
-    except Exception as e:
-        return {
-            "score": 0,
-            "feedback": f"AI evaluation failed: {str(e)}"
-        }
+        feedback = response.choices[0].message.content.strip()
+        match = re.search(r"(?im)^SCORE:\s*(\d{1,3})\b", feedback)
+        score = max(0, min(100, int(match.group(1)))) if match else 0
+        return {"score": score, "feedback": feedback}
+    except Exception as exc:
+        return {"score": 0, "feedback": f"AI evaluation failed: {exc}"}
