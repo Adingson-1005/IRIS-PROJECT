@@ -1,10 +1,32 @@
 import fitz
 import os
+import re
 import httpx
 from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
+
+SECTION_KEYWORDS = [
+    "abstract",
+    "background of the study",
+    "objectives of the study",
+    "statement of the problem",
+    "significance of the study",
+    "scope and limitation",
+    "review of related literature",
+    "theoretical and conceptual framework",
+    "research design",
+    "research methodology",
+    "data collection",
+    "statistical treatment",
+    "presentation, analysis and interpretation",
+    "summary of findings",
+    "conclusion",
+    "recommendation",
+    "references",
+]
+
 
 def extract_text(source: str) -> str:
     try:
@@ -21,6 +43,34 @@ def extract_text(source: str) -> str:
     except Exception as e:
         return ""
 
+
+def extract_relevant_content(text: str, max_chars: int = 4000, snippet_len: int = 300) -> str:
+    """Instead of one continuous block (which only captures the front matter
+    or the first section of a long chapter), pull a short snippet from
+    around each key section heading. This gives the AI visibility into
+    whether each section has real content, using far fewer tokens than
+    dumping raw, continuous text."""
+    lower = text.lower()
+    snippets = []
+
+    for keyword in SECTION_KEYWORDS:
+        idx = lower.find(keyword)
+        if idx == -1:
+            continue
+        end = min(len(text), idx + snippet_len)
+        snippets.append(f"[{keyword.upper()}]\n{text[idx:end]}")
+
+    if snippets:
+        return "\n\n".join(snippets)[:max_chars]
+
+    # Fallback for documents that don't match any expected section keywords:
+    # skip front matter by starting from "Chapter 1" if present.
+    match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
+    if match:
+        text = text[match.start():]
+    return text[:max_chars]
+
+
 def check_research(student_path: str, template_path: str) -> dict:
     student_text = extract_text(student_path)
     template_text = extract_text(template_path)
@@ -31,8 +81,8 @@ def check_research(student_path: str, template_path: str) -> dict:
     if not template_text:
         return {"score": 0, "feedback": "Could not extract text from the research template. Please contact your instructor."}
 
-    student_preview = student_text[:4000]
-    template_preview = template_text[:2000]
+    student_preview = extract_relevant_content(student_text)
+    template_preview = extract_relevant_content(template_text)
 
     prompt = f"""You are a strict academic research evaluator for senior high school students in the Philippines.
 
@@ -121,7 +171,7 @@ OVERALL FEEDBACK:
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         response = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="openai/gpt-oss-120b",
             messages=[
                 {
                     "role": "system",
@@ -133,13 +183,12 @@ OVERALL FEEDBACK:
                 }
             ],
             temperature=0.2,
-            max_tokens=1000
+            max_tokens=1200
         )
 
         feedback = response.choices[0].message.content.strip()
 
-        import re
-        score_match = re.search(r"SCORE:\s*(\d+)", feedback)
+        score_match = re.search(r"(?i)score\s*:?\s*\**\s*(\d{1,3})", feedback)
         score = int(score_match.group(1)) if score_match else 0
         score = max(0, min(100, score))
 
