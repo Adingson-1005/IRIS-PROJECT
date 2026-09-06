@@ -44,12 +44,18 @@ def extract_text(source: str) -> str:
         return ""
 
 
-def extract_relevant_content(text: str, max_chars: int = 4000, snippet_len: int = 300) -> str:
+def extract_relevant_content(text: str, snippet_len: int = 500, safety_cap: int = 12000) -> str:
     """Instead of one continuous block (which only captures the front matter
-    or the first section of a long chapter), pull a short snippet from
-    around each key section heading. This gives the AI visibility into
-    whether each section has real content, using far fewer tokens than
-    dumping raw, continuous text."""
+    or the first section of a long chapter), pull a snippet from around each
+    key section heading. snippet_len is generous (500 chars) because some
+    thesis templates stack a lot of front-matter metadata (title, author
+    list, program, date, adviser name) directly under a heading like
+    "ABSTRACT" before the actual paragraph content begins — a short window
+    can land entirely on that metadata and never reach the real content.
+    All matched sections are kept in full (no blunt end-of-string truncation
+    that could silently drop later sections like References); safety_cap is
+    only a hard ceiling in case an unusual document matches an extreme
+    number of keywords."""
     lower = text.lower()
     snippets = []
 
@@ -61,14 +67,15 @@ def extract_relevant_content(text: str, max_chars: int = 4000, snippet_len: int 
         snippets.append(f"[{keyword.upper()}]\n{text[idx:end]}")
 
     if snippets:
-        return "\n\n".join(snippets)[:max_chars]
+        combined = "\n\n".join(snippets)
+        return combined[:safety_cap]
 
     # Fallback for documents that don't match any expected section keywords:
     # skip front matter by starting from "Chapter 1" if present.
     match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
     if match:
         text = text[match.start():]
-    return text[:max_chars]
+    return text[:safety_cap]
 
 
 def check_research(student_path: str, template_path: str) -> dict:
