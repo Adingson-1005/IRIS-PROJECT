@@ -119,14 +119,14 @@
 
 .sd-student-active {
   background: #ede9fe;
-  border-left: 3px solid #7e3af2;
+  border-left: 3px solid #1a56db;
 }
 
 .sd-student-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #7e3af2;
+  background: #1a56db;
   color: white;
   font-size: 12px;
   font-weight: 700;
@@ -157,7 +157,7 @@
 }
 
 .sd-student-badge {
-  background: #7e3af2;
+  background: #1a56db;
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -688,7 +688,7 @@
 }
 
 .sd-step-active .sd-step-circle {
-  background: #7e3af2;
+  background: #1a56db;
   color: white;
   box-shadow: 0 0 0 3px rgba(126,58,242,0.2);
 }
@@ -709,7 +709,7 @@
 }
 
 .sd-step-active .sd-step-label {
-  color: #7e3af2;
+  color: #1a56db;
   font-weight: 700;
 }
 
@@ -754,7 +754,7 @@
 }
 
 .sd-status-select:focus {
-  border-color: #7e3af2;
+  border-color: #1a56db;
   background: white;
 }
 
@@ -1025,7 +1025,7 @@
 }
 
 .md-upload-field textarea:focus {
-  border-color: #7e3af2;
+  border-color: #1a56db;
   background: white;
 }
 
@@ -1041,7 +1041,7 @@
 }
 
 .md-upload-field select:focus {
-  border-color: #7e3af2;
+  border-color: #1a56db;
   background: white;
 }
 
@@ -1220,4 +1220,3 @@
     padding: 16px;
   }
 }
- 

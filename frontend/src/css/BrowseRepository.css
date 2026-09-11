@@ -49,7 +49,7 @@
 }
 
 .br-search:focus {
-  border-color: #3F6838;
+  border-color: #1a56db;
   background: white;
 }
 
@@ -65,13 +65,13 @@
 }
 
 .br-select:focus {
-  border-color: #3F6838;
+  border-color: #1a56db;
   background: white;
 }
 
 .br-reindex {
   padding: 9px 18px;
-  background-color: #3F6838;
+  background-color: #1a56db;
   color: white;
   border: none;
   border-radius: 8px;
@@ -83,7 +83,7 @@
 }
 
 .br-reindex:hover {
-  background-color: #2d4e28;
+  background-color: #1447c0;
 }
 
 /* ── Count ── */
@@ -178,7 +178,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: #3F6838;
+  background-color: #1a56db;
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -265,4 +265,3 @@
     grid-template-columns: 1fr 1fr;
   }
 }
- 

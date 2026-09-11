@@ -6,7 +6,7 @@
 
 .instructor-sidebar {
   width: 220px;
-  background-color: #3F6838;
+  background-color: #1a56db;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -127,7 +127,7 @@
 
 .mobile-topbar {
   display: none;
-  background-color: #0e9f6e;
+  background-color: #1a56db;
   padding: 14px 16px;
   align-items: center;
   justify-content: space-between;

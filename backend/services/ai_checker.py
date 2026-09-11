@@ -7,26 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SECTION_KEYWORDS = [
-    "abstract",
-    "background of the study",
-    "objectives of the study",
-    "statement of the problem",
-    "significance of the study",
-    "scope and limitation",
-    "review of related literature",
-    "theoretical and conceptual framework",
-    "research design",
-    "research methodology",
-    "data collection",
-    "statistical treatment",
-    "presentation, analysis and interpretation",
-    "summary of findings",
-    "conclusion",
-    "recommendation",
-    "references",
-]
-
 
 def extract_text(source: str) -> str:
     try:
@@ -44,38 +24,19 @@ def extract_text(source: str) -> str:
         return ""
 
 
-def extract_relevant_content(text: str, snippet_len: int = 500, safety_cap: int = 12000) -> str:
-    """Instead of one continuous block (which only captures the front matter
-    or the first section of a long chapter), pull a snippet from around each
-    key section heading. snippet_len is generous (500 chars) because some
-    thesis templates stack a lot of front-matter metadata (title, author
-    list, program, date, adviser name) directly under a heading like
-    "ABSTRACT" before the actual paragraph content begins — a short window
-    can land entirely on that metadata and never reach the real content.
-    All matched sections are kept in full (no blunt end-of-string truncation
-    that could silently drop later sections like References); safety_cap is
-    only a hard ceiling in case an unusual document matches an extreme
-    number of keywords."""
-    lower = text.lower()
-    snippets = []
-
-    for keyword in SECTION_KEYWORDS:
-        idx = lower.find(keyword)
-        if idx == -1:
-            continue
-        end = min(len(text), idx + snippet_len)
-        snippets.append(f"[{keyword.upper()}]\n{text[idx:end]}")
-
-    if snippets:
-        combined = "\n\n".join(snippets)
-        return combined[:safety_cap]
-
-    # Fallback for documents that don't match any expected section keywords:
-    # skip front matter by starting from "Chapter 1" if present.
+def extract_relevant_content(text: str, max_chars: int = 9000) -> str:
+    """Return one continuous excerpt starting from 'Chapter 1' if found,
+    skipping the front matter (title page, approval sheet, abstract,
+    acknowledgement, dedication, table of contents, etc.) which can easily
+    run several thousand characters before the real body of the paper
+    begins. Continuous prose is used deliberately instead of stitched-together
+    section-heading snippets: a chopped-up sequence of fragments reads to the
+    AI as "placeholder text" even when the underlying document is a complete,
+    legitimate paper, causing false "Not a Research Paper" verdicts."""
     match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
     if match:
         text = text[match.start():]
-    return text[:safety_cap]
+    return text[:max_chars]
 
 
 def check_research(student_path: str, template_path: str) -> dict:

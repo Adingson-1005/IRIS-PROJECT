@@ -24,7 +24,7 @@
 .ut-current-icon {
   width: 40px;
   height: 40px;
-  background-color: #0e9f6e;
+  background-color: #1a56db;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -128,14 +128,14 @@
 
 .ut-filename {
   font-size: 12px;
-  color: #0e9f6e;
+  color: #1a56db;
   margin-top: 6px;
 }
 
 .ut-submit {
   width: 100%;
   padding: 12px;
-  background-color: #3F6838;
+  background-color: #1a56db;
   color: white;
   border: none;
   border-radius: 8px;
@@ -145,11 +145,11 @@
 }
 
 .ut-submit:hover {
-  background-color: #047857;
+  background-color: #1447c0;
 }
 
 .ut-submit:disabled {
-  background-color: #047857;
+  background-color: #1447c0;
   cursor: not-allowed;
 }
 
@@ -162,7 +162,7 @@
 
 .ut-owner-note {
   font-size: 12px;
-  color: #0e9f6e;
+  color: #1a56db;
   margin-top: 4px;
   font-style: italic;
 }
