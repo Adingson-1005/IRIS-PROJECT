@@ -43,7 +43,7 @@ def require_assigned_instructor(db: Session, user: dict, class_name: str):
 @router.post("/upload")
 async def upload_draft(
     title: str = Form(...),
-    file: UploadFile = File(...),
+    gdocs_link: str = Form(...),
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
@@ -58,33 +58,26 @@ async def upload_draft(
                 detail="Please select your class before uploading a draft"
             )
 
-        allowed = ['.pdf', '.docx', '.doc']
-        ext = os.path.splitext(file.filename)[1].lower()
-        if ext not in allowed:
-            raise HTTPException(status_code=400, detail="Only PDF and DOCX files allowed")
+        title = title.strip()
+        gdocs_link = gdocs_link.strip()
 
-        file_bytes = await file.read()
-        if len(file_bytes) == 0:
-            raise HTTPException(status_code=400, detail="File is empty")
+        if not title:
+            raise HTTPException(status_code=400, detail="Title is required")
 
-        file_id = str(uuid.uuid4())
-        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename)
-        safe_name = re.sub(r"_+", "_", safe_name)
-        filename = f"{file_id}_{safe_name}"
-        file_url = upload_file(file_bytes, filename, "student_drafts")
+        if not gdocs_link.startswith("https://docs.google.com/"):
+            raise HTTPException(status_code=400, detail="Please provide a valid Google Docs link")
 
         db.execute(text("""
-            INSERT INTO student_drafts (student_id, title, file_url, file_type)
-            VALUES (:student_id, :title, :file_url, :file_type)
+            INSERT INTO student_drafts (student_id, title, gdocs_link, file_type)
+            VALUES (:student_id, :title, :gdocs_link, 'Google Doc')
         """), {
             "student_id": user["id"],
             "title": title,
-            "file_url": file_url,
-            "file_type": ext.replace(".", "").upper()
+            "gdocs_link": gdocs_link
         })
         db.commit()
 
-        return {"message": "Draft uploaded successfully"}
+        return {"message": "Draft submitted successfully"}
 
     except HTTPException:
         raise
@@ -100,7 +93,7 @@ def get_my_drafts(
 ):
     try:
         drafts = db.execute(text("""
-            SELECT id, title, file_url, file_type, status, commented_file_url, created_at
+            SELECT id, title, gdocs_link, file_url, file_type, status, created_at
             FROM student_drafts
             WHERE student_id = :student_id
             ORDER BY created_at DESC
@@ -234,7 +227,7 @@ def get_student_drafts(
             raise HTTPException(status_code=404, detail="Student not found")
 
         drafts = db.execute(text("""
-            SELECT id, title, file_url, file_type, status, commented_file_url, created_at
+            SELECT id, title, gdocs_link, file_url, file_type, status, created_at
             FROM student_drafts
             WHERE student_id = :student_id
             ORDER BY created_at DESC
@@ -397,7 +390,59 @@ def update_draft_status(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # ── Student: request publication ──
+
+# ── Student: upload final PDF, only allowed once the draft is Approved ──
+@router.post("/upload-final/{draft_id}")
+async def upload_final_pdf(
+    draft_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        draft = db.execute(text("""
+            SELECT id, student_id, status FROM student_drafts WHERE id = :id
+        """), {"id": draft_id}).fetchone()
+
+        if not draft:
+            raise HTTPException(status_code=404, detail="Draft not found")
+
+        if str(draft.student_id) != str(user["id"]):
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        if draft.status != "Approved":
+            raise HTTPException(
+                status_code=400,
+                detail="You can only upload the final PDF once your instructor has approved this draft"
+            )
+
+        if not file.filename.lower().endswith(".pdf"):
+            raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+
+        file_bytes = await file.read()
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="File is empty")
+
+        file_id = str(uuid.uuid4())
+        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename)
+        safe_name = re.sub(r"_+", "_", safe_name)
+        filename = f"{file_id}_{safe_name}"
+        file_url = upload_file(file_bytes, filename, "student_drafts")
+
+        db.execute(text("""
+            UPDATE student_drafts SET file_url = :file_url, file_type = 'PDF' WHERE id = :draft_id
+        """), {"file_url": file_url, "draft_id": draft_id})
+        db.commit()
+
+        return {"message": "Final PDF uploaded successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Student: request publication ──
 @router.post("/publish-request")
 def request_publication(
     payload: dict,
@@ -617,56 +662,6 @@ def reject_publication(
         db.commit()
 
         return {"message": "Publication request rejected"}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-        # ── Instructor: upload commented DOCX back to student ──
-@router.post("/upload-commented/{draft_id}")
-async def upload_commented_file(
-    draft_id: str,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user)
-):
-    try:
-        draft = db.execute(text("""
-            SELECT sd.id, u.class_name
-            FROM student_drafts sd
-            JOIN users u ON sd.student_id = u.id
-            WHERE sd.id = :draft_id
-        """), {"draft_id": draft_id}).fetchone()
-
-        if not draft:
-            raise HTTPException(status_code=404, detail="Draft not found")
-
-        require_assigned_instructor(db, user, draft.class_name)
-
-        allowed = ['.docx', '.doc']
-        ext = os.path.splitext(file.filename)[1].lower()
-        if ext not in allowed:
-            raise HTTPException(status_code=400, detail="Only DOCX files allowed for commented uploads")
-
-        file_bytes = await file.read()
-        if len(file_bytes) == 0:
-            raise HTTPException(status_code=400, detail="File is empty")
-
-        file_id = str(uuid.uuid4())
-        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", file.filename)
-        safe_name = re.sub(r"_+", "_", safe_name)
-        filename = f"commented_{file_id}_{safe_name}"
-        file_url = upload_file(file_bytes, filename, "commented_drafts")
-
-        db.execute(text("""
-            UPDATE student_drafts
-            SET commented_file_url = :file_url
-            WHERE id = :draft_id
-        """), {"file_url": file_url, "draft_id": draft_id})
-        db.commit()
-
-        return {"message": "Commented file uploaded successfully"}
 
     except HTTPException:
         raise

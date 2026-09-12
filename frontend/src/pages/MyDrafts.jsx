@@ -11,8 +11,8 @@ function MyDrafts({ onClose }) {
   const [selectedClass, setSelectedClass] = useState('')
   const [savingClass, setSavingClass] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
-  const [file, setFile] = useState(null)
   const [title, setTitle] = useState('')
+  const [gdocsLink, setGdocsLink] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -27,6 +27,11 @@ function MyDrafts({ onClose }) {
   const [publishTarget, setPublishTarget] = useState(null)
   const [submittingPublish, setSubmittingPublish] = useState(false)
   const [publishError, setPublishError] = useState('')
+
+  const [finalPdfFile, setFinalPdfFile] = useState(null)
+  const [uploadingFinalPdf, setUploadingFinalPdf] = useState(false)
+  const [finalPdfError, setFinalPdfError] = useState('')
+  const [finalPdfSuccess, setFinalPdfSuccess] = useState('')
 
   useEffect(() => {
     fetchMyClass()
@@ -70,6 +75,12 @@ function MyDrafts({ onClose }) {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setDrafts(response.data.drafts || [])
+      // Keep the detail panel in sync if the selected draft's data changed
+      setSelectedDraft(prev => {
+        if (!prev) return prev
+        const updated = (response.data.drafts || []).find(d => d.id === prev.id)
+        return updated || prev
+      })
     } catch {
       console.error('Failed to fetch drafts')
     }
@@ -108,11 +119,10 @@ function MyDrafts({ onClose }) {
   }
 
   const handleUpload = async () => {
-    if (!file) { setUploadError('Please select a file'); return }
     if (!title.trim()) { setUploadError('Please enter a title'); return }
-    const ext = file.name.split('.').pop().toLowerCase()
-    if (ext !== 'docx') {
-      setUploadError('Please upload a DOCX file only.')
+    if (!gdocsLink.trim()) { setUploadError('Please provide a Google Docs link'); return }
+    if (!gdocsLink.trim().startsWith('https://docs.google.com/')) {
+      setUploadError('Please provide a valid Google Docs link (starting with https://docs.google.com/)')
       return
     }
     setUploading(true)
@@ -120,7 +130,7 @@ function MyDrafts({ onClose }) {
     try {
       const data = new FormData()
       data.append('title', title)
-      data.append('file', file)
+      data.append('gdocs_link', gdocsLink)
       const token = localStorage.getItem('token')
       await axios.post(
         'https://iris-backend-7717.onrender.com/drafts/upload',
@@ -133,11 +143,11 @@ function MyDrafts({ onClose }) {
         }
       )
       setTitle('')
-      setFile(null)
+      setGdocsLink('')
       setShowUpload(false)
       fetchDrafts()
     } catch (err) {
-      setUploadError(err.response?.data?.detail || 'Upload failed. Please try again.')
+      setUploadError(err.response?.data?.detail || 'Submission failed. Please try again.')
     }
     setUploading(false)
   }
@@ -158,6 +168,38 @@ function MyDrafts({ onClose }) {
       alert('Failed to delete draft')
     }
     setDeleting(null)
+  }
+
+  const handleUploadFinalPdf = async () => {
+    if (!finalPdfFile) { setFinalPdfError('Please select a PDF file'); return }
+    if (!finalPdfFile.name.toLowerCase().endsWith('.pdf')) {
+      setFinalPdfError('Only PDF files are allowed')
+      return
+    }
+    setUploadingFinalPdf(true)
+    setFinalPdfError('')
+    setFinalPdfSuccess('')
+    try {
+      const data = new FormData()
+      data.append('file', finalPdfFile)
+      const token = localStorage.getItem('token')
+      await axios.post(
+        `https://iris-backend-7717.onrender.com/drafts/upload-final/${selectedDraft.id}`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+      setFinalPdfSuccess('Final PDF uploaded successfully!')
+      setFinalPdfFile(null)
+      fetchDrafts()
+    } catch (err) {
+      setFinalPdfError(err.response?.data?.detail || 'Upload failed')
+    }
+    setUploadingFinalPdf(false)
   }
 
   const handleRequestPublish = async () => {
@@ -297,7 +339,7 @@ function MyDrafts({ onClose }) {
                   <svg viewBox="0 0 24 24" fill="none">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  Upload Draft
+                  New Draft
                 </button>
               </div>
 
@@ -309,7 +351,7 @@ function MyDrafts({ onClose }) {
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   </svg>
-                  <p>No drafts yet. Upload your first draft!</p>
+                  <p>No drafts yet. Submit your Google Docs link to get started!</p>
                 </div>
               )}
 
@@ -328,7 +370,7 @@ function MyDrafts({ onClose }) {
                   <div className="md-draft-info">
                     <p className="md-draft-title">{draft.title}</p>
                     <p className="md-draft-meta">
-                      {draft.file_type} · {new Date(draft.created_at).toLocaleDateString()}
+                      {draft.file_url ? 'Final PDF uploaded' : 'Google Doc'} · {new Date(draft.created_at).toLocaleDateString()}
                     </p>
                     {draft.comments?.length > 0 && (
                       <p className="md-draft-comments">
@@ -371,10 +413,9 @@ function MyDrafts({ onClose }) {
                     <h3 className="md-detail-title">{selectedDraft.title}</h3>
                     <p className="md-detail-meta">
                       Submitted {new Date(selectedDraft.created_at).toLocaleDateString()}
-                      {' · '}{selectedDraft.file_type}
                     </p>
                     <a
-                      href={selectedDraft.file_url}
+                      href={selectedDraft.gdocs_link}
                       target="_blank"
                       rel="noreferrer"
                       className="md-view-btn"
@@ -382,38 +423,71 @@ function MyDrafts({ onClose }) {
                       <svg viewBox="0 0 24 24" fill="none">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                      View File
+                      View / Comment on Google Docs
                     </a>
-                    {selectedDraft.commented_file_url && (
-                      <div className="md-commented-available">
-                        <div className="md-commented-icon">
-                          <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
-                              stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
-                              stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          </svg>
-                        </div>
-                        <div className="md-commented-info">
-                          <p className="md-commented-title">Instructor commented file available</p>
-                          <p className="md-commented-sub">
-                            Download and open in Microsoft Word to see your instructor's inline comments.
+
+                    {selectedDraft.status === 'Approved' && (
+                      <div className="md-commented-section">
+                        <h4 className="md-add-comment-title">Final PDF</h4>
+
+                        {selectedDraft.file_url ? (
+                          <div className="md-commented-existing">
+                            <svg viewBox="0 0 24 24" fill="none">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+                                stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
+                                stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <span>Final PDF uploaded</span>
+                            <a
+                              href={selectedDraft.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="md-commented-view"
+                            >
+                              View
+                            </a>
+                          </div>
+                        ) : (
+                          <p className="md-commented-desc">
+                            Your draft has been approved. Upload the final PDF
+                            version for the institutional repository.
                           </p>
-                        </div>
-                        <a
-                          href={selectedDraft.commented_file_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="md-commented-download"
+                        )}
+
+                        {finalPdfError && (
+                          <p className="md-comment-error">{finalPdfError}</p>
+                        )}
+                        {finalPdfSuccess && (
+                          <p className="md-commented-success">{finalPdfSuccess}</p>
+                        )}
+
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          className="md-commented-input"
+                          onChange={(e) => {
+                            setFinalPdfFile(e.target.files[0])
+                            setFinalPdfError('')
+                            setFinalPdfSuccess('')
+                          }}
+                        />
+                        {finalPdfFile && (
+                          <p className="md-commented-filename">{finalPdfFile.name}</p>
+                        )}
+
+                        <button
+                          className="md-commented-upload-btn"
+                          onClick={handleUploadFinalPdf}
+                          disabled={uploadingFinalPdf || !finalPdfFile}
                         >
-                          <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
-                              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          Download
-                        </a>
+                          {uploadingFinalPdf
+                            ? 'Uploading...'
+                            : selectedDraft.file_url ? 'Replace Final PDF' : 'Upload Final PDF'}
+                        </button>
                       </div>
                     )}
+
                     {selectedDraft.status === 'Approved' && (() => {
                       const req = publishRequests.find(r => r.draft_id === selectedDraft.id)
                       if (req?.status === 'Approved') {
@@ -459,7 +533,8 @@ function MyDrafts({ onClose }) {
 
                     {selectedDraft.comments?.length === 0 && (
                       <p className="md-no-comments">
-                        No comments yet. Your instructor will leave feedback here.
+                        No comments yet. Your instructor will leave feedback here
+                        or directly in your Google Doc.
                       </p>
                     )}
 
@@ -486,12 +561,12 @@ function MyDrafts({ onClose }) {
           </div>
         )}
 
-        {/* Upload modal */}
+        {/* Upload (submit Google Docs link) modal */}
         {showUpload && (
           <div className="md-upload-overlay" onClick={() => setShowUpload(false)}>
             <div className="md-upload-modal" onClick={(e) => e.stopPropagation()}>
               <div className="md-upload-header">
-                <h3>Upload Draft</h3>
+                <h3>Submit New Draft</h3>
                 <button className="md-close" onClick={() => setShowUpload(false)}>
                   <svg viewBox="0 0 24 24" fill="none">
                     <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -512,16 +587,18 @@ function MyDrafts({ onClose }) {
               </div>
 
               <div className="md-upload-field">
-                <label>File (DOCX only)</label>
+                <label>Google Docs Link</label>
                 <input
-                  type="file"
-                  accept=".docx"
-                  onChange={(e) => setFile(e.target.files[0])}
+                  type="url"
+                  placeholder="https://docs.google.com/document/d/..."
+                  value={gdocsLink}
+                  onChange={(e) => setGdocsLink(e.target.value)}
                 />
-                {file && <p className="md-upload-filename">{file.name}</p>}
                 <p className="md-upload-privacy-note">
-                  Please upload your research draft in DOCX format only.
-                  Your instructor will add comments directly on the file.
+                  Make sure your Google Doc's sharing setting allows your instructor
+                  to view and comment (e.g. "Anyone with the link can comment").
+                  This link cannot be changed after submitting — if you need to
+                  share a different document, submit a new draft instead.
                 </p>
               </div>
 
@@ -538,7 +615,7 @@ function MyDrafts({ onClose }) {
                   onClick={handleUpload}
                   disabled={uploading}
                 >
-                  {uploading ? 'Uploading...' : 'Upload'}
+                  {uploading ? 'Submitting...' : 'Submit Draft'}
                 </button>
               </div>
             </div>
