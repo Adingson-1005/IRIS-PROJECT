@@ -14,10 +14,6 @@ function StudentDrafts() {
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState('')
-  const [uploadingComment, setUploadingComment] = useState(null)
-  const [commentedFile, setCommentedFile] = useState(null)
-  const [commentedFileError, setCommentedFileError] = useState('')
-  const [commentedFileSuccess, setCommentedFileSuccess] = useState('')
   const [assignedClass, setAssignedClass] = useState(null)
   const [updatingStatus, setUpdatingStatus] = useState(null)
   const [publishRequests, setPublishRequests] = useState([])
@@ -156,39 +152,6 @@ function StudentDrafts() {
     } catch {
       alert('Failed to delete comment')
     }
-  }
-
-  const handleUploadCommented = async (draftId) => {
-    if (!commentedFile) { setCommentedFileError('Please select a DOCX file'); return }
-    const ext = commentedFile.name.split('.').pop().toLowerCase()
-    if (!['docx', 'doc'].includes(ext)) {
-      setCommentedFileError('Only DOCX files are allowed')
-      return
-    }
-    setUploadingComment(draftId)
-    setCommentedFileError('')
-    setCommentedFileSuccess('')
-    try {
-      const data = new FormData()
-      data.append('file', commentedFile)
-      const token = localStorage.getItem('token')
-      await axios.post(
-        `https://iris-backend-7717.onrender.com/drafts/upload-commented/${draftId}`,
-        data,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
-          }
-        }
-      )
-      setCommentedFileSuccess('Commented file uploaded successfully!')
-      setCommentedFile(null)
-      await fetchStudentDrafts(selectedStudent)
-    } catch (err) {
-      setCommentedFileError(err.response?.data?.detail || 'Upload failed')
-    }
-    setUploadingComment(null)
   }
 
   const handleApprove = async (requestId) => {
@@ -403,7 +366,7 @@ function StudentDrafts() {
                     <div className="sd-draft-info">
                       <p className="sd-draft-title">{draft.title}</p>
                       <p className="sd-draft-meta">
-                        {draft.file_type} · {new Date(draft.created_at).toLocaleDateString()}
+                        {draft.file_url ? 'Final PDF uploaded' : 'Google Doc'} · {new Date(draft.created_at).toLocaleDateString()}
                       </p>
                       <span className={`sd-status-badge sd-status-${(draft.status || 'Submitted').toLowerCase().replace(/ /g, '-')}`}>
                         {draft.status || 'Submitted'}
@@ -433,10 +396,9 @@ function StudentDrafts() {
                   <h3 className="sd-detail-title">{selectedDraft.title}</h3>
                   <p className="sd-detail-meta">
                     Submitted {new Date(selectedDraft.created_at).toLocaleDateString()}
-                    {' · '}{selectedDraft.file_type}
                   </p>
                   <a
-                    href={selectedDraft.file_url}
+                    href={selectedDraft.gdocs_link}
                     target="_blank"
                     rel="noreferrer"
                     className="sd-view-btn"
@@ -444,8 +406,24 @@ function StudentDrafts() {
                     <svg viewBox="0 0 24 24" fill="none">
                       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    View File
+                    View / Comment on Google Docs
                   </a>
+
+                  {selectedDraft.file_url && (
+                    <a
+                      href={selectedDraft.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="sd-view-btn"
+                      style={{ marginLeft: '8px' }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      View Final PDF
+                    </a>
+                  )}
                 </div>
 
                 {/* Status tracker */}
@@ -527,65 +505,6 @@ function StudentDrafts() {
                         disabled={submitting}
                       >
                         {submitting ? 'Posting...' : 'Post Comment'}
-                      </button>
-                    </div>
-                  )}
-
-                  {canComment && (
-                    <div className="sd-commented-section">
-                      <h4 className="sd-add-comment-title">Upload Commented File</h4>
-                      <p className="sd-commented-desc">
-                        Download the student's draft, add your inline Word comments,
-                        then re-upload the commented DOCX here.
-                      </p>
-
-                      {selectedDraft.commented_file_url && (
-                        <div className="sd-commented-existing">
-                          <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
-                              stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
-                              stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          </svg>
-                          <span>Commented file already uploaded</span>
-                          <a
-                            href={selectedDraft.commented_file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="sd-commented-view"
-                          >
-                            View
-                          </a>
-                        </div>
-                      )}
-
-                      {commentedFileError && (
-                        <p className="sd-comment-error">{commentedFileError}</p>
-                      )}
-                      {commentedFileSuccess && (
-                        <p className="sd-commented-success">{commentedFileSuccess}</p>
-                      )}
-
-                      <input
-                        type="file"
-                        accept=".docx,.doc"
-                        className="sd-commented-input"
-                        onChange={(e) => {
-                          setCommentedFile(e.target.files[0])
-                          setCommentedFileError('')
-                          setCommentedFileSuccess('')
-                        }}
-                      />
-                      {commentedFile && (
-                        <p className="sd-commented-filename">{commentedFile.name}</p>
-                      )}
-
-                      <button
-                        className="sd-commented-upload-btn"
-                        onClick={() => handleUploadCommented(selectedDraft.id)}
-                        disabled={uploadingComment === selectedDraft.id || !commentedFile}
-                      >
-                        {uploadingComment === selectedDraft.id ? 'Uploading...' : 'Upload Commented File'}
                       </button>
                     </div>
                   )}
