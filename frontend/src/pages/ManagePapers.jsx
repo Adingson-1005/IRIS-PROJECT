@@ -184,7 +184,12 @@ function ManagePapers() {
       {deleteTarget && (
         <div className="confirm-overlay">
           <div className="confirm-modal">
-            <div className="confirm-icon">🗑️</div>
+            <div className="confirm-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+                <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
             <h3 className="confirm-title">Delete Paper?</h3>
             <p className="confirm-desc">
               Are you sure you want to delete <strong>"{deleteTarget.title}"</strong>?

@@ -402,7 +402,10 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
             {showSimilarWarning && similarPapers.length > 0 && (
               <div className="myuploads-similar-warning">
                 <p className="myuploads-similar-title">
-                  ⚠️ Similar papers found in the repository:
+                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                    <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Similar papers found in the repository:
                 </p>
                 {similarPapers.map((p) => (
                   <div key={p.paper_id} className="myuploads-similar-item">
@@ -423,7 +426,11 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
 
             {showSimilarWarning && similarPapers.length === 0 && (
               <div className="myuploads-no-similar">
-                ✅ No similar papers found in the repository.
+                <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M8 12l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                No similar papers found in the repository.
               </div>
             )}
 
@@ -508,7 +515,12 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
       {deleteTarget && (
         <div className="confirm-overlay">
           <div className="confirm-modal">
-            <div className="confirm-icon">🗑️</div>
+            <div className="confirm-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+                <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
             <h3 className="confirm-title">Delete Paper?</h3>
             <p className="confirm-desc">
               Are you sure you want to delete{' '}
