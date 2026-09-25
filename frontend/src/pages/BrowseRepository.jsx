@@ -13,6 +13,13 @@ function BrowseRepository() {
   const [sortOrder, setSortOrder] = useState('desc')
   const role = localStorage.getItem('role')
 
+  const SearchIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+
   useEffect(() => { fetchPapers() }, [])
 
   const fetchPapers = async () => {
@@ -75,12 +82,15 @@ function BrowseRepository() {
       </div>
 
       <div className="br-filterbar">
-        <input
-          className="br-search"
-          placeholder="🔍  Search by title or author..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="br-search-wrapper">
+          <span className="br-search-icon"><SearchIcon /></span>
+          <input
+            className="br-search"
+            placeholder="Search by title or author..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <select className="br-select" value={strand} onChange={(e) => setStrand(e.target.value)}>
           <option value="">All Strands</option>
           <option value="STEM">STEM</option>

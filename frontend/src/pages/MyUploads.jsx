@@ -31,6 +31,13 @@ function MyUploads() {
   const [showUploadingModal, setShowUploadingModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
 
+  const SearchIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+
   useEffect(() => { fetchMyPapers() }, [])
 
   const fetchMyPapers = async () => {
@@ -201,12 +208,15 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
           </h3>
 
           <div className="myuploads-top-right">
-            <input
-              className="myuploads-search"
-              placeholder="🔍  Search by title or author..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div className="myuploads-search-wrapper">
+              <span className="myuploads-search-icon"><SearchIcon /></span>
+              <input
+                className="myuploads-search"
+                placeholder="Search by title or author..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
             <button
               className="myuploads-new-btn"
               onClick={() => setShowModal(true)}
@@ -232,7 +242,7 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
 
         {!loading && papers.length > 0 && filtered.length === 0 && (
           <div className="myuploads-empty">
-            <div className="myuploads-empty-icon">🔍</div>
+            <div className="myuploads-empty-icon"><SearchIcon /></div>
             <p>No papers match your search.</p>
           </div>
         )}
@@ -333,12 +343,14 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
             <div className="myuploads-modal-header">
               <h3 className="myuploads-modal-title">Upload Paper</h3>
               <button
-                className="myuploads-modal-close-btn"
-                onClick={closeModal}
-                disabled={uploading}
-              >
-                ✕
-              </button>
+              className="myuploads-modal-close-btn"
+              onClick={closeModal}
+              disabled={uploading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
             </div>
 
             {uploadError && (
@@ -384,7 +396,7 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
               onClick={() => checkSimilar(form.title, form.abstract)}
               disabled={checkingSimlar || (!form.title && !form.abstract)}
             >
-              {checkingSimlar ? 'Checking...' : '🔍 Check for Similar Studies'}
+              {checkingSimlar ? 'Checking...' : <><span className="myuploads-check-similar-btn-icon"><SearchIcon /></span>Check for Similar Studies</>}
             </button>
 
             {showSimilarWarning && similarPapers.length > 0 && (

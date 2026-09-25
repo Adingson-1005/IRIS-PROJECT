@@ -15,6 +15,13 @@ function ManagePapers() {
   const [selectedPaper, setSelectedPaper] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
 
+  const SearchIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+
   useEffect(() => { fetchPapers() }, [])
 
   const fetchPapers = async () => {
@@ -80,12 +87,15 @@ function ManagePapers() {
       </div>
 
       <div className="mp-filterbar">
-        <input
-          className="mp-search"
-          placeholder="🔍  Search by title or author..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="mp-search-wrapper">
+          <span className="mp-search-icon"><SearchIcon /></span>
+          <input
+            className="mp-search"
+            placeholder="Search by title or author..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <select className="mp-select" value={strand} onChange={(e) => setStrand(e.target.value)}>
           <option value="">All Strands</option>
           <option value="STEM">STEM</option>
