@@ -8,6 +8,7 @@ python-jose[cryptography]
 bcrypt==4.0.1
 python-dotenv
 python-multipart
+google-genai
 groq
 supabase
 httpx
