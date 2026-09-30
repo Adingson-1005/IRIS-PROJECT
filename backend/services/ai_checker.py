@@ -25,18 +25,15 @@ def extract_text(source: str) -> str:
         return ""
 
 
-def extract_relevant_content(text: str, max_chars: int = 20000) -> str:
-    """Return one continuous excerpt starting from 'Chapter 1' if found,
-    skipping the front matter (title page, approval sheet, abstract,
-    acknowledgement, dedication, table of contents, etc.) which can easily
-    run several thousand characters before the real body of the paper
-    begins. Continuous prose is used deliberately instead of stitched-together
-    section-heading snippets: a chopped-up sequence of fragments reads to the
-    AI as "placeholder text" even when the underlying document is a complete,
-    legitimate paper, causing false "Not a Research Paper" verdicts.
-    max_chars is larger now that Gemini is used instead of Groq — Gemini's
-    free tier is limited by requests-per-day rather than a tight
-    tokens-per-minute cap, so more of the paper can be included per request."""
+def extract_relevant_content(text: str, max_chars: int = 300000) -> str:
+    """Return the paper starting from 'Chapter 1' if found, skipping the
+    front matter (title page, approval sheet, abstract, acknowledgement,
+    dedication, table of contents, etc.) which adds no evaluative value.
+    max_chars is now very generous (300,000 chars ≈ 75,000 tokens) because
+    Gemini's 1,048,576-token context window comfortably fits an entire
+    thesis in one request — this is no longer constrained by Groq's old
+    8,000 tokens-per-minute limit, so the whole paper can be evaluated
+    instead of an early excerpt."""
     match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
     if match:
         text = text[match.start():]
@@ -148,7 +145,7 @@ OVERALL FEEDBACK:
             config=types.GenerateContentConfig(
                 system_instruction="You are a strict academic research evaluator for senior high school students in the Philippines.",
                 temperature=0.2,
-                max_output_tokens=1200
+                max_output_tokens=3000
             )
         )
 
