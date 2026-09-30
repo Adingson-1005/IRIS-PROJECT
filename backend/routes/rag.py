@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
-from groq import Groq
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from jose import jwt
 import os
@@ -138,18 +139,21 @@ def ask_rag(payload: dict, db: Session = Depends(get_db), _=Depends(require_logi
     prompt = build_prompt(question, context)
 
     try:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=500
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = client.models.generate_content(
+            model="gemini-flash-lite-latest",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                temperature=0.3,
+                max_output_tokens=500
+            )
         )
 
-        answer = response.choices[0].message.content.strip()
+        answer = (response.text or "").strip()
+        if not answer:
+            raise HTTPException(status_code=500, detail="AI error: empty response from the model")
+
         sources = [
             {"title": p["title"], "authors": p["authors"]}
             for p in relevant_papers
@@ -157,5 +161,7 @@ def ask_rag(payload: dict, db: Session = Depends(get_db), _=Depends(require_logi
 
         return {"answer": answer, "sources": sources}
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")

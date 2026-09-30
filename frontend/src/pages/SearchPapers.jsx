@@ -275,7 +275,14 @@ function SearchPapers() {
               onClick={(e) => handleCopyAPA(e, paper)}
               title="Copy APA Citation"
             >
-              {copiedId === id ? '✓ Copied' : 'Cite'}
+              {copiedId === id ? (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Copied
+                </>
+              ) : 'Cite'}
             </button>
           )}
         </div>
@@ -318,7 +325,10 @@ const fetchAiHistory = async () => {
     className="sp-drafts-btn"
     onClick={() => setShowDrafts(true)}
   >
-    📂 My Drafts
+    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+    My Drafts
   </button>
   <button
     className="sp-logout-btn"
@@ -376,7 +386,12 @@ const fetchAiHistory = async () => {
                         setTimeout(() => handleSearch(), 0)
                       }}
                     >
-                      <span className="sp-history-icon">🕐</span>
+                      <span className="sp-history-icon">
+                        <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                          <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </span>
                       <span>{item}</span>
                     </div>
                   ))}
@@ -631,7 +646,10 @@ const fetchAiHistory = async () => {
                     className="sp-history-back"
                     onClick={() => setSelectedHistory(null)}
                   >
-                    ← Back to History
+                    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                      <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Back to History
                   </button>
                   <h2>AI Feedback Results</h2>
                   <p className="sp-result-title">{selectedHistory.title}</p>
@@ -747,7 +765,15 @@ const fetchAiHistory = async () => {
                 <div className="sp-modal-field">
                   <label>Upload your draft (PDF only)</label>
                   <input type="file" accept=".pdf" onChange={(e) => setSubmitFile(e.target.files[0])} />
-                  {submitFile && <p className="sp-modal-filename">📄 {submitFile.name}</p>}
+                  {submitFile && (
+                    <p className="sp-modal-filename">
+                      <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      {submitFile.name}
+                    </p>
+                  )}
                 </div>
                 <div className="sp-modal-actions">
                   <button className="sp-modal-cancel" onClick={closeCheckerModal} disabled={submitLoading}>Cancel</button>

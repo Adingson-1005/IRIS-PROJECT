@@ -64,7 +64,11 @@ function UploadTemplate() {
 
       {currentTemplate ? (
         <div className="ut-current-card">
-          <div className="ut-current-icon">✓</div>
+          <div className="ut-current-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
           <div className="ut-current-info">
             <p className="ut-current-title">Active Template</p>
             <p className="ut-current-date">

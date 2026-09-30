@@ -2,7 +2,8 @@ import fitz
 import os
 import re
 import httpx
-from groq import Groq
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,7 +25,7 @@ def extract_text(source: str) -> str:
         return ""
 
 
-def extract_relevant_content(text: str, max_chars: int = 9000) -> str:
+def extract_relevant_content(text: str, max_chars: int = 20000) -> str:
     """Return one continuous excerpt starting from 'Chapter 1' if found,
     skipping the front matter (title page, approval sheet, abstract,
     acknowledgement, dedication, table of contents, etc.) which can easily
@@ -32,7 +33,10 @@ def extract_relevant_content(text: str, max_chars: int = 9000) -> str:
     begins. Continuous prose is used deliberately instead of stitched-together
     section-heading snippets: a chopped-up sequence of fragments reads to the
     AI as "placeholder text" even when the underlying document is a complete,
-    legitimate paper, causing false "Not a Research Paper" verdicts."""
+    legitimate paper, causing false "Not a Research Paper" verdicts.
+    max_chars is larger now that Gemini is used instead of Groq — Gemini's
+    free tier is limited by requests-per-day rather than a tight
+    tokens-per-minute cap, so more of the paper can be included per request."""
     match = re.search(r'chapter\s*1\b', text, re.IGNORECASE)
     if match:
         text = text[match.start():]
@@ -137,24 +141,20 @@ OVERALL FEEDBACK:
 """
 
     try:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a strict academic research evaluator for senior high school students in the Philippines."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.2,
-            max_tokens=1200
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = client.models.generate_content(
+            model="gemini-flash-lite-latest",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction="You are a strict academic research evaluator for senior high school students in the Philippines.",
+                temperature=0.2,
+                max_output_tokens=1200
+            )
         )
 
-        feedback = response.choices[0].message.content.strip()
+        feedback = (response.text or "").strip()
+        if not feedback:
+            return {"score": 0, "feedback": "AI evaluation failed: empty response from the model. Please try again."}
 
         score_match = re.search(r"(?i)score\s*:?\s*\**\s*(\d{1,3})", feedback)
         score = int(score_match.group(1)) if score_match else 0

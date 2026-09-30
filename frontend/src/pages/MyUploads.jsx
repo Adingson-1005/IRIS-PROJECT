@@ -235,7 +235,12 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
 
         {!loading && papers.length === 0 && (
           <div className="myuploads-empty">
-            <div className="myuploads-empty-icon">📄</div>
+            <div className="myuploads-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
             <p>You haven't uploaded any papers yet. Click "Upload Paper" to add your first one.</p>
           </div>
         )}
@@ -487,7 +492,13 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
                 onChange={(e) => setFile(e.target.files[0])}
               />
               {file && (
-                <p className="myuploads-modal-filename">📄 {file.name}</p>
+                <p className="myuploads-modal-filename">
+                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  {file.name}
+                </p>
               )}
             </div>
 
