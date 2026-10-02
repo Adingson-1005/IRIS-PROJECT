@@ -12,31 +12,14 @@ function MyUploads() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(null)
 
-  // Upload modal
-  const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({
-    title: '',
-    authors: '',
-    abstract: '',
-    category: '',
-    methodology: '',
-    year: ''
-  })
-  const [file, setFile] = useState(null)
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState('')
-  const [uploadSuccess, setUploadSuccess] = useState('')
-  const [uploadMessage, setUploadMessage] = useState('')
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [showUploadingModal, setShowUploadingModal] = useState(false)
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
-
-  const SearchIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" aria-hidden="true">
-      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  )
+  // Check Similar Studies modal
+  const [showSimilarModal, setShowSimilarModal] = useState(false)
+  const [similarTitle, setSimilarTitle] = useState('')
+  const [similarAbstract, setSimilarAbstract] = useState('')
+  const [similarPapers, setSimilarPapers] = useState([])
+  const [checkingSimilar, setCheckingSimilar] = useState(false)
+  const [hasChecked, setHasChecked] = useState(false)
+  const [similarError, setSimilarError] = useState('')
 
   useEffect(() => { fetchMyPapers() }, [])
 
@@ -52,107 +35,6 @@ function MyUploads() {
     }
     setLoading(false)
   }
-
-  const resetForm = () => {
-    setForm({
-      title: '',
-      authors: '',
-      abstract: '',
-      category: '',
-      methodology: '',
-      year: ''
-    })
-    setFile(null)
-  }
-
-  const clearUploadState = () => {
-    setUploadError('')
-    setUploadSuccess('')
-    setUploadMessage('')
-    setUploadProgress(0)
-  }
-
-  const handleFormChange = (key, value) => {
-    setForm({ ...form, [key]: value })
-  }
-
-  const handleUpload = async () => {
-    const { title, authors, abstract, category, methodology, year } = form
-
-    if (!title.trim()) { setUploadError('Title is required'); return }
-    if (!authors.trim()) { setUploadError('Authors are required'); return }
-    if (!abstract.trim()) { setUploadError('Abstract is required'); return }
-    if (!category) { setUploadError('Please select a strand'); return }
-    if (!methodology) { setUploadError('Please select a methodology'); return }
-    if (!year || isNaN(year)) { setUploadError('Please enter a valid year'); return }
-    if (!file) { setUploadError('Please select a PDF file'); return }
-
-    setUploading(true)
-    setUploadError('')
-    setUploadSuccess('')
-    setUploadMessage('')
-    setUploadProgress(0)
-    setShowUploadingModal(true)
-
-    try {
-      const data = new FormData()
-      data.append('title', title)
-      data.append('authors', authors)
-      data.append('abstract', abstract)
-      data.append('category', category)
-      data.append('methodology', methodology)
-      data.append('year', year)
-      data.append('file', file)
-
-      const token = localStorage.getItem('token')
-      await axios.post(`${API_BASE}/papers/upload`, data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        },
-        onUploadProgress: (progressEvent) => {
-          const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          setUploadProgress(pct)
-          setUploadMessage(pct < 100 ? 'Uploading your paper...' : 'Finishing up...')
-        }
-      })
-
-      setShowUploadingModal(false)
-      setShowModal(false)
-      setShowSuccessModal(true)
-      setUploadSuccess('Paper uploaded successfully')
-      setUploadMessage('Your paper has been uploaded successfully.')
-      setUploadProgress(100)
-      resetForm()
-      setSimilarPapers([])
-      setShowSimilarWarning(false)
-      fetchMyPapers()
-    } catch (err) {
-      setShowUploadingModal(false)
-      setUploadError(err.response?.data?.detail || 'Upload failed. Please try again.')
-    }
-
-    setUploading(false)
-  }
-
-  const checkSimilar = async (title, abstract) => {
-  if (!title.trim() && !abstract.trim()) return
-  setCheckingSimilar(true)
-  try {
-    const token = localStorage.getItem('token')
-    const response = await axios.post(
-      'https://iris-backend-7717.onrender.com/papers/check-similar',
-      { title, abstract },
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    const results = response.data.similar_papers || []
-    setSimilarPapers(results)
-    if (results.length > 0) setShowSimilarWarning(true)
-  } catch {
-    console.error('Similarity check failed')
-  }
-  setCheckingSimilar(false)
-}
 
   const handleDelete = async () => {
     if (!deleteTarget) return
@@ -170,13 +52,32 @@ function MyUploads() {
     setDeleting(null)
   }
 
-  const closeModal = () => {
-    if (uploading) return
-    setShowModal(false)
-    resetForm()
-    clearUploadState()
-    setShowSuccessModal(false)
-    setShowUploadingModal(false)
+  const checkSimilar = async () => {
+    if (!similarTitle.trim() && !similarAbstract.trim()) return
+    setCheckingSimilar(true)
+    setSimilarError('')
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.post(
+        `${API_BASE}/papers/check-similar`,
+        { title: similarTitle, abstract: similarAbstract },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setSimilarPapers(response.data.similar_papers || [])
+      setHasChecked(true)
+    } catch {
+      setSimilarError('Similarity check failed. Please try again.')
+    }
+    setCheckingSimilar(false)
+  }
+
+  const closeSimilarModal = () => {
+    setShowSimilarModal(false)
+    setSimilarTitle('')
+    setSimilarAbstract('')
+    setSimilarPapers([])
+    setHasChecked(false)
+    setSimilarError('')
   }
 
   const filtered = papers.filter((p) => {
@@ -186,10 +87,6 @@ function MyUploads() {
       p.authors?.toLowerCase().includes(q)
     )
   })
-
-  const [similarPapers, setSimilarPapers] = useState([])
-const [checkingSimlar, setCheckingSimilar] = useState(false)
-const [showSimilarWarning, setShowSimilarWarning] = useState(false)
 
   return (
     <div className="myuploads-content">
@@ -208,20 +105,17 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
           </h3>
 
           <div className="myuploads-top-right">
-            <div className="myuploads-search-wrapper">
-              <span className="myuploads-search-icon"><SearchIcon /></span>
-              <input
-                className="myuploads-search"
-                placeholder="Search by title or author..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            <input
+              className="myuploads-search"
+              placeholder="🔍  Search by title or author..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
             <button
               className="myuploads-new-btn"
-              onClick={() => setShowModal(true)}
+              onClick={() => setShowSimilarModal(true)}
             >
-              + Upload Paper
+              Check for Similar Studies
             </button>
           </div>
         </div>
@@ -235,19 +129,14 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
 
         {!loading && papers.length === 0 && (
           <div className="myuploads-empty">
-            <div className="myuploads-empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <p>You haven't uploaded any papers yet. Click "Upload Paper" to add your first one.</p>
+            <div className="myuploads-empty-icon">📄</div>
+            <p>You haven't contributed any papers to the repository yet.</p>
           </div>
         )}
 
         {!loading && papers.length > 0 && filtered.length === 0 && (
           <div className="myuploads-empty">
-            <div className="myuploads-empty-icon"><SearchIcon /></div>
+            <div className="myuploads-empty-icon">🔍</div>
             <p>No papers match your search.</p>
           </div>
         )}
@@ -303,85 +192,31 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
 
       </div>
 
-      {showUploadingModal && (
-        <div className="confirm-overlay">
-          <div className="confirm-modal">
-            <div className="upload-spinner"></div>
-            <h3 className="confirm-title">Uploading Paper...</h3>
-            <p className="confirm-desc">
-              Please wait while your paper is being uploaded and indexed.
-            </p>
-            <div className="myuploads-progress-bar-wrapper">
-              <div
-                className="myuploads-progress-bar-fill"
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-            <p className="myuploads-progress-pct">{uploadProgress}%</p>
-          </div>
-        </div>
-      )}
-
-      {showSuccessModal && (
-        <div className="myuploads-modal-overlay" onClick={() => setShowSuccessModal(false)}>
+      {/* Check for Similar Studies modal */}
+      {showSimilarModal && (
+        <div className="myuploads-modal-overlay" onClick={closeSimilarModal}>
           <div className="myuploads-modal" onClick={(e) => e.stopPropagation()}>
             <div className="myuploads-modal-header">
-              <h3 className="myuploads-modal-title">Upload Complete</h3>
-            </div>
-            <p className="myuploads-modal-success">{uploadSuccess || uploadMessage}</p>
-            <div className="myuploads-modal-actions">
-              <button className="myuploads-modal-submit" onClick={() => setShowSuccessModal(false)}>
-                Close
+              <h3 className="myuploads-modal-title">Check for Similar Studies</h3>
+              <button className="myuploads-modal-close-btn" onClick={closeSimilarModal}>
+                ✕
               </button>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Upload modal */}
-      {showModal && (
-        <div className="myuploads-modal-overlay" onClick={closeModal}>
-          <div
-            className="myuploads-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="myuploads-modal-header">
-              <h3 className="myuploads-modal-title">Upload Paper</h3>
-              <button
-              className="myuploads-modal-close-btn"
-              onClick={closeModal}
-              disabled={uploading}
-            >
-              <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
-                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-            </div>
+            <p className="myuploads-page-sub" style={{ marginBottom: '16px' }}>
+              Enter a title and/or abstract to check whether similar studies
+              already exist in the repository.
+            </p>
 
-            {uploadError && (
-              <p className="myuploads-modal-error">{uploadError}</p>
-            )}
-            {uploadSuccess && (
-              <p className="myuploads-modal-success">{uploadSuccess}</p>
-            )}
+            {similarError && <p className="myuploads-modal-error">{similarError}</p>}
 
             <div className="myuploads-modal-field">
               <label>Title</label>
               <input
                 type="text"
                 placeholder="Enter the paper title"
-                value={form.title}
-                onChange={(e) => handleFormChange('title', e.target.value)}
-              />
-            </div>
-
-            <div className="myuploads-modal-field">
-              <label>Authors</label>
-              <input
-                type="text"
-                placeholder="e.g. Dela Cruz, J., Santos, M."
-                value={form.authors}
-                onChange={(e) => handleFormChange('authors', e.target.value)}
+                value={similarTitle}
+                onChange={(e) => setSimilarTitle(e.target.value)}
               />
             </div>
 
@@ -390,27 +225,24 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
               <textarea
                 rows={4}
                 placeholder="Enter abstract"
-                value={form.abstract}
-                onChange={(e) => handleFormChange('abstract', e.target.value)}
+                value={similarAbstract}
+                onChange={(e) => setSimilarAbstract(e.target.value)}
               />
             </div>
 
             <button
               className="myuploads-check-similar-btn"
               type="button"
-              onClick={() => checkSimilar(form.title, form.abstract)}
-              disabled={checkingSimlar || (!form.title && !form.abstract)}
+              onClick={checkSimilar}
+              disabled={checkingSimilar || (!similarTitle.trim() && !similarAbstract.trim())}
             >
-              {checkingSimlar ? 'Checking...' : <><span className="myuploads-check-similar-btn-icon"><SearchIcon /></span>Check for Similar Studies</>}
+              {checkingSimilar ? 'Checking...' : '🔍 Check for Similar Studies'}
             </button>
 
-            {showSimilarWarning && similarPapers.length > 0 && (
+            {hasChecked && similarPapers.length > 0 && (
               <div className="myuploads-similar-warning">
                 <p className="myuploads-similar-title">
-                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
-                    <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Similar papers found in the repository:
+                  ⚠️ Similar papers found in the repository:
                 </p>
                 {similarPapers.map((p) => (
                   <div key={p.paper_id} className="myuploads-similar-item">
@@ -423,99 +255,18 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
                     </div>
                   </div>
                 ))}
-                <p className="myuploads-similar-note">
-                  You can still upload this paper if it is sufficiently different.
-                </p>
               </div>
             )}
 
-            {showSimilarWarning && similarPapers.length === 0 && (
+            {hasChecked && similarPapers.length === 0 && (
               <div className="myuploads-no-similar">
-                <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M8 12l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                No similar papers found in the repository.
+                ✅ No similar papers found in the repository.
               </div>
             )}
-
-            <div className="myuploads-modal-row">
-              <div className="myuploads-modal-field">
-                <label>Strand</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => handleFormChange('category', e.target.value)}
-                >
-                  <option value="">— Select strand —</option>
-                  <option value="STEM">STEM</option>
-                  <option value="HUMSS">HUMSS</option>
-                  <option value="ABM">ABM</option>
-                  <option value="GAS">GAS</option>
-                </select>
-              </div>
-
-              <div className="myuploads-modal-field">
-                <label>Methodology</label>
-                <select
-                  value={form.methodology}
-                  onChange={(e) =>
-                    handleFormChange('methodology', e.target.value)
-                  }
-                >
-                  <option value="">— Select methodology —</option>
-                  <option value="Qualitative">Qualitative</option>
-                  <option value="Quantitative">Quantitative</option>
-                  <option value="Mixed Methods">Mixed Methods</option>
-                  <option value="Experimental">Experimental</option>
-                  <option value="Descriptive">Descriptive</option>
-                </select>
-              </div>
-
-              <div className="myuploads-modal-field">
-                <label>Year</label>
-                <input
-                  type="number"
-                  min="2000"
-                  max="2030"
-                  placeholder="2026"
-                  value={form.year}
-                  onChange={(e) => handleFormChange('year', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="myuploads-modal-field">
-              <label>PDF File</label>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-              {file && (
-                <p className="myuploads-modal-filename">
-                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                  {file.name}
-                </p>
-              )}
-            </div>
 
             <div className="myuploads-modal-actions">
-              <button
-                className="myuploads-modal-cancel"
-                onClick={closeModal}
-                disabled={uploading}
-              >
-                Cancel
-              </button>
-              <button
-                className="myuploads-modal-submit"
-                onClick={handleUpload}
-                disabled={uploading}
-              >
-                {uploading ? 'Uploading...' : 'Upload'}
+              <button className="myuploads-modal-cancel" onClick={closeSimilarModal}>
+                Close
               </button>
             </div>
           </div>
@@ -526,12 +277,7 @@ const [showSimilarWarning, setShowSimilarWarning] = useState(false)
       {deleteTarget && (
         <div className="confirm-overlay">
           <div className="confirm-modal">
-            <div className="confirm-icon">
-              <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
-                <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
+            <div className="confirm-icon">🗑️</div>
             <h3 className="confirm-title">Delete Paper?</h3>
             <p className="confirm-desc">
               Are you sure you want to delete{' '}
