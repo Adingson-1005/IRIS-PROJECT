@@ -1,196 +1,189 @@
-.admin-shell {
-  display: flex;
+.ad-shell {
   min-height: 100vh;
-  background-color: #f0f4f8;
+  background-color: #eef1f6;
 }
 
-/* ── Sidebar ── */
-.admin-sidebar {
-  width: 220px;
-  background-color: #1a56db;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
+/* ── Top bar ── */
+.ad-topbar-wrap {
   position: sticky;
   top: 0;
-  height: 100vh;
   z-index: 100;
-  transition: transform 0.3s ease;
+  padding: 16px 28px 0;
+  background: linear-gradient(#eef1f6 75%, rgba(238, 241, 246, 0));
 }
 
-.sidebar-brand {
-  padding: 20px 20px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+.ad-topbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
+  gap: 16px;
+  background: white;
+  border-radius: 28px;
+  padding: 10px 14px 10px 20px;
+  box-shadow: 0 2px 12px rgba(26, 26, 46, 0.06);
 }
 
-.sidebar-brand h1 {
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.sidebar-brand p {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 12px 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.nav-item {
+.ad-brand {
   display: flex;
   align-items: center;
-  padding: 11px 20px;
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 14px;
-  background: none;
-  border: none;
-  border-left: 3px solid transparent;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s, color 0.15s;
-}
-
-.nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-.nav-item.active {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: white;
-  border-left-color: white;
-}
-
-.sidebar-footer {
-  padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  display: flex;
-  flex-direction: column;
   gap: 10px;
+  flex-shrink: 0;
 }
 
-.admin-name {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
-}
-
-.admin-logout {
-  padding: 7px 12px;
-  background-color: rgba(255, 255, 255, 0.12);
+.ad-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #1a56db;
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ad-logo svg {
+  width: 19px;
+  height: 19px;
+}
+
+.ad-brand-text h1 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1.1;
+}
+
+.ad-brand-text p {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 1px;
+}
+
+/* ── Pill navigation ── */
+.ad-nav {
+  display: flex;
+  gap: 4px;
+  background: #f1f3f6;
+  padding: 6px;
+  border-radius: 999px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ad-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.ad-nav-item {
+  padding: 9px 18px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
   font-size: 13px;
-  text-align: left;
-  transition: background 0.15s;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.admin-logout:hover {
-  background-color: rgba(255, 255, 255, 0.22);
+.ad-nav-item:hover {
+  color: #1a1a2e;
 }
 
-.admin-main {
-  flex: 1;
-  padding: 32px;
-  overflow-y: auto;
+.ad-nav-item.active {
+  background: white;
+  color: #1a56db;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ── User area ── */
+.ad-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.ad-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.ad-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1a56db;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ad-logout {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ad-logout svg {
+  width: 17px;
+  height: 17px;
+}
+
+.ad-logout:hover {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+/* ── Page content ── */
+.ad-main {
+  padding: 24px 28px 48px;
+  max-width: 1500px;
+  margin: 0 auto;
   min-width: 0;
 }
 
-.admin-placeholder {
-  color: #888;
-  font-size: 15px;
-  padding: 60px 0;
-  text-align: center;
-}
-
-/* ── Mobile hamburger ── */
-.sidebar-hamburger {
-  display: none;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 22px;
-  cursor: pointer;
-  padding: 4px;
-}
-
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 99;
-}
-
-/* ── Mobile top bar ── */
-.mobile-topbar {
-  display: none;
-  background-color: #1a56db;
-  padding: 14px 16px;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 98;
-}
-
-.mobile-topbar-title {
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.mobile-menu-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 4px;
-}
-
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .ad-user-name {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
-  .admin-shell {
-    flex-direction: column;
+  .ad-topbar-wrap {
+    padding: 10px 12px 0;
   }
 
-  .admin-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    transform: translateX(-100%);
-    width: 260px;
+  .ad-topbar {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    border-radius: 22px;
+    padding: 10px 12px;
   }
 
-  .admin-sidebar.open {
-    transform: translateX(0);
+  .ad-nav {
+    order: 3;
+    width: 100%;
   }
 
-  .sidebar-overlay.open {
-    display: block;
-  }
-
-  .mobile-topbar {
-    display: flex;
-  }
-
-  .admin-main {
-    padding: 16px;
-  }
-
-  .sidebar-hamburger {
-    display: block;
+  .ad-main {
+    padding: 16px 12px 32px;
   }
 }
