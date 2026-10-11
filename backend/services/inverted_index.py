@@ -84,7 +84,7 @@ def search_index(query: str, db: Session):
                        p.methodology, p.year, p.abstract
                 FROM inverted_index ii
                 JOIN papers p ON ii.paper_id = p.id
-                WHERE ii.term = :term
+                WHERE ii.term = :term AND p.deleted_at IS NULL
             """), {"term": term}).fetchall()
 
             for row in results:

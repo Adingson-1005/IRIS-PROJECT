@@ -37,25 +37,10 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.mp-search-wrapper {
-  position: relative;
+.mp-search {
   flex: 1;
   min-width: 180px;
-}
-
-.mp-search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  color: #8a8f98;
-  pointer-events: none;
-}
-
-.mp-search {
-  width: 100%;
-  padding: 9px 14px 9px 36px;
+  padding: 9px 14px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   font-size: 13px;
@@ -241,6 +226,70 @@
 }
 
 .mp-delete-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ── Active / Archived tabs ── */
+.mp-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mp-tab {
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mp-tab:hover {
+  border-color: #1a56db;
+  color: #1a56db;
+}
+
+.mp-tab-active,
+.mp-tab-active:hover {
+  background: #1a56db;
+  border-color: #1a56db;
+  color: white;
+}
+
+/* ── Archived card extras ── */
+.mp-archived-date {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.mp-restore-btn {
+  padding: 5px 12px;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mp-restore-btn:hover {
+  background-color: #bfdbfe;
+}
+
+.mp-restore-btn:disabled {
   background-color: #e5e7eb;
   color: #9ca3af;
   cursor: not-allowed;

@@ -47,7 +47,7 @@ function MyUploads() {
       setPapers(papers.filter((p) => p.id !== deleteTarget.id))
       setDeleteTarget(null)
     } catch {
-      alert('Failed to delete paper')
+      alert('Failed to archive paper')
     }
     setDeleting(null)
   }
@@ -180,7 +180,7 @@ function MyUploads() {
                         }
                         disabled={deleting === paper.id}
                       >
-                        {deleting === paper.id ? 'Deleting...' : 'Delete'}
+                        {deleting === paper.id ? 'Archiving...' : 'Archive'}
                       </button>
                     </td>
                   </tr>
@@ -273,15 +273,15 @@ function MyUploads() {
         </div>
       )}
 
-      {/* Delete confirmation */}
+      {/* Archive confirmation */}
       {deleteTarget && (
         <div className="confirm-overlay">
           <div className="confirm-modal">
             <div className="confirm-icon">🗑️</div>
-            <h3 className="confirm-title">Delete Paper?</h3>
+            <h3 className="confirm-title">Archive Paper?</h3>
             <p className="confirm-desc">
-              Are you sure you want to delete{' '}
-              <strong>"{deleteTarget.title}"</strong>? This cannot be undone.
+              Are you sure you want to archive{' '}
+              <strong>"{deleteTarget.title}"</strong>? It will be hidden from the repository and search. An administrator can restore it later.
             </p>
             <div className="confirm-actions">
               <button
@@ -291,11 +291,11 @@ function MyUploads() {
                 Cancel
               </button>
               <button
-                className="confirm-delete"
+                className="confirm-proceed"
                 onClick={handleDelete}
                 disabled={deleting}
               >
-                {deleting ? 'Deleting...' : 'Yes, Delete'}
+                {deleting ? 'Archiving...' : 'Yes, Archive'}
               </button>
             </div>
           </div>

@@ -4,53 +4,86 @@ import '../css/ManagePapers.css'
 import PaperView from '../components/PaperView'
 import '../css/ConfirmModal.css'
 
+const API_BASE = 'https://iris-backend-7717.onrender.com'
+
 function ManagePapers() {
   const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [deleting, setDeleting] = useState(null)
+  const [view, setView] = useState('active') // 'active' | 'archived'
+  const [processing, setProcessing] = useState(null)
   const [search, setSearch] = useState('')
   const [strand, setStrand] = useState('')
   const [methodology, setMethodology] = useState('')
   const [sortOrder, setSortOrder] = useState('desc')
   const [selectedPaper, setSelectedPaper] = useState(null)
-  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [archiveTarget, setArchiveTarget] = useState(null)
+  const [statusModal, setStatusModal] = useState(null) // { type: 'success' | 'error', message }
 
-  const SearchIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" width="16" height="16" aria-hidden="true">
-      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  )
+  useEffect(() => { fetchPapers() }, [view])
 
-  useEffect(() => { fetchPapers() }, [])
+  const authHeaders = () => ({
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
 
   const fetchPapers = async () => {
+    setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get('https://iris-backend-7717.onrender.com/papers/list', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setPapers(response.data.papers)
+      const endpoint = view === 'archived' ? '/papers/archived' : '/papers/list'
+      const response = await axios.get(`${API_BASE}${endpoint}`, authHeaders())
+      setPapers(response.data.papers || [])
     } catch {
       console.error('Failed to fetch papers')
+      setPapers([])
     }
     setLoading(false)
   }
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return
-    setDeleting(deleteTarget.id)
+  const handleArchive = async () => {
+    if (!archiveTarget) return
+    setProcessing(archiveTarget.id)
     try {
-      const token = localStorage.getItem('token')
-      await axios.delete(`https://iris-backend-7717.onrender.com/papers/delete/${deleteTarget.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.delete(
+        `${API_BASE}/papers/delete/${archiveTarget.id}`,
+        authHeaders()
+      )
+      if (response.data?.error) throw new Error(response.data.error)
+      setPapers(papers.filter(p => p.id !== archiveTarget.id))
+      setArchiveTarget(null)
+      setStatusModal({
+        type: 'success',
+        message: 'Paper archived. You can restore it anytime from the Archived tab.'
       })
-      setPapers(papers.filter(p => p.id !== deleteTarget.id))
-      setDeleteTarget(null)
-    } catch {
-      alert('Failed to delete paper')
+    } catch (err) {
+      setArchiveTarget(null)
+      setStatusModal({
+        type: 'error',
+        message: err.response?.data?.detail || err.message || 'Failed to archive paper'
+      })
     }
-    setDeleting(null)
+    setProcessing(null)
+  }
+
+  const handleRestore = async (paper) => {
+    setProcessing(paper.id)
+    try {
+      const response = await axios.post(
+        `${API_BASE}/papers/restore/${paper.id}`,
+        {},
+        authHeaders()
+      )
+      if (response.data?.error) throw new Error(response.data.error)
+      setPapers(papers.filter(p => p.id !== paper.id))
+      setStatusModal({
+        type: 'success',
+        message: 'Paper restored. It is now visible in the repository again.'
+      })
+    } catch (err) {
+      setStatusModal({
+        type: 'error',
+        message: err.response?.data?.detail || err.message || 'Failed to restore paper'
+      })
+    }
+    setProcessing(null)
   }
 
   const initials = (name) => {
@@ -74,6 +107,8 @@ function ManagePapers() {
       return sortOrder === 'desc' ? dateB - dateA : dateA - dateB
     })
 
+  const isArchivedView = view === 'archived'
+
   return (
     <div className="mp-container">
 
@@ -81,21 +116,35 @@ function ManagePapers() {
         <div>
           <h2 className="mp-page-title">Manage Papers</h2>
           <p className="mp-page-sub">
-            {papers.length} paper{papers.length !== 1 ? 's' : ''} in the repository
+            {isArchivedView
+              ? `${papers.length} archived paper${papers.length !== 1 ? 's' : ''}`
+              : `${papers.length} paper${papers.length !== 1 ? 's' : ''} in the repository`}
           </p>
         </div>
       </div>
 
+      <div className="mp-tabs">
+        <button
+          className={`mp-tab ${!isArchivedView ? 'mp-tab-active' : ''}`}
+          onClick={() => setView('active')}
+        >
+          Active
+        </button>
+        <button
+          className={`mp-tab ${isArchivedView ? 'mp-tab-active' : ''}`}
+          onClick={() => setView('archived')}
+        >
+          Archived
+        </button>
+      </div>
+
       <div className="mp-filterbar">
-        <div className="mp-search-wrapper">
-          <span className="mp-search-icon"><SearchIcon /></span>
-          <input
-            className="mp-search"
-            placeholder="Search by title or author..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <input
+          className="mp-search"
+          placeholder="🔍  Search by title or author..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         <select className="mp-select" value={strand} onChange={(e) => setStrand(e.target.value)}>
           <option value="">All Strands</option>
           <option value="STEM">STEM</option>
@@ -133,7 +182,11 @@ function ManagePapers() {
       {!loading && filtered.length === 0 && (
         <div className="mp-empty">
           <div className="mp-empty-icon">📭</div>
-          <p>No papers found. Try adjusting your filters.</p>
+          <p>
+            {isArchivedView && papers.length === 0
+              ? 'No archived papers.'
+              : 'No papers found. Try adjusting your filters.'}
+          </p>
         </div>
       )}
 
@@ -159,18 +212,36 @@ function ManagePapers() {
                   ? paper.abstract.substring(0, 120) + '...'
                   : 'No abstract available.'}
               </p>
+              {isArchivedView && paper.deleted_at && (
+                <span className="mp-archived-date">
+                  Archived on {new Date(paper.deleted_at).toLocaleDateString()}
+                </span>
+              )}
               <div className="mp-card-footer">
                 <span className="mp-method-badge">{paper.methodology}</span>
-                <button
-                  className="mp-delete-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setDeleteTarget({ id: paper.id, title: paper.title })
-                  }}
-                  disabled={deleting === paper.id}
-                >
-                  {deleting === paper.id ? 'Deleting...' : 'Delete'}
-                </button>
+                {isArchivedView ? (
+                  <button
+                    className="mp-restore-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRestore(paper)
+                    }}
+                    disabled={processing === paper.id}
+                  >
+                    {processing === paper.id ? 'Restoring...' : 'Restore'}
+                  </button>
+                ) : (
+                  <button
+                    className="mp-delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setArchiveTarget({ id: paper.id, title: paper.title })
+                    }}
+                    disabled={processing === paper.id}
+                  >
+                    {processing === paper.id ? 'Archiving...' : 'Archive'}
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -181,25 +252,58 @@ function ManagePapers() {
         <PaperView paper={selectedPaper} onClose={() => setSelectedPaper(null)} />
       )}
 
-      {deleteTarget && (
+      {/* Archive confirmation */}
+      {archiveTarget && (
         <div className="confirm-overlay">
           <div className="confirm-modal">
-            <div className="confirm-icon">
-              <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
-                <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <div className="confirm-icon" style={{ color: '#1a56db' }}>
+              <svg viewBox="0 0 24 24" fill="none" width="40" height="40">
+                <polyline points="21 8 21 21 3 21 3 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <rect x="1" y="3" width="22" height="5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="10" y1="12" x2="14" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
-            <h3 className="confirm-title">Delete Paper?</h3>
+            <h3 className="confirm-title">Archive Paper?</h3>
             <p className="confirm-desc">
-              Are you sure you want to delete <strong>"{deleteTarget.title}"</strong>?
-              This cannot be undone.
+              Are you sure you want to archive <strong>"{archiveTarget.title}"</strong>?
+              It will be hidden from the repository and search, but you can restore
+              it anytime from the Archived tab.
             </p>
             <div className="confirm-actions">
-              <button className="confirm-cancel" onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button className="confirm-delete" onClick={handleDelete} disabled={deleting}>
-                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              <button className="confirm-cancel" onClick={() => setArchiveTarget(null)}>Cancel</button>
+              <button className="confirm-proceed" onClick={handleArchive} disabled={!!processing}>
+                {processing ? 'Archiving...' : 'Yes, Archive'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success / error popup */}
+      {statusModal && (
+        <div className="confirm-overlay" onClick={() => setStatusModal(null)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="confirm-icon"
+              style={{ color: statusModal.type === 'success' ? '#0e9f6e' : '#d97706' }}
+            >
+              {statusModal.type === 'success' ? (
+                <svg viewBox="0 0 24 24" fill="none" width="40" height="40">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                  <path d="M8 12l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" width="40" height="40">
+                  <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
+            <h3 className="confirm-title">
+              {statusModal.type === 'success' ? 'Success' : 'Something went wrong'}
+            </h3>
+            <p className="confirm-desc">{statusModal.message}</p>
+            <div className="confirm-actions">
+              <button className="confirm-proceed" onClick={() => setStatusModal(null)}>OK</button>
             </div>
           </div>
         </div>

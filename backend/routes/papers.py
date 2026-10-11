@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.inverted_index import build_index
-from services.storage import upload_file, delete_file
+from services.storage import upload_file
 from jose import jwt
 import os
 import uuid
@@ -116,6 +116,7 @@ def list_papers(db: Session = Depends(get_db)):
                    year, file_url, created_at,
                    COALESCE(downloads, 0) as downloads
             FROM papers
+            WHERE deleted_at IS NULL
             ORDER BY created_at DESC
         """)).fetchall()
         return {"papers": [dict(row._mapping) for row in papers]}
@@ -134,11 +135,35 @@ def my_papers(
                    year, file_url, created_at,
                    COALESCE(downloads, 0) as downloads
             FROM papers
-            WHERE uploaded_by = :user_id
+            WHERE uploaded_by = :user_id AND deleted_at IS NULL
             ORDER BY created_at DESC
         """), {"user_id": user["id"]}).fetchall()
 
         return {"papers": [dict(row._mapping) for row in papers]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@router.get("/archived")
+def list_archived_papers(
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        if user["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Admin only")
+
+        papers = db.execute(text("""
+            SELECT id, title, authors, abstract, category, methodology,
+                   year, file_url, created_at, deleted_at,
+                   COALESCE(downloads, 0) as downloads
+            FROM papers
+            WHERE deleted_at IS NOT NULL
+            ORDER BY deleted_at DESC
+        """)).fetchall()
+        return {"papers": [dict(row._mapping) for row in papers]}
+    except HTTPException:
+        raise
     except Exception as e:
         return {"error": str(e)}
 
@@ -153,7 +178,7 @@ def reindex_all(
         if user["role"] not in ["instructor", "admin"]:
             raise HTTPException(status_code=403, detail="Instructor or admin only")
 
-        papers = db.execute(text("SELECT id, file_url FROM papers")).fetchall()
+        papers = db.execute(text("SELECT id, file_url FROM papers WHERE deleted_at IS NULL")).fetchall()
         paper_list = [(str(p.id), p.file_url) for p in papers]
 
         def reindex_all_background():
@@ -184,32 +209,67 @@ def delete_paper(
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user)
 ):
+    """Archives the paper instead of permanently deleting it. The file and
+    search index entries are kept intact so the paper can be fully restored
+    later from the Archived view."""
     try:
         paper = db.execute(
-            text("SELECT id, uploaded_by, file_url FROM papers WHERE id = :paper_id"),
+            text("SELECT id, uploaded_by, deleted_at FROM papers WHERE id = :paper_id"),
             {"paper_id": paper_id}
         ).fetchone()
 
         if not paper:
             raise HTTPException(status_code=404, detail="Paper not found")
 
+        if paper.deleted_at is not None:
+            raise HTTPException(status_code=400, detail="Paper is already archived")
+
         is_owner = str(paper.uploaded_by) == str(user["id"])
         if user["role"] != "admin" and not (user["role"] == "instructor" and is_owner):
-            raise HTTPException(status_code=403, detail="You do not have permission to delete this paper")
+            raise HTTPException(status_code=403, detail="You do not have permission to archive this paper")
 
         db.execute(
-            text("DELETE FROM inverted_index WHERE paper_id = :paper_id"),
-            {"paper_id": paper_id}
-        )
-        db.execute(
-            text("DELETE FROM papers WHERE id = :paper_id"),
+            text("UPDATE papers SET deleted_at = NOW() WHERE id = :paper_id"),
             {"paper_id": paper_id}
         )
         db.commit()
 
-        delete_file(paper.file_url)
+        return {"message": "Paper archived successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}
 
-        return {"message": "Paper deleted successfully"}
+
+@router.post("/restore/{paper_id}")
+def restore_paper(
+    paper_id: str,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    try:
+        paper = db.execute(
+            text("SELECT id, uploaded_by, deleted_at FROM papers WHERE id = :paper_id"),
+            {"paper_id": paper_id}
+        ).fetchone()
+
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
+
+        if paper.deleted_at is None:
+            raise HTTPException(status_code=400, detail="Paper is not archived")
+
+        is_owner = str(paper.uploaded_by) == str(user["id"])
+        if user["role"] != "admin" and not (user["role"] == "instructor" and is_owner):
+            raise HTTPException(status_code=403, detail="You do not have permission to restore this paper")
+
+        db.execute(
+            text("UPDATE papers SET deleted_at = NULL WHERE id = :paper_id"),
+            {"paper_id": paper_id}
+        )
+        db.commit()
+
+        return {"message": "Paper restored successfully"}
     except HTTPException:
         raise
     except Exception as e:
@@ -226,6 +286,9 @@ def download_paper(paper_id: str, db: Session = Depends(get_db)):
 
         if not paper:
             raise HTTPException(status_code=404, detail="Paper not found")
+
+        if paper.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="This paper has been archived and is no longer available")
 
         db.execute(
             text("UPDATE papers SET downloads = COALESCE(downloads, 0) + 1 WHERE id = :id"),
@@ -280,7 +343,7 @@ async def check_similar(payload: dict = Body(...), db: Session = Depends(get_db)
                 SELECT ii.paper_id, ii.frequency, p.title, p.authors, p.category, p.year
                 FROM inverted_index ii
                 JOIN papers p ON ii.paper_id = p.id
-                WHERE ii.term = :term
+                WHERE ii.term = :term AND p.deleted_at IS NULL
             """), {"term": keyword}).fetchall()
 
             for row in results:
