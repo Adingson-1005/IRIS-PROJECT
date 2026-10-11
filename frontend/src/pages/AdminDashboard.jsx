@@ -10,10 +10,9 @@ import ManageClasses from './ManageClasses'
 
 function AdminDashboard() {
   const navigate = useNavigate()
-  const full_name = localStorage.getItem('full_name')
+  const full_name = localStorage.getItem('full_name') || 'Admin'
   const [activePage, setActivePage] = useState('papers')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = () => {
     localStorage.clear()
@@ -24,86 +23,81 @@ function AdminDashboard() {
     { key: 'papers',    label: 'Manage Papers' },
     { key: 'analytics', label: 'Analytics' },
     { key: 'users',     label: 'Manage Users' },
-    { key: 'drafts', label: 'Student Drafts' },
-    { key: 'classes', label: 'Manage Classes' },
+    { key: 'drafts',    label: 'Student Drafts' },
+    { key: 'classes',   label: 'Manage Classes' },
   ]
-
-  const handleNavClick = (key) => {
-    setActivePage(key)
-    setSidebarOpen(false)
-  }
 
   const renderContent = () => {
     switch (activePage) {
       case 'papers':    return <ManagePapers />
       case 'analytics': return <Analytics />
       case 'users':     return <ManageUsers />
-      case 'drafts': return <StudentDrafts />
-      case 'classes': return <ManageClasses />
+      case 'drafts':    return <StudentDrafts />
+      case 'classes':   return <ManageClasses />
       default:          return <ManageUsers />
     }
   }
 
-  return (
-    <div className="admin-shell">
+  const initials = full_name
+    .trim()
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase()
 
-      {/* Mobile top bar */}
-      <div className="mobile-topbar">
-        <span className="mobile-topbar-title">IRIS — Admin</span>
-        <button
-          className="mobile-menu-btn"
-          onClick={() => setSidebarOpen(true)}
-        >
-          <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
-            <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-        </button>
+  return (
+    <div className="ad-shell">
+
+      <div className="ad-topbar-wrap">
+        <header className="ad-topbar">
+
+          <div className="ad-brand">
+            <div className="ad-logo">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div className="ad-brand-text">
+              <h1>IRIS</h1>
+              <p>Admin Panel</p>
+            </div>
+          </div>
+
+          <nav className="ad-nav">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                className={`ad-nav-item ${activePage === item.key ? 'active' : ''}`}
+                onClick={() => setActivePage(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="ad-user">
+            <span className="ad-user-name">{full_name}</span>
+            <div className="ad-avatar">{initials}</div>
+            <button
+              className="ad-logout"
+              onClick={() => setShowLogoutModal(true)}
+              aria-label="Logout"
+              title="Logout"
+            >
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+        </header>
       </div>
 
-      {/* Overlay */}
-      <div
-        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
-        onClick={() => setSidebarOpen(false)}
-      />
-
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-brand">
-          <div>
-            <h1>IRIS</h1>
-            <p>Admin Panel</p>
-          </div>
-          <button
-            className="sidebar-hamburger"
-            onClick={() => setSidebarOpen(false)}
-          >
-            ✕
-          </button>
-        </div>
-
-        <nav className="sidebar-nav">
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              className={`nav-item ${activePage === item.key ? 'active' : ''}`}
-              onClick={() => handleNavClick(item.key)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-footer">
-          <span className="admin-name">Welcome, {full_name}</span>
-          <button
-            className="admin-logout"
-            onClick={() => setShowLogoutModal(true)}
-          >
-            Logout
-          </button>
-        </div>
-      </aside>
-
-      <main className="admin-main">
+      <main className="ad-main">
         {renderContent()}
       </main>
 
