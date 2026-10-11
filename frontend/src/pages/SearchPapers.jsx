@@ -73,7 +73,7 @@ function SearchPapers() {
     if (!keyword.trim()) { setMode('browse'); return }
     setSearching(true)
     setError('')
-    setShowHistory(false)
+    setShowSearchHistory(false)
 
     const newHistory = [
       keyword.trim(),
@@ -106,7 +106,7 @@ function SearchPapers() {
     setMode('browse')
     setSearchResults([])
     setError('')
-    setShowHistory(false)
+    setShowSearchHistory(false)
   }
 
   const handleKeyDown = (e) => {
@@ -293,7 +293,8 @@ function SearchPapers() {
   const [showTerms, setShowTerms] = useState(false)
 const [showPrivacy, setShowPrivacy] = useState(false)
 
-const [showHistory, setShowHistory] = useState(false)
+const [showSearchHistory, setShowSearchHistory] = useState(false)
+const [showAiHistory, setShowAiHistory] = useState(false)
 const [aiHistory, setAiHistory] = useState([])
 const [loadingHistory, setLoadingHistory] = useState(false)
 const [selectedHistory, setSelectedHistory] = useState(null)
@@ -353,15 +354,15 @@ const fetchAiHistory = async () => {
                 value={keyword}
                 onChange={(e) => {
                   setKeyword(e.target.value)
-                  setShowHistory(e.target.value === '' && searchHistory.length > 0)
+                  setShowSearchHistory(e.target.value === '' && searchHistory.length > 0)
                 }}
                 onFocus={() => {
-                  if (!keyword && searchHistory.length > 0) setShowHistory(true)
+                  if (!keyword && searchHistory.length > 0) setShowSearchHistory(true)
                 }}
-                onBlur={() => setTimeout(() => setShowHistory(false), 150)}
+                onBlur={() => setTimeout(() => setShowSearchHistory(false), 150)}
                 onKeyDown={handleKeyDown}
               />
-              {showHistory && searchHistory.length > 0 && (
+              {showSearchHistory && searchHistory.length > 0 && (
                 <div className="sp-history-dropdown">
                   <div className="sp-history-header">
                     <span>Recent Searches</span>
@@ -370,7 +371,7 @@ const fetchAiHistory = async () => {
                       onMouseDown={() => {
                         setSearchHistory([])
                         localStorage.removeItem('iris_search_history')
-                        setShowHistory(false)
+                        setShowSearchHistory(false)
                       }}
                     >
                       Clear all
@@ -382,7 +383,7 @@ const fetchAiHistory = async () => {
                       className="sp-history-item"
                       onMouseDown={() => {
                         setKeyword(item)
-                        setShowHistory(false)
+                        setShowSearchHistory(false)
                         setTimeout(() => handleSearch(), 0)
                       }}
                     >
@@ -553,7 +554,7 @@ const fetchAiHistory = async () => {
           <button
             className="sp-fab sp-fab-history"
             onClick={() => {
-              setShowHistory(true)
+              setShowAiHistory(true)
               fetchAiHistory()
             }}
             title="View AI checker history"
@@ -566,9 +567,9 @@ const fetchAiHistory = async () => {
         </div>
       </div>
 
-      {showHistory && (
+      {showAiHistory && (
         <div className="sp-modal-overlay" onClick={() => {
-          setShowHistory(false)
+          setShowAiHistory(false)
           setSelectedHistory(null)
         }}>
           <div className="sp-modal sp-history-modal" onClick={(e) => e.stopPropagation()}>
@@ -633,7 +634,7 @@ const fetchAiHistory = async () => {
                 <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
                   <button
                     className="sp-modal-submit sp-modal-submit-checker"
-                    onClick={() => setShowHistory(false)}
+                    onClick={() => setShowAiHistory(false)}
                   >
                     Close
                   </button>
@@ -726,7 +727,7 @@ const fetchAiHistory = async () => {
                     className="sp-modal-submit sp-modal-submit-checker"
                     onClick={() => {
                       setSelectedHistory(null)
-                      setShowHistory(false)
+                      setShowAiHistory(false)
                     }}
                   >
                     Close
@@ -878,7 +879,7 @@ const fetchAiHistory = async () => {
                     className="sp-modal-cancel"
                     onClick={() => {
                       setShowModal(false)
-                      setShowHistory(true)
+                      setShowAiHistory(true)
                       fetchAiHistory()
                     }}
                   >
