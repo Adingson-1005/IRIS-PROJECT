@@ -14,6 +14,7 @@ app.add_middleware(
         "https://iris-project-lemon.vercel.app",
         "http://localhost:5173"
     ],
+    allow_origin_regex=r"https://iris-project(?:-[a-z0-9-]+)?\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
