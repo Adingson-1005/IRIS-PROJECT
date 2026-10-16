@@ -22,7 +22,7 @@ function ManagePapers() {
   useEffect(() => { fetchPapers() }, [view])
 
   const authHeaders = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
   })
 
   const fetchPapers = async () => {

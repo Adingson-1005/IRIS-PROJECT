@@ -42,7 +42,7 @@ function MyDrafts({ onClose }) {
 
   const fetchMyClass = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         'https://iris-backend-7717.onrender.com/classes/my-class',
         { headers: { Authorization: `Bearer ${token}` } }
@@ -56,7 +56,7 @@ function MyDrafts({ onClose }) {
 
   const fetchClasses = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         'https://iris-backend-7717.onrender.com/classes/list',
         { headers: { Authorization: `Bearer ${token}` } }
@@ -69,7 +69,7 @@ function MyDrafts({ onClose }) {
 
   const fetchDrafts = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         'https://iris-backend-7717.onrender.com/drafts/my-drafts',
         { headers: { Authorization: `Bearer ${token}` } }
@@ -89,7 +89,7 @@ function MyDrafts({ onClose }) {
 
   const fetchPublishRequests = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         'https://iris-backend-7717.onrender.com/drafts/my-publish-requests',
         { headers: { Authorization: `Bearer ${token}` } }
@@ -104,7 +104,7 @@ function MyDrafts({ onClose }) {
     if (!selectedClass) return
     setSavingClass(true)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         'https://iris-backend-7717.onrender.com/classes/select',
         { class_name: selectedClass },
@@ -131,7 +131,7 @@ function MyDrafts({ onClose }) {
       const data = new FormData()
       data.append('title', title)
       data.append('gdocs_link', gdocsLink)
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         'https://iris-backend-7717.onrender.com/drafts/upload',
         data,
@@ -156,7 +156,7 @@ function MyDrafts({ onClose }) {
     if (!deleteTarget) return
     setDeleting(deleteTarget.id)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.delete(
         `https://iris-backend-7717.onrender.com/drafts/delete/${deleteTarget.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -182,7 +182,7 @@ function MyDrafts({ onClose }) {
     try {
       const data = new FormData()
       data.append('file', finalPdfFile)
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         `https://iris-backend-7717.onrender.com/drafts/upload-final/${selectedDraft.id}`,
         data,
@@ -211,7 +211,7 @@ function MyDrafts({ onClose }) {
     setSubmittingPublish(true)
     setPublishError('')
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         'https://iris-backend-7717.onrender.com/drafts/publish-request',
         {

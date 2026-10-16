@@ -22,7 +22,7 @@ function StudentDrafts() {
   const [rejectTarget, setRejectTarget] = useState(null)
   const [rejectReason, setRejectReason] = useState('')
   const [processingRequest, setProcessingRequest] = useState(null)
-  const role = localStorage.getItem('role')
+  const role = sessionStorage.getItem('role')
 
   useEffect(() => {
     fetchStudents()
@@ -40,7 +40,7 @@ function StudentDrafts() {
 
   const fetchMyClass = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         'https://iris-backend-7717.onrender.com/classes/list',
         { headers: { Authorization: `Bearer ${token}` } }
@@ -55,7 +55,7 @@ function StudentDrafts() {
 
   const fetchStudents = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         'https://iris-backend-7717.onrender.com/drafts/all-students',
         { headers: { Authorization: `Bearer ${token}` } }
@@ -70,7 +70,7 @@ function StudentDrafts() {
   const fetchPublishRequests = async () => {
     setLoadingRequests(true)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         'https://iris-backend-7717.onrender.com/drafts/publish-requests',
         { headers: { Authorization: `Bearer ${token}` } }
@@ -87,7 +87,7 @@ function StudentDrafts() {
     setSelectedDraft(null)
     setLoadingDrafts(true)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(
         `https://iris-backend-7717.onrender.com/drafts/student/${student.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -104,7 +104,7 @@ function StudentDrafts() {
   const handleUpdateStatus = async (draftId, newStatus) => {
     setUpdatingStatus(draftId)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.put(
         `https://iris-backend-7717.onrender.com/drafts/status/${draftId}`,
         { status: newStatus },
@@ -127,7 +127,7 @@ function StudentDrafts() {
     setSubmitting(true)
     setCommentError('')
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         `https://iris-backend-7717.onrender.com/drafts/comment/${selectedDraft.id}`,
         { comment },
@@ -143,7 +143,7 @@ function StudentDrafts() {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.delete(
         `https://iris-backend-7717.onrender.com/drafts/comment/${commentId}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -157,7 +157,7 @@ function StudentDrafts() {
   const handleApprove = async (requestId) => {
     setProcessingRequest(requestId)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         `https://iris-backend-7717.onrender.com/drafts/publish-approve/${requestId}`,
         {},
@@ -175,7 +175,7 @@ function StudentDrafts() {
     if (!rejectReason.trim()) { alert('Please enter a rejection reason'); return }
     setProcessingRequest(rejectTarget)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         `https://iris-backend-7717.onrender.com/drafts/publish-reject/${rejectTarget}`,
         { reason: rejectReason },

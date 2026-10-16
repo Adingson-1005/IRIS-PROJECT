@@ -75,7 +75,7 @@ function Analytics() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fullName = localStorage.getItem('full_name') || 'Admin'
+  const fullName = sessionStorage.getItem('full_name') || 'Admin'
   const firstName = fullName.split(' ')[0]
   const today = new Date().toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric'
@@ -85,7 +85,7 @@ function Analytics() {
 
   const fetchAll = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const headers = { Authorization: `Bearer ${token}` }
 
       const [s, ts, td, cat] = await Promise.all([

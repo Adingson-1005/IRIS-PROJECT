@@ -13,7 +13,7 @@ function ManageClasses() {
 
   const fetchAll = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const headers = { Authorization: `Bearer ${token}` }
       const [cls, users] = await Promise.all([
         axios.get('https://iris-backend-7717.onrender.com/classes/list', { headers }),
@@ -31,7 +31,7 @@ function ManageClasses() {
     setSaving(classId)
     setMessage('')
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       if (instructorId === '') {
         await axios.post(
           'https://iris-backend-7717.onrender.com/classes/unassign',

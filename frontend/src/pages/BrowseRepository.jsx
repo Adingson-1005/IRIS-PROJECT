@@ -11,7 +11,7 @@ function BrowseRepository() {
   const [strand, setStrand] = useState('')
   const [methodology, setMethodology] = useState('')
   const [sortOrder, setSortOrder] = useState('desc')
-  const role = localStorage.getItem('role')
+  const role = sessionStorage.getItem('role')
 
   const SearchIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" width="16" height="16" aria-hidden="true">
@@ -24,7 +24,7 @@ function BrowseRepository() {
 
   const fetchPapers = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get('https://iris-backend-7717.onrender.com/papers/list', {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -37,7 +37,7 @@ function BrowseRepository() {
 
   const handleReindex = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.post(
         'https://iris-backend-7717.onrender.com/papers/reindex-all', {},
         { headers: { Authorization: `Bearer ${token}` } }

@@ -10,7 +10,7 @@ import LegalPolicy from './LegalPolicy'
 
 function SearchPapers() {
   const navigate = useNavigate()
-  const full_name = localStorage.getItem('full_name')
+  const full_name = sessionStorage.getItem('full_name')
   const firstName = full_name ? full_name.split(' ')[0] : 'Student'
 
   const [keyword, setKeyword] = useState('')
@@ -58,7 +58,7 @@ function SearchPapers() {
 
   const fetchAllPapers = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get('https://iris-backend-7717.onrender.com/papers/list', {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -83,7 +83,7 @@ function SearchPapers() {
     localStorage.setItem('iris_search_history', JSON.stringify(newHistory))
 
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const params = { keyword }
       if (filters.category) params.category = filters.category
       if (filters.methodology) params.methodology = filters.methodology
@@ -156,7 +156,7 @@ function SearchPapers() {
       const data = new FormData()
       data.append('title', submitTitle)
       data.append('file', submitFile)
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.post(
         'https://iris-backend-7717.onrender.com/ai/submit-draft',
         data,
@@ -185,7 +185,7 @@ function SearchPapers() {
     setRagError('')
     setRagAnswer(null)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.post(
         'https://iris-backend-7717.onrender.com/rag/ask',
         { question: ragQuestion },
@@ -302,7 +302,7 @@ const [selectedHistory, setSelectedHistory] = useState(null)
 const fetchAiHistory = async () => {
   setLoadingHistory(true)
   try {
-    const token = localStorage.getItem('token')
+    const token = sessionStorage.getItem('token')
     const response = await axios.get(
       'https://iris-backend-7717.onrender.com/ai/history',
       { headers: { Authorization: `Bearer ${token}` } }
@@ -333,7 +333,7 @@ const fetchAiHistory = async () => {
   </button>
   <button
     className="sp-logout-btn"
-    onClick={() => { localStorage.clear(); navigate('/') }}
+    onClick={() => { sessionStorage.clear(); navigate('/') }}
   >
     Logout
   </button>

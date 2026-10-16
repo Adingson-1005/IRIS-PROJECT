@@ -25,7 +25,7 @@ function MyUploads() {
 
   const fetchMyPapers = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get(`${API_BASE}/papers/my-papers`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -40,7 +40,7 @@ function MyUploads() {
     if (!deleteTarget) return
     setDeleting(deleteTarget.id)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.delete(`${API_BASE}/papers/delete/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -57,7 +57,7 @@ function MyUploads() {
     setCheckingSimilar(true)
     setSimilarError('')
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.post(
         `${API_BASE}/papers/check-similar`,
         { title: similarTitle, abstract: similarAbstract },

@@ -26,9 +26,9 @@ function Login() {
         password
       })
       const { token, role, full_name } = response.data
-      localStorage.setItem('token', token)
-      localStorage.setItem('role', role)
-      localStorage.setItem('full_name', full_name)
+      sessionStorage.setItem('token', token)
+      sessionStorage.setItem('role', role)
+      sessionStorage.setItem('full_name', full_name)
 
       if (role === 'admin') navigate('/admin')
       else if (role === 'instructor') navigate('/instructor')
@@ -41,8 +41,8 @@ function Login() {
   }
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const role = localStorage.getItem('role')
+    const token = sessionStorage.getItem('token')
+    const role = sessionStorage.getItem('role')
     if (token && role) {
       if (role === 'admin') navigate('/admin', { replace: true })
       else if (role === 'instructor') navigate('/instructor', { replace: true })

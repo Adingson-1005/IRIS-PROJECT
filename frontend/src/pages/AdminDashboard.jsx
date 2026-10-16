@@ -10,12 +10,12 @@ import ManageClasses from './ManageClasses'
 
 function AdminDashboard() {
   const navigate = useNavigate()
-  const full_name = localStorage.getItem('full_name') || 'Admin'
+  const full_name = sessionStorage.getItem('full_name') || 'Admin'
   const [activePage, setActivePage] = useState('papers')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const handleLogout = () => {
-    localStorage.clear()
+    sessionStorage.clear()
     navigate('/')
   }
 

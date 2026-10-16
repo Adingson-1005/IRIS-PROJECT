@@ -27,7 +27,7 @@ function ManageUsers() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.get('https://iris-backend-7717.onrender.com/users/list', {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -47,7 +47,7 @@ function ManageUsers() {
     }
     setDeleting(deleteTarget.id)
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.delete(`https://iris-backend-7717.onrender.com/users/delete/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -69,7 +69,7 @@ function ManageUsers() {
     setAddError('')
     setAddMessage('')
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       await axios.post(
         'https://iris-backend-7717.onrender.com/auth/register',
         {
@@ -111,7 +111,7 @@ function ManageUsers() {
     try {
       const data = new FormData()
       data.append('file', bulkFile)
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
       const response = await axios.post(
         'https://iris-backend-7717.onrender.com/users/bulk-upload',
         data,

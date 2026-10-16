@@ -22,7 +22,7 @@ function PaperView({ paper, onClose }) {
 
   const handleDownload = async () => {
   try {
-    const token = localStorage.getItem('token')
+    const token = sessionStorage.getItem('token')
     const paperId = paper.paper_id || paper.id
 
     const response = await fetch(

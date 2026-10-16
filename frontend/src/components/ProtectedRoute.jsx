@@ -4,15 +4,15 @@ import { useNavigate } from 'react-router-dom'
 function ProtectedRoute({ children, allowedRole }) {
   const navigate = useNavigate()
 
-  const token = localStorage.getItem('token')
-  const role = localStorage.getItem('role')
+  const token = sessionStorage.getItem('token')
+  const role = sessionStorage.getItem('role')
 
   useEffect(() => {
     window.history.replaceState(null, '', window.location.href)
     window.history.pushState(null, '', window.location.href)
 
     const handlePopState = () => {
-      localStorage.clear()
+      sessionStorage.clear()
       window.history.pushState(null, '', '/')
       navigate('/', { replace: true })
     }
@@ -22,13 +22,13 @@ function ProtectedRoute({ children, allowedRole }) {
   }, [navigate])
 
   if (!token) {
-    localStorage.clear()
+    sessionStorage.clear()
     navigate('/', { replace: true })
     return null
   }
 
   if (allowedRole && role !== allowedRole) {
-    localStorage.clear()
+    sessionStorage.clear()
     navigate('/', { replace: true })
     return null
   }
@@ -37,12 +37,12 @@ function ProtectedRoute({ children, allowedRole }) {
     const payload = JSON.parse(atob(token.split('.')[1]))
     const expiry = payload.exp * 1000
     if (Date.now() > expiry) {
-      localStorage.clear()
+      sessionStorage.clear()
       navigate('/', { replace: true })
       return null
     }
   } catch {
-    localStorage.clear()
+    sessionStorage.clear()
     navigate('/', { replace: true })
     return null
   }
