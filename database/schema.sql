@@ -48,4 +48,12 @@ CREATE TABLE student_submissions (
     feedback TEXT,
     status VARCHAR(50) DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-); 
+);
+
+-- Daily Ask AI question usage by student
+CREATE TABLE rag_daily_usage (
+    student_id INTEGER NOT NULL,
+    usage_date DATE NOT NULL,
+    question_count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (student_id, usage_date)
+);

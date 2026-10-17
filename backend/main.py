@@ -37,6 +37,18 @@ app.include_router(classes.router, prefix="/classes", tags=["classes"])
 def root():
     return {"message": "IRIS backend is running"}
 
+@app.on_event("startup")
+def initialize_rag_daily_usage():
+    with engine.begin() as connection:
+        connection.execute(text("""
+            CREATE TABLE IF NOT EXISTS rag_daily_usage (
+                student_id INTEGER NOT NULL,
+                usage_date DATE NOT NULL,
+                question_count INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (student_id, usage_date)
+            )
+        """))
+
 @app.get("/test-db")
 def test_db():
     try:

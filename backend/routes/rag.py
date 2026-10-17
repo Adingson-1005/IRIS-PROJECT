@@ -6,6 +6,8 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 from jose import jwt
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 
 load_dotenv()
@@ -14,11 +16,13 @@ router = APIRouter()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
 ALGORITHM = "HS256"
+DAILY_QUESTION_LIMIT = 5
+LOCAL_TIMEZONE = ZoneInfo("Asia/Manila")
 
 def require_login(authorization: str = Header(...)):
     try:
         token = authorization.replace("Bearer ", "")
-        jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -119,8 +123,31 @@ INSTRUCTIONS:
 - Do not write, draft, or create research papers or documents for the student"""
 
 
+def reserve_daily_question(db: Session, student_id: int) -> None:
+    today = datetime.now(LOCAL_TIMEZONE).date()
+    result = db.execute(text("""
+        INSERT INTO rag_daily_usage (student_id, usage_date, question_count)
+        VALUES (:student_id, :usage_date, 1)
+        ON CONFLICT (student_id, usage_date)
+        DO UPDATE SET question_count = rag_daily_usage.question_count + 1
+        WHERE rag_daily_usage.question_count < :daily_limit
+        RETURNING question_count
+    """), {
+        "student_id": student_id,
+        "usage_date": today,
+        "daily_limit": DAILY_QUESTION_LIMIT
+    })
+    if result.fetchone() is None:
+        db.rollback()
+        raise HTTPException(
+            status_code=429,
+            detail="Daily Ask AI limit reached (5 questions). Please try again tomorrow."
+        )
+    db.commit()
+
+
 @router.post("/ask")
-def ask_rag(payload: dict, db: Session = Depends(get_db), _=Depends(require_login)):
+def ask_rag(payload: dict, db: Session = Depends(get_db), user=Depends(require_login)):
     question = payload.get("question", "").strip()
 
     if not question:
@@ -133,6 +160,13 @@ def ask_rag(payload: dict, db: Session = Depends(get_db), _=Depends(require_logi
                 "answer": "I'm sorry, but I'm only able to assist with research-related questions. I cannot write, draft, or create research papers or documents for you. Please ask me a question about research topics, concepts, or methodologies instead.",
                 "sources": []
             }
+
+    if user.get("role") == "student":
+        try:
+            student_id = int(user["sub"])
+        except (KeyError, TypeError, ValueError):
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        reserve_daily_question(db, student_id)
 
     relevant_papers = search_relevant_papers(question, db)
     context = build_context(relevant_papers)
