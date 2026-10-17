@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import '../css/SearchPapers.css'
+import '../css/ConfirmModal.css'
 import PaperView from '../components/PaperView'
 import IRISlogo from '../assets/IRISlogo.png'
 import MyDrafts from './MyDrafts'
@@ -12,6 +13,7 @@ function SearchPapers() {
   const navigate = useNavigate()
   const full_name = sessionStorage.getItem('full_name')
   const firstName = full_name ? full_name.split(' ')[0] : 'Student'
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const [keyword, setKeyword] = useState('')
   const [filters, setFilters] = useState({ category: '', methodology: '', year: '' })
@@ -27,6 +29,11 @@ function SearchPapers() {
   const [copiedId, setCopiedId] = useState(null)
   const papersPerPage = 12
   const [showDrafts, setShowDrafts] = useState(false)
+
+  const handleLogout = () => {
+    sessionStorage.clear()
+    navigate('/')
+  }
 
   // Search history
   const [searchHistory, setSearchHistory] = useState(() => {
@@ -349,7 +356,7 @@ const fetchAiHistory = async () => {
   </button>
   <button
     className="sp-logout-btn"
-    onClick={() => { sessionStorage.clear(); navigate('/') }}
+    onClick={() => setShowLogoutModal(true)}
   >
     Logout
   </button>
@@ -1012,6 +1019,33 @@ const fetchAiHistory = async () => {
 
       {showTerms && <TermsAndConditions onClose={() => setShowTerms(false)} />}
       {showPrivacy && <LegalPolicy onClose={() => setShowPrivacy(false)} />}
+      {showLogoutModal && (
+        <div className="confirm-overlay">
+          <div
+            className="confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="student-logout-title"
+          >
+            <div className="confirm-icon">👋</div>
+            <h3 className="confirm-title" id="student-logout-title">Logging out?</h3>
+            <p className="confirm-desc">
+              Are you sure you want to logout of your student account?
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Stay
+              </button>
+              <button className="confirm-proceed" onClick={handleLogout}>
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
