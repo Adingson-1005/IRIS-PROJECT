@@ -9,6 +9,11 @@ import MyDrafts from './MyDrafts'
 import TermsAndConditions from './TermsAndConditions'
 import LegalPolicy from './LegalPolicy'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ||
+  (['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:8000'
+    : 'https://iris-backend-7717.onrender.com')
+
 function SearchPapers() {
   const navigate = useNavigate()
   const full_name = sessionStorage.getItem('full_name')
@@ -70,7 +75,7 @@ function SearchPapers() {
   const fetchAllPapers = async () => {
     try {
       const token = sessionStorage.getItem('token')
-      const response = await axios.get('https://iris-backend-7717.onrender.com/papers/list', {
+      const response = await axios.get(`${API_BASE}/papers/list`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAllPapers(response.data.papers)
@@ -99,7 +104,7 @@ function SearchPapers() {
       if (filters.category) params.category = filters.category
       if (filters.methodology) params.methodology = filters.methodology
       if (filters.year) params.year = filters.year
-      const response = await axios.get('https://iris-backend-7717.onrender.com/search/', {
+      const response = await axios.get(`${API_BASE}/search/`, {
         params,
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -131,7 +136,7 @@ function SearchPapers() {
         if (filters.category && p.category !== filters.category) return false
         if (filters.methodology && p.methodology !== filters.methodology) return false
         if (filters.year && String(p.year) !== String(filters.year)) return false
-        if (classFilter && !p.class_names?.includes(classFilter)) return false
+        if (classFilter && p.class_name !== classFilter) return false
         return true
       })
       .sort((a, b) => {
@@ -259,7 +264,7 @@ function SearchPapers() {
   }
 
   const displayPapers = mode === 'search'
-    ? searchResults.filter(p => !classFilter || p.class_names?.includes(classFilter))
+    ? searchResults.filter(p => !classFilter || p.class_name === classFilter)
     : applyFilters(allPapers)
 
   const totalPages = Math.ceil(displayPapers.length / papersPerPage)
@@ -522,7 +527,7 @@ const fetchAiHistory = async () => {
           <div className="sp-empty-state">
             <p>
               {classFilter
-                ? `No papers linked to ${classFilter}. Paper classes are matched from author names and student accounts.`
+                ? `No papers assigned to ${classFilter} were found.`
                 : 'No papers in the repository yet.'}
             </p>
           </div>

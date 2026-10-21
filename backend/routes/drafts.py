@@ -597,14 +597,15 @@ def approve_publication(
 
         # Add to papers table
         db.execute(text("""
-            INSERT INTO papers (title, authors, abstract, category, methodology, year, file_url, uploaded_by)
-            VALUES (:title, :authors, :abstract, :category, :methodology, :year, :file_url, :uploaded_by)
+            INSERT INTO papers (title, authors, abstract, category, methodology, class_name, year, file_url, uploaded_by)
+            VALUES (:title, :authors, :abstract, :category, :methodology, :class_name, :year, :file_url, :uploaded_by)
         """), {
             "title": req.title,
             "authors": req.authors,
             "abstract": req.abstract or "",
             "category": req.category or "",
             "methodology": req.methodology or "",
+            "class_name": req.class_name,
             "year": req.year or 2024,
             "file_url": file_url,
             "uploaded_by": user["id"]

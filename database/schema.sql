@@ -15,6 +15,7 @@ CREATE TABLE papers (
     abstract TEXT,
     category VARCHAR(100),
     methodology VARCHAR(100),
+    class_name VARCHAR(100),
     year INTEGER,
     file_url VARCHAR(500),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -49,4 +50,3 @@ CREATE TABLE student_submissions (
     status VARCHAR(50) DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-

@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.inverted_index import build_index
-from services.paper_classes import attach_student_classes
 from services.storage import upload_file, delete_file
 from jose import jwt
 import os
@@ -113,19 +112,14 @@ async def upload_paper(
 def list_papers(db: Session = Depends(get_db)):
     try:
         papers = db.execute(text("""
-            SELECT id, title, authors, abstract, category, methodology,
+            SELECT id, title, authors, abstract, category, methodology, class_name,
                    year, file_url, created_at,
                    COALESCE(downloads, 0) as downloads
             FROM papers
             WHERE deleted_at IS NULL
             ORDER BY created_at DESC
         """)).fetchall()
-        return {
-            "papers": attach_student_classes(
-                db,
-                [dict(row._mapping) for row in papers]
-            )
-        }
+        return {"papers": [dict(row._mapping) for row in papers]}
     except Exception as e:
         return {"error": str(e)}
 
@@ -137,7 +131,7 @@ def my_papers(
 ):
     try:
         papers = db.execute(text("""
-            SELECT id, title, authors, abstract, category, methodology,
+            SELECT id, title, authors, abstract, category, methodology, class_name,
                    year, file_url, created_at,
                    COALESCE(downloads, 0) as downloads
             FROM papers
@@ -160,7 +154,7 @@ def list_archived_papers(
             raise HTTPException(status_code=403, detail="Admin only")
 
         papers = db.execute(text("""
-            SELECT id, title, authors, abstract, category, methodology,
+            SELECT id, title, authors, abstract, category, methodology, class_name,
                    year, file_url, created_at, deleted_at,
                    COALESCE(downloads, 0) as downloads
             FROM papers

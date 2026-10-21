@@ -81,7 +81,7 @@ def search_index(query: str, db: Session):
             results = db.execute(text("""
                 SELECT ii.paper_id, ii.frequency,
                        p.title, p.authors, p.category,
-                       p.methodology, p.year, p.abstract, p.file_url
+                       p.methodology, p.class_name, p.year, p.abstract, p.file_url
                 FROM inverted_index ii
                 JOIN papers p ON ii.paper_id = p.id
                 WHERE ii.term = :term AND p.deleted_at IS NULL
@@ -96,6 +96,7 @@ def search_index(query: str, db: Session):
                         "authors": row.authors,
                         "category": row.category,
                         "methodology": row.methodology,
+                        "class_name": row.class_name,
                         "year": row.year,
                         "abstract": row.abstract,
                         "file_url": row.file_url,

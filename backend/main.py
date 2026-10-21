@@ -8,6 +8,32 @@ from routes import auth, papers, search, analytics, users, templates, ai, rag, d
 
 app = FastAPI()
 
+@app.on_event("startup")
+def ensure_paper_class_column():
+    with engine.begin() as conn:
+        conn.execute(text("""
+            ALTER TABLE papers
+            ADD COLUMN IF NOT EXISTS class_name VARCHAR(100)
+        """))
+        conn.execute(text("""
+            UPDATE papers AS p
+            SET class_name = u.class_name
+            FROM publication_requests AS pr
+            JOIN users AS u ON u.id = pr.student_id
+            LEFT JOIN student_drafts AS sd ON sd.id = pr.draft_id
+            WHERE pr.status = 'Approved'
+              AND u.class_name IS NOT NULL
+              AND p.class_name IS NULL
+              AND (
+                    (sd.file_url IS NOT NULL AND sd.file_url <> '' AND p.file_url = sd.file_url)
+                    OR (
+                        LOWER(TRIM(p.title)) = LOWER(TRIM(pr.title))
+                        AND LOWER(TRIM(COALESCE(p.authors, ''))) =
+                            LOWER(TRIM(COALESCE(pr.authors, '')))
+                    )
+              )
+        """))
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
