@@ -29,6 +29,21 @@ def _name_matches(author_name: str, authors: str) -> bool:
 
 
 def attach_student_classes(db: Session, papers: list[dict]) -> list[dict]:
+    published_paper_classes = {
+        row.file_url: row.class_name
+        for row in db.execute(text("""
+            SELECT DISTINCT sd.file_url, u.class_name
+            FROM publication_requests pr
+            JOIN student_drafts sd ON sd.id = pr.draft_id
+            JOIN users u ON u.id = pr.student_id
+            WHERE pr.status = 'Approved'
+              AND sd.file_url IS NOT NULL
+              AND u.class_name IS NOT NULL
+              AND TRIM(u.class_name) != ''
+        """)).fetchall()
+        if row.file_url
+    }
+
     students = db.execute(text("""
         SELECT full_name, class_name
         FROM users
@@ -49,6 +64,10 @@ def attach_student_classes(db: Session, papers: list[dict]) -> list[dict]:
             for author_name, class_name in class_by_author
             if _name_matches(author_name, paper.get("authors") or "")
         }
+        published_class = published_paper_classes.get(paper.get("file_url"))
+        if published_class:
+            matched_classes.add(published_class)
+
         paper["class_names"] = sorted(
             matched_classes,
             key=lambda class_name: (
