@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
 from services.inverted_index import build_index
-from services.storage import upload_file
+from services.paper_classes import attach_student_classes
+from services.storage import upload_file, delete_file
 from jose import jwt
 import os
 import uuid
@@ -119,7 +120,12 @@ def list_papers(db: Session = Depends(get_db)):
             WHERE deleted_at IS NULL
             ORDER BY created_at DESC
         """)).fetchall()
-        return {"papers": [dict(row._mapping) for row in papers]}
+        return {
+            "papers": attach_student_classes(
+                db,
+                [dict(row._mapping) for row in papers]
+            )
+        }
     except Exception as e:
         return {"error": str(e)}
 
@@ -239,6 +245,48 @@ def delete_paper(
         raise
     except Exception as e:
         return {"error": str(e)}
+
+
+@router.delete("/permanent-delete/{paper_id}")
+def permanently_delete_paper(
+    paper_id: str,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    try:
+        paper = db.execute(
+            text("SELECT id, file_url, deleted_at FROM papers WHERE id = :paper_id"),
+            {"paper_id": paper_id}
+        ).fetchone()
+
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
+        if paper.deleted_at is None:
+            raise HTTPException(status_code=400, detail="Only archived papers can be permanently deleted")
+
+        db.execute(
+            text("DELETE FROM inverted_index WHERE paper_id = :paper_id"),
+            {"paper_id": paper_id}
+        )
+        db.execute(
+            text("DELETE FROM papers WHERE id = :paper_id"),
+            {"paper_id": paper_id}
+        )
+        db.commit()
+
+        storage_deleted = delete_file(paper.file_url)
+        return {
+            "message": "Paper permanently deleted",
+            "storage_deleted": storage_deleted
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/restore/{paper_id}")

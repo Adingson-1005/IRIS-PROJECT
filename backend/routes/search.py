@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, Header, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from services.inverted_index import search_index
+from services.paper_classes import attach_student_classes
 from sqlalchemy import text
 from jose import jwt
 import os
@@ -39,6 +40,7 @@ def search(
                 r for r in results
                 if r["methodology"] == methodology
             ]
+        results = attach_student_classes(db, results)
 
         db.execute(text("""
             INSERT INTO search_logs (keyword, results_count)

@@ -17,6 +17,7 @@ function ManagePapers() {
   const [sortOrder, setSortOrder] = useState('desc')
   const [selectedPaper, setSelectedPaper] = useState(null)
   const [archiveTarget, setArchiveTarget] = useState(null)
+  const [permanentDeleteTarget, setPermanentDeleteTarget] = useState(null)
   const [statusModal, setStatusModal] = useState(null) // { type: 'success' | 'error', message }
 
   useEffect(() => { fetchPapers() }, [view])
@@ -81,6 +82,33 @@ function ManagePapers() {
       setStatusModal({
         type: 'error',
         message: err.response?.data?.detail || err.message || 'Failed to restore paper'
+      })
+    }
+    setProcessing(null)
+  }
+
+  const handlePermanentlyDelete = async () => {
+    if (!permanentDeleteTarget) return
+    setProcessing(permanentDeleteTarget.id)
+    try {
+      const response = await axios.delete(
+        `${API_BASE}/papers/permanent-delete/${permanentDeleteTarget.id}`,
+        authHeaders()
+      )
+      if (response.data?.error) throw new Error(response.data.error)
+      setPapers(papers.filter(p => p.id !== permanentDeleteTarget.id))
+      setPermanentDeleteTarget(null)
+      setStatusModal({
+        type: response.data?.storage_deleted ? 'success' : 'error',
+        message: response.data?.storage_deleted
+          ? 'Paper and its stored PDF were permanently deleted.'
+          : 'The paper was deleted from the repository, but its PDF could not be removed from Supabase Storage.'
+      })
+    } catch (err) {
+      setPermanentDeleteTarget(null)
+      setStatusModal({
+        type: 'error',
+        message: err.response?.data?.detail || err.message || 'Failed to permanently delete paper'
       })
     }
     setProcessing(null)
@@ -217,19 +245,31 @@ function ManagePapers() {
                   Archived on {new Date(paper.deleted_at).toLocaleDateString()}
                 </span>
               )}
-              <div className="mp-card-footer">
+              <div className={`mp-card-footer ${isArchivedView ? 'mp-card-footer-archived' : ''}`}>
                 <span className="mp-method-badge">{paper.methodology}</span>
                 {isArchivedView ? (
-                  <button
-                    className="mp-restore-btn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRestore(paper)
-                    }}
-                    disabled={processing === paper.id}
-                  >
-                    {processing === paper.id ? 'Restoring...' : 'Restore'}
-                  </button>
+                  <div className="mp-archived-actions">
+                    <button
+                      className="mp-restore-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRestore(paper)
+                      }}
+                      disabled={processing === paper.id}
+                    >
+                      {processing === paper.id ? 'Restoring...' : 'Restore'}
+                    </button>
+                    <button
+                      className="mp-permanent-delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPermanentDeleteTarget({ id: paper.id, title: paper.title })
+                      }}
+                      disabled={processing === paper.id}
+                    >
+                      Permanently Delete
+                    </button>
+                  </div>
                 ) : (
                   <button
                     className="mp-delete-btn"
@@ -273,6 +313,30 @@ function ManagePapers() {
               <button className="confirm-cancel" onClick={() => setArchiveTarget(null)}>Cancel</button>
               <button className="confirm-proceed" onClick={handleArchive} disabled={!!processing}>
                 {processing ? 'Archiving...' : 'Yes, Archive'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permanent deletion confirmation */}
+      {permanentDeleteTarget && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon" style={{ color: '#b91c1c' }}>
+              <svg viewBox="0 0 24 24" fill="none" width="40" height="40">
+                <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h3 className="confirm-title">Permanently Delete Paper?</h3>
+            <p className="confirm-desc">
+              This will permanently delete <strong>"{permanentDeleteTarget.title}"</strong>,
+              its search index, and its stored PDF. This cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-cancel" onClick={() => setPermanentDeleteTarget(null)}>Cancel</button>
+              <button className="mp-permanent-delete-confirm" onClick={handlePermanentlyDelete} disabled={!!processing}>
+                {processing ? 'Deleting...' : 'Permanently Delete'}
               </button>
             </div>
           </div>

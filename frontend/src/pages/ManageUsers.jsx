@@ -7,6 +7,9 @@ function ManageUsers() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(null)
+  const [selectedUserIds, setSelectedUserIds] = useState([])
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [bulkDeleteMessage, setBulkDeleteMessage] = useState(null)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
@@ -52,10 +55,53 @@ function ManageUsers() {
         headers: { Authorization: `Bearer ${token}` }
       })
       setUsers(users.filter(u => u.id !== deleteTarget.id))
+      setSelectedUserIds(current => current.filter(id => id !== deleteTarget.id))
       setDeleteTarget(null)
     } catch (err) {
       alert(err.response?.data?.detail || 'Failed to delete user')
     }
+    setDeleting(null)
+  }
+
+  const handleSelectUser = (userId) => {
+    setSelectedUserIds(current => current.includes(userId)
+      ? current.filter(id => id !== userId)
+      : [...current, userId])
+    setBulkDeleteMessage(null)
+  }
+
+  const handleSelectAllVisible = (checked) => {
+    const visibleIds = filtered.filter(user => user.role !== 'admin').map(user => user.id)
+    setSelectedUserIds(current => checked
+      ? [...new Set([...current, ...visibleIds])]
+      : current.filter(id => !visibleIds.includes(id)))
+    setBulkDeleteMessage(null)
+  }
+
+  const handleBulkDelete = async () => {
+    setDeleting('bulk')
+    const token = sessionStorage.getItem('token')
+    const results = await Promise.allSettled(selectedUserIds.map(userId =>
+      axios.delete(`https://iris-backend-7717.onrender.com/users/delete/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    ))
+    const deletedIds = results.flatMap((result, index) =>
+      result.status === 'fulfilled' && !result.value.data?.error
+        ? [selectedUserIds[index]]
+        : []
+    )
+    const failedCount = selectedUserIds.length - deletedIds.length
+
+    setUsers(current => current.filter(user => !deletedIds.includes(user.id)))
+    setSelectedUserIds(current => current.filter(id => !deletedIds.includes(id)))
+    setBulkDeleteMessage({
+      error: failedCount > 0,
+      text: failedCount > 0
+        ? `Deleted ${deletedIds.length} user${deletedIds.length === 1 ? '' : 's'}; ${failedCount} could not be deleted. Failed users remain selected.`
+        : `Deleted ${deletedIds.length} user${deletedIds.length === 1 ? '' : 's'}.`
+    })
+    setShowBulkDeleteConfirm(false)
     setDeleting(null)
   }
 
@@ -144,6 +190,9 @@ function ManageUsers() {
     const matchRole = roleFilter ? u.role === roleFilter : true
     return matchSearch && matchRole
   })
+  const visibleSelectableUsers = filtered.filter(user => user.role !== 'admin')
+  const allVisibleSelected = visibleSelectableUsers.length > 0 &&
+    visibleSelectableUsers.every(user => selectedUserIds.includes(user.id))
 
   const totalStudents = users.filter(u => u.role === 'student').length
   const totalInstructors = users.filter(u => u.role === 'instructor').length
@@ -182,6 +231,15 @@ function ManageUsers() {
             <button className="mu-bulk-btn" onClick={() => setShowBulkModal(true)}>
               Upload Excel
             </button>
+            {selectedUserIds.length > 0 && (
+              <button
+                className="mu-bulk-delete-btn"
+                onClick={() => setShowBulkDeleteConfirm(true)}
+                disabled={!!deleting}
+              >
+                Delete Selected ({selectedUserIds.length})
+              </button>
+            )}
             <select
               className="mu-select"
               value={roleFilter}
@@ -201,6 +259,15 @@ function ManageUsers() {
           </div>
         </div>
 
+        {bulkDeleteMessage && (
+          <p
+            className={`mu-delete-message ${bulkDeleteMessage.error ? 'mu-delete-message-error' : ''}`}
+            role="status"
+          >
+            {bulkDeleteMessage.text}
+          </p>
+        )}
+
         {loading && <p className="mu-loading">Loading users...</p>}
 
         {!loading && filtered.length === 0 && (
@@ -212,6 +279,15 @@ function ManageUsers() {
             <table className="mu-table">
               <thead>
                 <tr>
+                  <th className="mu-checkbox-cell">
+                    <input
+                      type="checkbox"
+                      aria-label="Select all non-admin users shown"
+                      checked={allVisibleSelected}
+                      onChange={(e) => handleSelectAllVisible(e.target.checked)}
+                      disabled={visibleSelectableUsers.length === 0 || !!deleting}
+                    />
+                  </th>
                   <th>Full Name</th>
                   <th>Email</th>
                   <th>Role</th>
@@ -223,6 +299,15 @@ function ManageUsers() {
               <tbody>
                 {filtered.map((user) => (
                   <tr key={user.id}>
+                    <td className="mu-checkbox-cell">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${user.full_name}`}
+                        checked={user.role !== 'admin' && selectedUserIds.includes(user.id)}
+                        onChange={() => handleSelectUser(user.id)}
+                        disabled={user.role === 'admin' || !!deleting}
+                      />
+                    </td>
                     <td>{user.full_name}</td>
                     <td className="mu-email">{user.email}</td>
                     <td>
@@ -349,6 +434,40 @@ function ManageUsers() {
                 disabled={!!deleting}
               >
                 {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete confirmation */}
+      {showBulkDeleteConfirm && (
+        <div className="confirm-overlay">
+          <div className="confirm-modal">
+            <div className="confirm-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="40" height="40">
+                <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h3 className="confirm-title">Delete Selected Users?</h3>
+            <p className="confirm-desc">
+              Permanently delete {selectedUserIds.length} selected non-admin account{selectedUserIds.length === 1 ? '' : 's'}? This cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button
+                className="confirm-cancel"
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                disabled={!!deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-delete"
+                onClick={handleBulkDelete}
+                disabled={!!deleting}
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete Selected'}
               </button>
             </div>
           </div>

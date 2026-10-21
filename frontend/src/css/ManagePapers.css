@@ -200,6 +200,12 @@
   border-top: 1px solid #f5f5f5;
 }
 
+.mp-card-footer-archived {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .mp-method-badge {
   background-color: #ede9fe;
   color: #5b21b6;
@@ -290,6 +296,37 @@
 }
 
 .mp-restore-btn:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.mp-archived-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.mp-permanent-delete-btn,
+.mp-permanent-delete-confirm {
+  padding: 5px 10px;
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mp-permanent-delete-btn:hover,
+.mp-permanent-delete-confirm:hover {
+  background-color: #fca5a5;
+}
+
+.mp-permanent-delete-btn:disabled,
+.mp-permanent-delete-confirm:disabled {
   background-color: #e5e7eb;
   color: #9ca3af;
   cursor: not-allowed;

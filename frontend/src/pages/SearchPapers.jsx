@@ -17,6 +17,7 @@ function SearchPapers() {
 
   const [keyword, setKeyword] = useState('')
   const [filters, setFilters] = useState({ category: '', methodology: '', year: '' })
+  const [classFilter, setClassFilter] = useState('')
   const [sortOrder, setSortOrder] = useState('desc')
   const [allPapers, setAllPapers] = useState([])
   const [searchResults, setSearchResults] = useState([])
@@ -64,7 +65,7 @@ function SearchPapers() {
 
   useEffect(() => { fetchAllPapers() }, [])
 
-  useEffect(() => { setCurrentPage(1) }, [keyword, filters, mode, sortOrder])
+  useEffect(() => { setCurrentPage(1) }, [keyword, filters, classFilter, mode, sortOrder])
 
   const fetchAllPapers = async () => {
     try {
@@ -113,6 +114,7 @@ function SearchPapers() {
   const handleClear = () => {
     setKeyword('')
     setFilters({ category: '', methodology: '', year: '' })
+    setClassFilter('')
     setMode('browse')
     setSearchResults([])
     setError('')
@@ -129,6 +131,7 @@ function SearchPapers() {
         if (filters.category && p.category !== filters.category) return false
         if (filters.methodology && p.methodology !== filters.methodology) return false
         if (filters.year && String(p.year) !== String(filters.year)) return false
+        if (classFilter && !p.class_names?.includes(classFilter)) return false
         return true
       })
       .sort((a, b) => {
@@ -256,7 +259,7 @@ function SearchPapers() {
   }
 
   const displayPapers = mode === 'search'
-    ? searchResults
+    ? searchResults.filter(p => !classFilter || p.class_names?.includes(classFilter))
     : applyFilters(allPapers)
 
   const totalPages = Math.ceil(displayPapers.length / papersPerPage)
@@ -462,6 +465,18 @@ const fetchAiHistory = async () => {
             <option value="Descriptive">Descriptive</option>
           </select>
 
+          <select
+            className="sp-select"
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+          >
+            <option value="">All Classes</option>
+            <option value="Class A">Class A</option>
+            <option value="Class B">Class B</option>
+            <option value="Class C">Class C</option>
+            <option value="Class D">Class D</option>
+          </select>
+
           <input
             className="sp-select sp-year"
             type="number"
@@ -504,7 +519,13 @@ const fetchAiHistory = async () => {
         {loading && <div className="sp-empty-state"><p>Loading papers...</p></div>}
 
         {!loading && displayPapers.length === 0 && mode === 'browse' && (
-          <div className="sp-empty-state"><p>No papers in the repository yet.</p></div>
+          <div className="sp-empty-state">
+            <p>
+              {classFilter
+                ? `No papers linked to ${classFilter}. Paper classes are matched from author names and student accounts.`
+                : 'No papers in the repository yet.'}
+            </p>
+          </div>
         )}
 
         {!loading && displayPapers.length === 0 && mode === 'search' && (
