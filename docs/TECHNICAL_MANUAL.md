@@ -142,6 +142,7 @@ CREATE TABLE papers (
   abstract TEXT,
   category TEXT,                    -- strand: STEM/HUMSS/ABM/GAS
   methodology TEXT,
+  class_name TEXT,                  -- student class for repository filtering
   year INT,
   file_url TEXT NOT NULL,
   uploaded_by UUID REFERENCES users(id),
@@ -341,6 +342,7 @@ Base URL (production): `https://iris-backend-7717.onrender.com`
 | POST | `/upload` | Multipart upload (title, authors, abstract, category, methodology, year, file). Triggers background indexing. |
 | GET | `/list` | All papers, newest first. |
 | GET | `/my-papers` | Papers uploaded by the current user. |
+| PATCH | `/{paper_id}/class` | Admin assigns or clears a paper's class (Class A-D). |
 | POST | `/reindex-all` | Rebuild the inverted index for every paper (background task). |
 | DELETE | `/delete/{paper_id}` | Remove paper and its index rows. |
 | GET | `/download/{paper_id}` | Increments download counter and returns `{download_url}`. |

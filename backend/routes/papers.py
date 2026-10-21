@@ -168,6 +168,40 @@ def list_archived_papers(
         return {"error": str(e)}
 
 
+@router.patch("/{paper_id}/class")
+def update_paper_class(
+    paper_id: str,
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)
+):
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    class_name = payload.get("class_name")
+    if class_name == "":
+        class_name = None
+    if class_name not in (None, "Class A", "Class B", "Class C", "Class D"):
+        raise HTTPException(status_code=400, detail="Invalid class")
+
+    try:
+        result = db.execute(text("""
+            UPDATE papers
+            SET class_name = :class_name
+            WHERE id = :paper_id
+            RETURNING id
+        """), {"class_name": class_name, "paper_id": paper_id}).fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="Paper not found")
+        db.commit()
+        return {"message": "Paper class updated", "class_name": class_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/reindex-all")
 def reindex_all(
     background_tasks: BackgroundTasks,

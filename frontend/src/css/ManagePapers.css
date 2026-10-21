@@ -191,6 +191,20 @@
   flex: 1;
 }
 
+.mp-class-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 12px;
+}
+
+.mp-class-field .mp-select {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+}
+
 .mp-card-footer {
   display: flex;
   justify-content: space-between;

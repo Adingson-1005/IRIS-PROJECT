@@ -4,13 +4,17 @@ import '../css/ManagePapers.css'
 import PaperView from '../components/PaperView'
 import '../css/ConfirmModal.css'
 
-const API_BASE = 'https://iris-backend-7717.onrender.com'
+const API_BASE = import.meta.env.VITE_API_BASE_URL ||
+  (['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:8000'
+    : 'https://iris-backend-7717.onrender.com')
 
 function ManagePapers() {
   const [papers, setPapers] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('active') // 'active' | 'archived'
   const [processing, setProcessing] = useState(null)
+  const [classSaving, setClassSaving] = useState(null)
   const [search, setSearch] = useState('')
   const [strand, setStrand] = useState('')
   const [methodology, setMethodology] = useState('')
@@ -25,6 +29,26 @@ function ManagePapers() {
   const authHeaders = () => ({
     headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
   })
+
+  const handleClassChange = async (paper, className) => {
+    setClassSaving(paper.id)
+    try {
+      await axios.patch(
+        `${API_BASE}/papers/${paper.id}/class`,
+        { class_name: className || null },
+        authHeaders()
+      )
+      setPapers(current => current.map(item =>
+        item.id === paper.id ? { ...item, class_name: className || null } : item
+      ))
+    } catch (err) {
+      setStatusModal({
+        type: 'error',
+        message: err.response?.data?.detail || 'Failed to update paper class'
+      })
+    }
+    setClassSaving(null)
+  }
 
   const fetchPapers = async () => {
     setLoading(true)
@@ -240,6 +264,24 @@ function ManagePapers() {
                   ? paper.abstract.substring(0, 120) + '...'
                   : 'No abstract available.'}
               </p>
+              {sessionStorage.getItem('role') === 'admin' && (
+                <label className="mp-class-field" onClick={(e) => e.stopPropagation()}>
+                  <span>Class</span>
+                  <select
+                    className="mp-select"
+                    value={paper.class_name || ''}
+                    onChange={(e) => handleClassChange(paper, e.target.value)}
+                    disabled={classSaving === paper.id}
+                  >
+                    <option value="">Unassigned</option>
+                    <option value="Class A">Class A</option>
+                    <option value="Class B">Class B</option>
+                    <option value="Class C">Class C</option>
+                    <option value="Class D">Class D</option>
+                  </select>
+                  {classSaving === paper.id && <span>Saving...</span>}
+                </label>
+              )}
               {isArchivedView && paper.deleted_at && (
                 <span className="mp-archived-date">
                   Archived on {new Date(paper.deleted_at).toLocaleDateString()}

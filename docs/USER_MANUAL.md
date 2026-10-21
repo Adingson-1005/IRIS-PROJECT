@@ -261,8 +261,9 @@
 
    1. Click **Manage Papers** in the sidebar.
    2. Use the search and filters to find a paper.
-   3. Click a card to open it.
-   4. Click **Delete** on a card to remove a paper from the repository.
+   3. Set the **Class** selector on a paper to assign or change its class, or choose **Unassigned**.
+   4. Click a card to open it.
+   5. Click **Delete** on a card to remove a paper from the repository.
 
    ### 5.10 Analytics (Admin)
 
