@@ -246,7 +246,7 @@ const handlePrint = () => {
     </html>
   `
 
-  const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+  const printWindow = window.open('', '_blank')
   if (!printWindow) {
     alert('Please allow pop-ups to export paper details.')
     return
