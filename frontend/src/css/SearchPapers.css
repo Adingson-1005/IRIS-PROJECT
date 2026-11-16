@@ -1349,3 +1349,42 @@
     display: none;
   }
 }
+
+/* ── Ask AI daily limit ── */
+.sp-rag-usage {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 5px 12px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+}
+
+.sp-rag-expired {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  color: #92400e;
+}
+
+.sp-rag-expired strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.sp-rag-expired p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sp-rag-textarea:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}

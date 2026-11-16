@@ -64,6 +64,7 @@ function SearchPapers() {
   const [ragLoading, setRagLoading] = useState(false)
   const [ragAnswer, setRagAnswer] = useState(null)
   const [ragError, setRagError] = useState('')
+  const [ragUsage, setRagUsage] = useState(null) // { limit, used, remaining }
 
   const [showAiPanel, setShowAiPanel] = useState(false)
   const [activeAiTab, setActiveAiTab] = useState('rag')
@@ -197,7 +198,28 @@ function SearchPapers() {
     setSubmitLoading(false)
   }
 
+  const fetchRagUsage = async () => {
+    try {
+      const token = sessionStorage.getItem('token')
+      const response = await axios.get(`${API_BASE}/rag/usage`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setRagUsage(response.data)
+    } catch {
+      // Not critical: the server still enforces the daily limit
+    }
+  }
+
+  // Refresh the remaining-questions counter whenever the Ask AI tab is shown
+  useEffect(() => {
+    if (showAiPanel && activeAiTab === 'rag') fetchRagUsage()
+  }, [showAiPanel, activeAiTab])
+
+  const ragLimitReached =
+    ragUsage !== null && typeof ragUsage.remaining === 'number' && ragUsage.remaining <= 0
+
   const handleAskRag = async () => {
+    if (ragLimitReached) return
     if (!ragQuestion.trim()) { setRagError('Please enter a question'); return }
     setRagLoading(true)
     setRagError('')
@@ -205,12 +227,14 @@ function SearchPapers() {
     try {
       const token = sessionStorage.getItem('token')
       const response = await axios.post(
-        'https://iris-backend-7717.onrender.com/rag/ask',
+        `${API_BASE}/rag/ask`,
         { question: ragQuestion },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setRagAnswer(response.data)
+      if (response.data?.usage) setRagUsage(response.data.usage)
     } catch (err) {
+      if (err.response?.status === 429) fetchRagUsage()
       setRagError(err.response?.data?.detail || 'Failed to get answer. Please try again.')
     }
     setRagLoading(false)
@@ -818,14 +842,24 @@ const fetchAiHistory = async () => {
                         <p className="sp-modal-desc">Ask a research question and AI will answer based on papers in the repository.</p>
                       </div>
                     </div>
-                    {ragError && <p className="sp-modal-error">{ragError}</p>}
+                    {ragLimitReached ? (
+                      <div className="sp-rag-expired">
+                        <strong>Your Ask AI session has expired for the day.</strong>
+                        <p>You have used all {ragUsage.limit} questions for today. It resets tomorrow.</p>
+                      </div>
+                    ) : ragUsage && typeof ragUsage.remaining === 'number' && (
+                      <p className="sp-rag-usage">
+                        {ragUsage.remaining} of {ragUsage.limit} questions left today
+                      </p>
+                    )}
+                    {ragError && !ragLimitReached && <p className="sp-modal-error">{ragError}</p>}
                     <div className="sp-modal-field">
                       <label>Your research question</label>
-                      <textarea className="sp-rag-textarea" placeholder="e.g. What methodologies are used in studies about social media?" value={ragQuestion} onChange={(e) => setRagQuestion(e.target.value)} rows={3} />
+                      <textarea className="sp-rag-textarea" placeholder="e.g. What methodologies are used in studies about social media?" value={ragQuestion} onChange={(e) => setRagQuestion(e.target.value)} rows={3} disabled={ragLimitReached} />
                     </div>
                     <div className="sp-modal-actions">
                       <button className="sp-modal-cancel" onClick={closeAiPanel} disabled={ragLoading}>Cancel</button>
-                      <button className="sp-modal-submit sp-modal-submit-rag" onClick={handleAskRag} disabled={ragLoading}>
+                      <button className="sp-modal-submit sp-modal-submit-rag" onClick={handleAskRag} disabled={ragLoading || ragLimitReached}>
                         {ragLoading ? 'Thinking...' : 'Ask AI'}
                       </button>
                     </div>
@@ -855,8 +889,18 @@ const fetchAiHistory = async () => {
                         ))}
                       </div>
                     )}
+                    {ragLimitReached ? (
+                      <div className="sp-rag-expired">
+                        <strong>Your Ask AI session has expired for the day.</strong>
+                        <p>You have used all {ragUsage.limit} questions for today. It resets tomorrow.</p>
+                      </div>
+                    ) : ragUsage && typeof ragUsage.remaining === 'number' && (
+                      <p className="sp-rag-usage">
+                        {ragUsage.remaining} of {ragUsage.limit} questions left today
+                      </p>
+                    )}
                     <div className="sp-modal-actions" style={{ marginTop: '16px' }}>
-                      <button className="sp-modal-cancel" onClick={() => { setRagAnswer(null); setRagQuestion('') }}>Ask another</button>
+                      <button className="sp-modal-cancel" onClick={() => { setRagAnswer(null); setRagQuestion('') }} disabled={ragLimitReached}>Ask another</button>
                       <button className="sp-modal-submit sp-modal-submit-rag" onClick={closeAiPanel}>Done</button>
                     </div>
                   </>

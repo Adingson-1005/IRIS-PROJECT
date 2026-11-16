@@ -6,6 +6,7 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 from jose import jwt
+from datetime import datetime, timedelta, timezone
 import os
 
 load_dotenv()
@@ -15,12 +16,54 @@ router = APIRouter()
 SECRET_KEY = os.getenv("SECRET_KEY", "iris-secret")
 ALGORITHM = "HS256"
 
+# Maximum number of Ask AI questions a student may ask per day.
+# Change it here, or set RAG_DAILY_LIMIT in the Render environment variables.
+DAILY_QUESTION_LIMIT = int(os.getenv("RAG_DAILY_LIMIT", "5"))
+
 def require_login(authorization: str = Header(...)):
     try:
         token = authorization.replace("Bearer ", "")
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+def today_ph():
+    """The 'day' for the question limit follows Philippine time (UTC+8),
+    so the limit resets at midnight in the Philippines."""
+    return datetime.now(timezone(timedelta(hours=8))).date()
+
+
+def reserve_question(db: Session, student_id: str, usage_date):
+    """Atomically uses up one question for today. Returns the new question
+    count, or None when the student has already reached the daily limit."""
+    if DAILY_QUESTION_LIMIT <= 0:
+        return None
+    row = db.execute(text("""
+        INSERT INTO rag_daily_usage (student_id, usage_date, question_count)
+        VALUES (CAST(:sid AS uuid), :d, 1)
+        ON CONFLICT (student_id, usage_date)
+        DO UPDATE SET question_count = rag_daily_usage.question_count + 1
+        WHERE rag_daily_usage.question_count < :limit
+        RETURNING question_count
+    """), {"sid": str(student_id), "d": usage_date, "limit": DAILY_QUESTION_LIMIT}).fetchone()
+    db.commit()
+    return row[0] if row else None
+
+
+def refund_question(db: Session, student_id: str, usage_date):
+    """Gives the question back when the AI could not answer, so a server
+    error never costs the student one of their daily questions."""
+    try:
+        db.execute(text("""
+            UPDATE rag_daily_usage
+            SET question_count = GREATEST(question_count - 1, 0)
+            WHERE student_id = CAST(:sid AS uuid) AND usage_date = :d
+        """), {"sid": str(student_id), "d": usage_date})
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Could not refund Ask AI question: {e}")
+
 
 REJECTED_KEYWORDS = [
     "make me", "write me", "draft me", "create me", "generate me",
@@ -119,6 +162,25 @@ INSTRUCTIONS:
 - Do not write, draft, or create research papers or documents for the student"""
 
 
+@router.get("/usage")
+def get_usage(db: Session = Depends(get_db), user=Depends(require_login)):
+    """How many Ask AI questions the student has left today."""
+    if user.get("role") != "student":
+        return {"limit": None, "used": 0, "remaining": None}
+
+    row = db.execute(text("""
+        SELECT question_count FROM rag_daily_usage
+        WHERE student_id = CAST(:sid AS uuid) AND usage_date = :d
+    """), {"sid": str(user.get("sub")), "d": today_ph()}).fetchone()
+
+    used = row[0] if row else 0
+    return {
+        "limit": DAILY_QUESTION_LIMIT,
+        "used": used,
+        "remaining": max(DAILY_QUESTION_LIMIT - used, 0)
+    }
+
+
 @router.post("/ask")
 def ask_rag(payload: dict, db: Session = Depends(get_db), user=Depends(require_login)):
     question = payload.get("question", "").strip()
@@ -137,6 +199,32 @@ def ask_rag(payload: dict, db: Session = Depends(get_db), user=Depends(require_l
     relevant_papers = search_relevant_papers(question, db)
     context = build_context(relevant_papers)
     prompt = build_prompt(question, context)
+
+    # Daily limit applies to students only. Rejected / empty questions above
+    # do not use one up because they never reach the AI.
+    is_student = user.get("role") == "student"
+    student_id = user.get("sub")
+    usage_date = today_ph()
+    new_count = None
+
+    if is_student:
+        try:
+            new_count = reserve_question(db, student_id, usage_date)
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail="Could not check your daily question limit. Please try again."
+            )
+        if new_count is None:
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "Your Ask AI session has expired for the day. "
+                    f"You have used all {DAILY_QUESTION_LIMIT} questions for today. "
+                    "It resets tomorrow."
+                )
+            )
 
     try:
         client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -159,9 +247,20 @@ def ask_rag(payload: dict, db: Session = Depends(get_db), user=Depends(require_l
             for p in relevant_papers
         ]
 
-        return {"answer": answer, "sources": sources}
+        result = {"answer": answer, "sources": sources}
+        if is_student:
+            result["usage"] = {
+                "limit": DAILY_QUESTION_LIMIT,
+                "used": new_count,
+                "remaining": max(DAILY_QUESTION_LIMIT - new_count, 0)
+            }
+        return result
 
     except HTTPException:
+        if is_student:
+            refund_question(db, student_id, usage_date)
         raise
     except Exception as e:
+        if is_student:
+            refund_question(db, student_id, usage_date)
         raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
