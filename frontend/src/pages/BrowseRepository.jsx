@@ -93,10 +93,12 @@ function BrowseRepository() {
         </div>
         <select className="br-select" value={strand} onChange={(e) => setStrand(e.target.value)}>
           <option value="">All Strands</option>
-          <option value="STEM">STEM</option>
-          <option value="HUMSS">HUMSS</option>
-          <option value="ABM">ABM</option>
-          <option value="GAS">GAS</option>
+          <option value="STEM Engr">STEM Engr</option>
+          <option value="STEM HA">STEM HA</option>
+          <option value="HASS">HASS</option>
+          <option value="BE">BE</option>
+          <option value="TechPro ICT">TechPro ICT</option>
+          <option value="TechPro HE">TechPro HE</option>
         </select>
         <select className="br-select" value={methodology} onChange={(e) => setMethodology(e.target.value)}>
           <option value="">All Methodologies</option>

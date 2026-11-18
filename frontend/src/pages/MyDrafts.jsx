@@ -704,10 +704,12 @@ function MyDrafts({ onClose }) {
                   onChange={(e) => setPublishForm({ ...publishForm, category: e.target.value })}
                 >
                   <option value="">Select strand</option>
-                  <option value="STEM">STEM</option>
-                  <option value="HUMSS">HUMSS</option>
-                  <option value="ABM">ABM</option>
-                  <option value="GAS">GAS</option>
+                  <option value="STEM Engr">STEM Engr</option>
+                  <option value="STEM HA">STEM HA</option>
+                  <option value="HASS">HASS</option>
+                  <option value="BE">BE</option>
+                  <option value="TechPro ICT">TechPro ICT</option>
+                  <option value="TechPro HE">TechPro HE</option>
                 </select>
               </div>
 
